@@ -1,0 +1,4 @@
+Resource ID,Title,Type,Skill Level,URL,Description,Date Added
+RES-001,Prompt Engineering Guide,Documentation,Intermediate,https://platform.openai.com/docs/guides/prompt-engineering,Official OpenAI prompt engineering guide.,2026-07-07
+RES-002,Google AI Essentials,Course,Beginner,https://grow.google/ai,Introductory AI course for business users.,2026-07-07
+RES-003,Claude Documentation,Documentation,Advanced,https://docs.anthropic.com,Anthropic model and API documentation.,2026-07-07

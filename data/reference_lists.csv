@@ -1,0 +1,153 @@
+List Name,Value
+Categories,LLM
+Categories,AI Coding
+Categories,AI Agent
+Categories,Automation
+Categories,Workflow Automation
+Categories,Browser Automation
+Categories,Research
+Categories,Search
+Categories,Data Analytics
+Categories,SQL
+Categories,Database
+Categories,Documentation
+Categories,Writing
+Categories,Productivity
+Categories,Presentation
+Categories,Meeting Assistant
+Categories,Voice AI
+Categories,Image Generation
+Categories,Video Generation
+Categories,UI Generation
+Categories,Design
+Categories,OCR
+Categories,Translation
+Categories,Email
+Categories,PDF
+Categories,Spreadsheet
+Categories,Power BI
+Categories,MCP
+Categories,API
+Categories,CLI
+Categories,DevOps
+Categories,Testing
+Categories,Security
+Categories,Education
+Categories,Other
+Sub Categories,Chatbot
+Sub Categories,Reasoning
+Sub Categories,Code Editor
+Sub Categories,IDE
+Sub Categories,Code Review
+Sub Categories,Research Assistant
+Sub Categories,Search Engine
+Sub Categories,Workflow Builder
+Sub Categories,Desktop Agent
+Sub Categories,Browser Agent
+Sub Categories,Voice Assistant
+Sub Categories,Image Generator
+Sub Categories,Video Generator
+Sub Categories,Presentation Generator
+Sub Categories,Mind Map
+Sub Categories,Diagram
+Sub Categories,Documentation
+Sub Categories,Data Visualization
+Sub Categories,Spreadsheet
+Sub Categories,Knowledge Base
+Sub Categories,Meeting Notes
+Sub Categories,Prompt Library
+Sub Categories,Email Assistant
+Sub Categories,PDF Reader
+Sub Categories,OCR
+Sub Categories,Database Client
+Sub Categories,API Platform
+Sub Categories,CLI Tool
+Sub Categories,Plugin
+Sub Categories,Browser Extension
+Sub Categories,Self Hosted
+Sub Categories,Cloud
+Pricing Models,Free
+Pricing Models,Freemium
+Pricing Models,Paid
+Pricing Models,Enterprise
+Pricing Models,Open Source
+Pricing Models,Trial
+Platforms,Web
+Platforms,Desktop
+Platforms,Mobile
+Platforms,CLI
+Platforms,API
+Platforms,Browser Extension
+Operating Systems,Windows
+Operating Systems,macOS
+Operating Systems,Linux
+Operating Systems,Android
+Operating Systems,iOS
+Status,Planned
+Status,Researching
+Status,Testing
+Status,Pilot
+Status,Adopted
+Status,Production
+Status,Deprecated
+Status,Archived
+Status,Rejected
+Recommendation,★★★★★
+Recommendation,★★★★☆
+Recommendation,★★★☆☆
+Recommendation,★★☆☆☆
+Recommendation,★☆☆☆☆
+Difficulty,Beginner
+Difficulty,Intermediate
+Difficulty,Advanced
+Difficulty,Expert
+Learning Curve,Low
+Learning Curve,Medium
+Learning Curve,High
+Learning Curve,Very High
+Yes / No,Yes
+Yes / No,No
+Yes / No,Partially
+Departments,Development
+Departments,Automation
+Departments,Reporting
+Departments,Data Engineering
+Departments,Management
+Departments,Operations
+Departments,Support
+Departments,Everyone
+Priority,Critical
+Priority,High
+Priority,Medium
+Priority,Low
+Priority,Backlog
+AI Models,GPT
+AI Models,Claude
+AI Models,Gemini
+AI Models,Llama
+AI Models,Mistral
+AI Models,DeepSeek
+AI Models,Qwen
+AI Models,Mixtral
+Common Use Cases,General Chat
+Common Use Cases,Research
+Common Use Cases,Deep Research
+Common Use Cases,Coding
+Common Use Cases,Code Review
+Common Use Cases,Debugging
+Common Use Cases,SQL
+Common Use Cases,Documentation
+Common Use Cases,Email Writing
+Common Use Cases,Presentation
+Common Use Cases,Meeting Notes
+Common Use Cases,Report Writing
+Common Use Cases,Data Analysis
+Common Use Cases,Visualization
+Common Use Cases,Web Scraping
+Common Use Cases,API Integration
+Common Use Cases,Image Generation
+Common Use Cases,Video Generation
+Common Use Cases,Voice Typing
+Common Use Cases,Translation
+Common Use Cases,Learning
+Common Use Cases,Knowledge Management

@@ -1,0 +1,4 @@
+Use Case ID,Title,Department,Tool Used,Status,Owner,Impact,Date
+UC-001,Weekly Report Automation,Operations,ChatGPT,Adopted,,Saves 2 hours per week,2026-07-07
+UC-002,Code Review Assistant,Engineering,Cursor,Testing,,Improves review consistency,2026-07-07
+UC-003,Customer Email Drafting,Customer Support,Claude,Pilot,,Faster response drafts,2026-07-07
