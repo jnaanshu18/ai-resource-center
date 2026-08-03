@@ -4,40 +4,60 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DCS AI Resource Center</title>
+<link rel="icon" href="shared/assets/favicon.jpg" type="image/jpeg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- BEGIN: DCS site chrome (docs/shared/) — replace with company header when embedding -->
+<link rel="stylesheet" href="shared/header.css">
+<!-- END: DCS site chrome styles -->
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar__inner">
-    <div class="brand">
-      <span class="brand__mark">&gt;_</span>
-      <div class="brand__text">
-        <span class="brand__name">DCS AI Resource Center</span>
-        <span class="brand__sub">Daily Code Solutions &middot; internal tool registry</span>
-      </div>
-    </div>
-    <div class="topbar__actions">
-      <button class="btn-suggest" id="openSuggest" type="button">+ Suggest a tool</button>
-      <a class="brand__repo" href="https://github.com/Daily-Code-Solutions/DCS-Resources" target="_blank" rel="noopener">
-        <span class="dot dot--live" aria-hidden="true"></span> synced with repo
-      </a>
-    </div>
-  </div>
-</header>
+<!-- BEGIN: DCS site chrome (docs/shared/) — replace this block with the company header -->
+<div id="dcs-site-header"></div>
+<script src="shared/header.js"></script>
+<!-- END: DCS site chrome -->
 
 <main>
   <section class="hero">
-    <h1>Every AI tool we run, tracked like code.</h1>
-    <p class="hero__lede">Research → Test → Pilot → Adopt, extend, reject, or archive. One source of truth so the team stops re-evaluating the same tool twice.</p>
-
-    <div class="stats" id="stats" aria-label="Portfolio summary"></div>
+    <div class="hero__container">
+      <h1 class="hero-heading">
+        Every AI tool we run, <span class="text-gradient">tracked like code.</span>
+      </h1>
+      <p class="hero-text">
+        One source of truth so the team stops re-evaluating the same tool twice.
+      </p>
+      <div class="hero__cta-wrap">
+        <button type="button" class="btn-base btn-primary btn-lg" id="openSuggestHero">Suggest a tool</button>
+      </div>
+      <div class="hero__proof">
+        <p class="text-caption">Built for teams that need proof, not theatre</p>
+        <div class="hero__brands">
+          <span>Research</span>
+          <span class="hero__arrow" aria-hidden="true">→</span>
+          <span>Test</span>
+          <span class="hero__arrow" aria-hidden="true">→</span>
+          <span>Pilot</span>
+          <span class="hero__arrow" aria-hidden="true">→</span>
+          <span>Adopt</span>
+        </div>
+      </div>
+    </div>
   </section>
 
+  <div class="content">
+    <div class="stats" id="stats" aria-label="Portfolio summary"></div>
+
   <section class="controls" aria-label="Filter tools">
+    <div class="controls__header">
+      <div>
+        <h2 class="controls__title">Find the right tool</h2>
+        <p class="controls__desc">Search or filter by status. Open more filters for category and pricing.</p>
+      </div>
+    </div>
+
     <div class="controls__row">
       <div class="search">
         <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -47,11 +67,12 @@
         <option value="name">Sort: Name (A–Z)</option>
         <option value="status">Sort: Status</option>
         <option value="category">Sort: Category</option>
+        <option value="pricing">Sort: Pricing</option>
       </select>
+      <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Compare</button>
     </div>
 
-    <div class="chiprow" id="statusChips" aria-label="Filter by status"></div>
-    <div class="chiprow chiprow--muted" id="categoryChips" aria-label="Filter by category"></div>
+    <div class="filter-groups" id="filterChips" aria-label="Filter tools"></div>
   </section>
 
   <section aria-label="Tool results">
@@ -62,10 +83,29 @@
     <div class="grid" id="toolGrid"></div>
     <p class="empty" id="emptyState" hidden>No tools match those filters — <button id="emptyClear" class="linkbtn">clear them</button>.</p>
   </section>
+  </div>
 </main>
 
+<div class="compare-bar" id="compareBar" hidden>
+  <div class="compare-bar__inner">
+    <span class="compare-bar__text" id="compareBarText">Select 2–3 tools to compare</span>
+    <div class="compare-bar__actions">
+      <button type="button" class="linkbtn" id="compareClear">clear</button>
+      <button type="button" class="btn-base btn-primary" id="compareOpen" disabled>Compare selected</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="compareOverlay" hidden>
+  <div class="modal modal--wide" id="compareModal" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
+    <button class="modal__close" id="compareClose" aria-label="Close">✕</button>
+    <h2 class="modal__name" id="compareTitle">Tool comparison</h2>
+    <div id="compareBody"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay" hidden>
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+  <div class="modal modal--wide" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
     <button class="modal__close" id="modalClose" aria-label="Close">✕</button>
     <div id="modalBody"></div>
   </div>
@@ -76,57 +116,55 @@
     <button class="modal__close" id="suggestClose" aria-label="Close">✕</button>
 
     <div id="suggestFormWrap">
-      <div class="modal__id">new submission</div>
       <h2 class="modal__name" id="suggestTitle">Suggest a tool</h2>
       <p class="modal__desc">Tell us what you're using or want the team to evaluate. A manager reviews and validates every suggestion before it's added to the directory.</p>
 
       <form id="suggestForm">
-        <div class="field">
-          <label for="s_name">Tool name *</label>
-          <input type="text" id="s_name" required placeholder="e.g. Linear">
+        <div class="field-row">
+          <div class="field">
+            <label for="s_name">Tool name <span class="req">*</span></label>
+            <input type="text" id="s_name" required placeholder="e.g. Linear">
+          </div>
+          <div class="field">
+            <label for="s_category">Category</label>
+            <select id="s_category">
+              <option value="">Select a category</option>
+            </select>
+          </div>
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label for="s_category">Category</label>
-            <select id="s_category">
-              <option value="">Select a category…</option>
-            </select>
-          </div>
-          <div class="field">
             <label for="s_url">Website / URL</label>
             <input type="url" id="s_url" placeholder="https://…">
+          </div>
+          <div class="field">
+            <label for="s_submitter">Your name</label>
+            <input type="text" id="s_submitter" placeholder="Optional">
           </div>
         </div>
 
         <div class="field">
-          <label for="s_desc">What does it do? *</label>
+          <label for="s_desc">What does it do? <span class="req">*</span></label>
           <textarea id="s_desc" rows="3" required placeholder="Short description of what it's for"></textarea>
         </div>
 
         <div class="field">
           <label for="s_reason">Why should we evaluate it?</label>
-          <textarea id="s_reason" rows="2" placeholder="Problem it solves, what you tried, expected impact…"></textarea>
+          <textarea id="s_reason" rows="3" placeholder="Problem it solves, what you tried, expected impact…"></textarea>
         </div>
 
-        <div class="field-row">
-          <div class="field">
-            <label for="s_submitter">Your name</label>
-            <input type="text" id="s_submitter" placeholder="Optional">
-          </div>
-          <div class="field">
-            <label for="s_dept">Department</label>
-            <input type="text" id="s_dept" placeholder="Optional">
-          </div>
+        <div class="field">
+          <label for="s_dept">Department</label>
+          <input type="text" id="s_dept" placeholder="Optional">
         </div>
 
-        <button type="submit" class="modal__cta modal__cta--wide" id="suggestSubmit">Submit for review →</button>
+        <button type="submit" class="modal__cta modal__cta--wide" id="suggestSubmit">Submit for review</button>
         <p class="field-note">Submissions aren't connected yet — this is a UI preview. Nothing is sent or saved when you submit right now.</p>
       </form>
     </div>
 
     <div id="suggestSuccess" hidden>
-      <div class="modal__id">submitted</div>
       <h2 class="modal__name">Thanks — got it.</h2>
       <p class="modal__desc">Your suggestion is queued for a manager to review, test, and validate. Once approved, it'll show up in the directory automatically.</p>
       <button type="button" class="modal__cta modal__cta--wide" id="suggestAnother">Suggest another tool</button>

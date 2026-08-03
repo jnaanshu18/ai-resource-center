@@ -1,4 +1,10 @@
 Tool Name,Evaluator,Score,Criteria,Recommendation,Evaluation Date,Notes
 ChatGPT,,4.5,"Quality, Speed, Cost",★★★★★,2026-07-07,Strong general-purpose assistant
 Claude,,4.7,"Reasoning, Context, Safety",★★★★★,2026-07-07,Excellent for long documents
-Cursor,,4.3,"Coding, IDE Integration",★★★★★,2026-07-07,High productivity for developers
+Cursor,,4.3,"Coding, IDE Integration",★★★★☆,2026-07-07,High productivity for developers
+Perplexity,,,"Citations, Speed, Accuracy",,2026-08-03,Best first stop for cited web research when sources matter
+GitHub Copilot,,,"Code Completion, IDE Integration, Speed",,2026-08-03,Solid baseline pair programmer; Cursor preferred for deeper project-aware work
+Notion AI,,,"Writing, Summarization, Workspace Fit",,2026-08-03,Useful inside Notion for drafts and summaries; not a replacement for research or coding tools
+OpenClaw,,,"Autonomy, Integrations, Self-hosting",,2026-08-03,Team-adopted local agent gateway across messaging channels; keep secrets off unapproved models
+Hermes Agent,,,"Autonomy, Memory, Scheduling",,2026-08-03,Self-hosted agent for terminal browser and cron-style automations
+Antigravity,,,"Agent Coding, Speed, Team Adoption",,2026-08-03,In production use for agentic coding and accelerated development workflows
