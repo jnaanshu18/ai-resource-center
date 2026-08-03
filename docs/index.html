@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCS AI Resource Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand">
+      <span class="brand__mark">&gt;_</span>
+      <div class="brand__text">
+        <span class="brand__name">DCS AI Resource Center</span>
+        <span class="brand__sub">Daily Code Solutions &middot; internal tool registry</span>
+      </div>
+    </div>
+    <a class="brand__repo" href="https://github.com/Daily-Code-Solutions/DCS-Resources" target="_blank" rel="noopener">
+      <span class="dot dot--live" aria-hidden="true"></span> synced with repo
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Every AI tool we run, tracked like code.</h1>
+    <p class="hero__lede">Research → Test → Pilot → Adopt, extend, reject, or archive. One source of truth so the team stops re-evaluating the same tool twice.</p>
+
+    <div class="stats" id="stats" aria-label="Portfolio summary"></div>
+  </section>
+
+  <section class="controls" aria-label="Filter tools">
+    <div class="controls__row">
+      <div class="search">
+        <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input type="text" id="searchInput" placeholder="Search tools, categories, notes…" autocomplete="off">
+      </div>
+      <select id="sortSelect" aria-label="Sort by">
+        <option value="name">Sort: Name (A–Z)</option>
+        <option value="status">Sort: Status</option>
+        <option value="category">Sort: Category</option>
+      </select>
+    </div>
+
+    <div class="chiprow" id="statusChips" aria-label="Filter by status"></div>
+    <div class="chiprow chiprow--muted" id="categoryChips" aria-label="Filter by category"></div>
+  </section>
+
+  <section aria-label="Tool results">
+    <div class="resultbar">
+      <span id="resultCount"></span>
+      <button id="clearFilters" class="linkbtn" hidden>clear filters</button>
+    </div>
+    <div class="grid" id="toolGrid"></div>
+    <p class="empty" id="emptyState" hidden>No tools match those filters — <button id="emptyClear" class="linkbtn">clear them</button>.</p>
+  </section>
+</main>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <button class="modal__close" id="modalClose" aria-label="Close">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<footer>
+  <p>Data lives in <code>/data/ai_tools_directory.csv</code> on the main branch. Update the sheet or CSV, regenerate <code>docs/data.js</code>, and push — the site rebuilds itself, nothing to redeploy by hand.</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
