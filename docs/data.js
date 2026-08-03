@@ -1,4 +1,4 @@
-// Auto-generated from data/ai_tools_directory.csv — do not edit by hand.
+// Auto-generated from data/ai_tools_directory.csv and data/reference_lists.csv — do not edit by hand.
 const TOOLS = [
   {
     "id": "AIT-001",
@@ -198,4 +198,41 @@ const TOOLS = [
     "description": "Agentic development platform designed to help developers build automate and manage software projects using autonomous AI agents.",
     "notes": "Already being used effectively in production by several team members for smart vibe coding and accelerated development."
   }
+];
+const CATEGORIES = [
+  "LLM",
+  "AI Coding",
+  "AI Agent",
+  "Automation",
+  "Workflow Automation",
+  "Browser Automation",
+  "Research",
+  "Search",
+  "Data Analytics",
+  "SQL",
+  "Database",
+  "Documentation",
+  "Writing",
+  "Productivity",
+  "Presentation",
+  "Meeting Assistant",
+  "Voice AI",
+  "Image Generation",
+  "Video Generation",
+  "UI Generation",
+  "Design",
+  "OCR",
+  "Translation",
+  "Email",
+  "PDF",
+  "Spreadsheet",
+  "Power BI",
+  "MCP",
+  "API",
+  "CLI",
+  "DevOps",
+  "Testing",
+  "Security",
+  "Education",
+  "Other"
 ];

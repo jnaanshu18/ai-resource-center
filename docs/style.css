@@ -65,6 +65,21 @@ a { color: inherit; }
   gap: 16px;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
+.topbar__actions { display: flex; align-items: center; gap: 12px; }
+.btn-suggest {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #0C1712;
+  background: var(--mint);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: opacity .15s, transform .15s;
+}
+.btn-suggest:hover { opacity: .88; }
+.btn-suggest:active { transform: scale(.97); }
 .brand__mark {
   font-family: var(--font-mono);
   color: var(--mint);
@@ -380,6 +395,7 @@ footer code {
   z-index: 100;
   animation: fadeIn .18s ease;
 }
+.modal-overlay[hidden] { display: none; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .modal {
@@ -451,6 +467,48 @@ footer code {
   transition: opacity .15s;
 }
 .modal__cta:hover { opacity: .85; }
+
+.modal__cta--wide { width: 100%; justify-content: center; margin-top: 4px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.field input,
+.field textarea,
+.field select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+.field select { appearance: none; cursor: pointer; }
+.field input::placeholder,
+.field textarea::placeholder { color: var(--text-faint); }
+.field input:focus,
+.field textarea:focus,
+.field select:focus { border-color: var(--mint); outline: none; }
+
+.field-note {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  text-align: center;
+  margin: 10px 0 0;
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 480px) {
+  .field-row { grid-template-columns: 1fr; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .card, .modal-overlay, .modal { animation: none; }

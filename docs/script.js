@@ -158,10 +158,19 @@ function clearFilters() {
   rerender();
 }
 
+function populateCategoryDropdown() {
+  const select = document.getElementById("s_category");
+  const options = (typeof CATEGORIES !== "undefined" ? CATEGORIES : [])
+    .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+    .join("");
+  select.insertAdjacentHTML("beforeend", options);
+}
+
 function init() {
   renderStats();
   renderChips();
   renderCards();
+  populateCategoryDropdown();
 
   document.getElementById("searchInput").addEventListener("input", e => {
     state.search = e.target.value;
@@ -211,8 +220,41 @@ function init() {
     if (e.target.id === "modalOverlay") closeModal();
   });
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeModal();
+    if (e.key === "Escape") { closeModal(); closeSuggest(); }
   });
+
+  // --- Suggest a Tool (UI only — not wired to a backend yet) ---
+  document.getElementById("openSuggest").addEventListener("click", openSuggest);
+  document.getElementById("suggestClose").addEventListener("click", closeSuggest);
+  document.getElementById("suggestOverlay").addEventListener("click", e => {
+    if (e.target.id === "suggestOverlay") closeSuggest();
+  });
+
+  document.getElementById("suggestForm").addEventListener("submit", e => {
+    e.preventDefault();
+    // NOTE: no submission target wired up yet — this just previews the
+    // confirmation state. Hook this up once the intake destination
+    // (GitHub Issue, internal backend, etc.) is decided.
+    document.getElementById("suggestFormWrap").hidden = true;
+    document.getElementById("suggestSuccess").hidden = false;
+  });
+
+  document.getElementById("suggestAnother").addEventListener("click", () => {
+    document.getElementById("suggestForm").reset();
+    document.getElementById("suggestSuccess").hidden = true;
+    document.getElementById("suggestFormWrap").hidden = false;
+  });
+}
+
+function openSuggest() {
+  document.getElementById("suggestOverlay").hidden = false;
+  document.body.style.overflow = "hidden";
+  document.getElementById("s_name").focus();
+}
+
+function closeSuggest() {
+  document.getElementById("suggestOverlay").hidden = true;
+  document.body.style.overflow = "";
 }
 
 init();
