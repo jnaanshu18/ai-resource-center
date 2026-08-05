@@ -39,7 +39,7 @@
       <header class="dcs-header" id="dcsHeader">
         <div class="dcs-header__inner">
           <a class="dcs-header__logo" href="${ROOT}/" aria-label="Daily Code Solutions home">
-            <img src="${ASSET_BASE}logo.svg" width="118" height="26" alt="Daily Code Solutions Logo" fetchpriority="high">
+            <img src="${ASSET_BASE}logo.svg" width="118" height="26" alt="Daily Code Solutions" fetchpriority="high">
           </a>
 
           <nav aria-label="Primary">
@@ -58,7 +58,7 @@
               rel="noopener noreferrer"
               aria-label="Visit our Upwork profile"
             >${UPWORK_LOGO}</a>
-            <a class="dcs-btn dcs-btn--primary" href="${ROOT}/contact">Schedule a Consultation</a>
+            <a class="dcs-btn dcs-btn--primary" href="${ROOT}/contact">Schedule a consultation</a>
           </div>
 
           <button class="dcs-header__toggle" type="button" id="dcsHeaderToggle" aria-expanded="false" aria-controls="dcsHeader" aria-label="Open menu">

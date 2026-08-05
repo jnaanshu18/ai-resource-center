@@ -3,7 +3,7 @@ const TOOLS = [
   {
     "id": "AIT-001",
     "name": "ChatGPT",
-    "category": "LLM",
+    "category": "LLM / Assistants",
     "subcategory": "Chatbot",
     "pricing": "Freemium",
     "status": "Adopted",
@@ -28,12 +28,20 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Default general assistant for everyday work. Prefer Claude for long-document reasoning when context limits matter."
+    "notes": "Default general assistant for everyday work. Prefer Claude for long-document reasoning when context limits matter.",
+    "limitations": "Weaker for very long documents versus Claude. Do not paste client secrets or confidential code into unapproved chats.",
+    "whenToUse": "Everyday writing, brainstorming, quick coding help, and general Q&A.",
+    "alternatives": "Claude for long documents; Perplexity when citations matter; Gemini for Workspace-heavy work.",
+    "costNote": "Freemium; Plus/Team plans if you need higher limits and better models.",
+    "securityTip": "Internal data only unless the workspace is explicitly approved. Never paste client secrets.",
+    "approvedModels": [
+      "GPT"
+    ]
   },
   {
     "id": "AIT-002",
     "name": "Claude",
-    "category": "LLM",
+    "category": "LLM / Assistants",
     "subcategory": "Reasoning",
     "pricing": "Freemium",
     "status": "Adopted",
@@ -58,12 +66,20 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Preferred for long documents and careful analysis. Strong context handling versus general chat tools."
+    "notes": "Preferred for long documents and careful analysis. Strong context handling versus general chat tools.",
+    "limitations": "Paid usage can add up at high volume. Prefer approved workspaces only for anything beyond Internal data.",
+    "whenToUse": "Long-document analysis, careful writing, complex reasoning, and coding reviews.",
+    "alternatives": "ChatGPT for everyday chat; Cursor for deep IDE work.",
+    "costNote": "Freemium; Pro/Team recommended for heavy daily use.",
+    "securityTip": "Prefer approved Anthropic workspaces. Keep Confidential client data off personal accounts.",
+    "approvedModels": [
+      "Claude"
+    ]
   },
   {
     "id": "AIT-003",
     "name": "Gemini",
-    "category": "LLM",
+    "category": "LLM / Assistants",
     "subcategory": "Chatbot",
     "pricing": "Freemium",
     "status": "Adopted",
@@ -87,7 +103,15 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Approved for team use, especially Workspace and multimodal workflows. Not the primary default versus ChatGPT/Claude."
+    "notes": "Approved for team use, especially Workspace and multimodal workflows. Not the primary default versus ChatGPT/Claude.",
+    "limitations": "Still validating as a team default. Confirm Workspace data handling before using with client material.",
+    "whenToUse": "Google Workspace workflows, multimodal understanding, and search-linked research.",
+    "alternatives": "ChatGPT or Claude as primary assistants until Gemini is confirmed as a default.",
+    "costNote": "Freemium via Google accounts; Advanced tiers may be needed for higher limits.",
+    "securityTip": "Confirm Workspace/admin settings before using with client or regulated data.",
+    "approvedModels": [
+      "Gemini"
+    ]
   },
   {
     "id": "AIT-004",
@@ -114,7 +138,16 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Solid baseline pair programmer in GitHub/IDEs. Cursor is the Production coding tool for deeper project-aware work."
+    "notes": "Solid baseline pair programmer in GitHub/IDEs. Cursor is the Production coding tool for deeper project-aware work.",
+    "limitations": "Less project-aware than Cursor for multi-file work. Review all suggested code before merging.",
+    "whenToUse": "Inline completions and light pair-programming inside GitHub/IDEs.",
+    "alternatives": "Cursor for multi-file project work; Antigravity for agentic coding sessions.",
+    "costNote": "Paid individual/business seats — confirm who is licensed.",
+    "securityTip": "Disable training on sensitive repos if policy requires. Review every suggestion.",
+    "approvedModels": [
+      "GPT",
+      "Claude"
+    ]
   },
   {
     "id": "AIT-005",
@@ -141,12 +174,22 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Core AI coding IDE for delivery. Strong team adoption and the default for multi-file, project-aware work."
+    "notes": "Core AI coding IDE for delivery. Strong team adoption and the default for multi-file, project-aware work.",
+    "limitations": "License cost and cloud features need clear policy. Keep client secrets out of unapproved model routes.",
+    "whenToUse": "Day-to-day software delivery, refactors, and project-aware coding.",
+    "alternatives": "GitHub Copilot for lighter completion; Antigravity for agent-first workflows.",
+    "costNote": "Paid seats — treat as a core Production license cost.",
+    "securityTip": "Follow team rules for which models may see client code. No secrets in prompts.",
+    "approvedModels": [
+      "Claude",
+      "GPT",
+      "Gemini"
+    ]
   },
   {
     "id": "AIT-006",
     "name": "Perplexity",
-    "category": "Research",
+    "category": "LLM / Assistants",
     "subcategory": "Research Assistant",
     "pricing": "Freemium",
     "status": "Adopted",
@@ -169,37 +212,22 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Best first stop for cited web research. Prefer over plain LLM chat when sources matter."
-  },
-  {
-    "id": "AIT-007",
-    "name": "Midjourney",
-    "category": "Image Generation",
-    "subcategory": "Image Generator",
-    "pricing": "Paid",
-    "status": "Researching",
-    "url": "https://www.midjourney.com",
-    "description": "High-quality image generation for design concepts, creative exploration, and marketing visuals.",
-    "platform": [
-      "Web",
-      "Desktop"
-    ],
-    "department": "Everyone",
-    "useCases": [
-      "Image Generation"
-    ],
-    "learningCurve": "Medium",
-    "priority": "Low",
-    "dataClassification": "Internal",
-    "owner": "Anshu Jain",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Niche creative exploration for concept art and marketing visuals. Confirm license terms before client-facing use."
+    "notes": "Best first stop for cited web research. Prefer over plain LLM chat when sources matter.",
+    "limitations": "Citations can still be wrong—verify sources. Not a substitute for primary research on critical claims.",
+    "whenToUse": "Fast web research with citations and fact-finding before deeper analysis.",
+    "alternatives": "ChatGPT/Claude for synthesis; NotebookLM for your own document packs.",
+    "costNote": "Freemium; Pro helps with higher limits and better research modes.",
+    "securityTip": "Do not paste confidential briefs into public research chats.",
+    "approvedModels": [
+      "GPT",
+      "Claude",
+      "Gemini"
+    ]
   },
   {
     "id": "AIT-008",
     "name": "Notion AI",
-    "category": "Productivity",
+    "category": "LLM / Assistants",
     "subcategory": "Knowledge Base",
     "pricing": "Paid",
     "status": "Adopted",
@@ -223,12 +251,21 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Useful inside existing Notion workflows for summaries and drafting. Not a replacement for research or coding tools."
+    "notes": "Useful inside existing Notion workflows for summaries and drafting. Not a replacement for research or coding tools.",
+    "limitations": "Only useful inside Notion; quality varies. Do not treat it as a dedicated research or coding tool.",
+    "whenToUse": "Summaries, drafts, and light writing inside existing Notion workspaces.",
+    "alternatives": "ChatGPT/Claude for heavier writing; NotebookLM for document Q&A outside Notion.",
+    "costNote": "Paid Notion AI add-on — confirm workspace subscription.",
+    "securityTip": "Respect Notion workspace permissions; do not move client data into personal Notion spaces.",
+    "approvedModels": [
+      "GPT",
+      "Claude"
+    ]
   },
   {
     "id": "AIT-009",
     "name": "OpenClaw",
-    "category": "AI Agent",
+    "category": "Agents & automation",
     "subcategory": "Desktop Agent",
     "pricing": "Open Source",
     "status": "Production",
@@ -251,12 +288,24 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Core self-hosted agent gateway across messaging channels. Keep client secrets off unapproved models."
+    "notes": "Core self-hosted agent gateway across messaging channels. Keep client secrets off unapproved models.",
+    "limitations": "Self-hosted agents can touch many systems—lock down channels and keep secrets off unapproved models.",
+    "whenToUse": "Self-hosted personal/team agent across messaging channels and local automation.",
+    "alternatives": "Hermes Agent for similar self-hosted agent work; n8n only as archived reference.",
+    "costNote": "Open source software; you pay for hosting and the underlying model APIs.",
+    "securityTip": "Lock down channel allowlists. Keep client secrets off unapproved models and logs.",
+    "approvedModels": [
+      "Claude",
+      "GPT",
+      "Gemini",
+      "Llama",
+      "DeepSeek"
+    ]
   },
   {
     "id": "AIT-010",
     "name": "Hermes Agent",
-    "category": "AI Agent",
+    "category": "Agents & automation",
     "subcategory": "Self Hosted",
     "pricing": "Open Source",
     "status": "Production",
@@ -279,12 +328,23 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Core self-hosted agent for terminal, browser, and scheduled automations on our infrastructure."
+    "notes": "Core self-hosted agent for terminal, browser, and scheduled automations on our infrastructure.",
+    "limitations": "Requires careful hosting and access control. Misconfigured agents can run unintended automations.",
+    "whenToUse": "Self-hosted autonomous tasks, terminal/browser work, and scheduled agent jobs.",
+    "alternatives": "OpenClaw for messaging-gateway style agents; OpenHands for sandboxed coding agents.",
+    "costNote": "Open source; infrastructure and model API costs apply.",
+    "securityTip": "Treat agent hosts as production systems—patch, restrict SSH, and audit tool permissions.",
+    "approvedModels": [
+      "Claude",
+      "GPT",
+      "Llama",
+      "DeepSeek"
+    ]
   },
   {
     "id": "AIT-011",
     "name": "NotebookLM",
-    "category": "Documentation",
+    "category": "LLM / Assistants",
     "subcategory": "Knowledge Base",
     "pricing": "Free",
     "status": "Pilot",
@@ -306,60 +366,15 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Piloting for document Q&A, briefing packs, and knowledge synthesis. Do not upload client-confidential files without approval."
-  },
-  {
-    "id": "AIT-012",
-    "name": "Wispr Flow",
-    "category": "Voice AI",
-    "subcategory": "Voice Assistant",
-    "pricing": "Freemium",
-    "status": "Pilot",
-    "url": "https://wisprflow.ai",
-    "description": "AI voice dictation that works in any app with real-time transcription, filler-word cleanup, and spoken edit commands.",
-    "platform": [
-      "Desktop",
-      "Mobile"
-    ],
-    "department": "Everyone",
-    "useCases": [
-      "Voice Typing",
-      "Documentation",
-      "Email Writing"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Anshu Jain",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Piloting for faster drafting and hands-free input. Promote further only if weekly usage sticks."
-  },
-  {
-    "id": "AIT-013",
-    "name": "Google Stitch",
-    "category": "UI Generation",
-    "subcategory": "Cloud",
-    "pricing": "Free",
-    "status": "Planned",
-    "url": "https://stitch.withgoogle.com",
-    "description": "Google Labs AI design canvas that turns prompts, sketches, or URLs into UI mockups and exportable frontend code.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Image Generation",
-      "Coding",
-      "Documentation"
-    ],
-    "learningCurve": "Medium",
-    "priority": "Low",
-    "dataClassification": "Internal",
-    "owner": "Anshu Jain",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Queued for UI ideation experiments. Overlaps with v0—compare before investing heavily."
+    "notes": "Piloting for document Q&A, briefing packs, and knowledge synthesis. Do not upload client-confidential files without approval.",
+    "limitations": "Do not upload client-confidential files without approval. Grounding quality depends on source quality.",
+    "whenToUse": "Q&A and briefings grounded in uploaded docs, notes, and source packs.",
+    "alternatives": "Perplexity for open web research; Dify for custom RAG apps.",
+    "costNote": "Free tier via Google; watch Workspace policy for higher volume.",
+    "securityTip": "Do not upload client-confidential files without approval.",
+    "approvedModels": [
+      "Gemini"
+    ]
   },
   {
     "id": "AIT-014",
@@ -386,12 +401,21 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "High-value PR review automation. Testing for line-level feedback, security checks, and review quality in Git workflows."
+    "notes": "High-value PR review automation. Testing for line-level feedback, security checks, and review quality in Git workflows.",
+    "limitations": "AI review can miss context or raise noise. Humans still own merge decisions and security sign-off.",
+    "whenToUse": "Automated PR review assistance and first-pass code quality checks.",
+    "alternatives": "Human review remains required; Cursor/Copilot for authoring code.",
+    "costNote": "Freemium/paid seats depending on repo volume.",
+    "securityTip": "Ensure PR content and secrets scanning policies are acceptable for your repos.",
+    "approvedModels": [
+      "GPT",
+      "Claude"
+    ]
   },
   {
     "id": "AIT-015",
     "name": "Julius AI",
-    "category": "Data Analytics",
+    "category": "Data & BI",
     "subcategory": "Data Visualization",
     "pricing": "Freemium",
     "status": "Pilot",
@@ -413,38 +437,20 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Piloting for ad hoc CSV/spreadsheet analysis and quick visuals. Use sample or internal data only."
-  },
-  {
-    "id": "AIT-016",
-    "name": "Comet",
-    "category": "Browser Automation",
-    "subcategory": "Browser Agent",
-    "pricing": "Freemium",
-    "status": "Researching",
-    "url": "https://www.perplexity.ai/comet",
-    "description": "Perplexity's Chromium-based AI browser with built-in assistant for search, summarisation, and agentic web task automation.",
-    "platform": [
-      "Desktop"
-    ],
-    "department": "Automation",
-    "useCases": [
-      "Research",
-      "Web Scraping",
-      "Deep Research"
-    ],
-    "learningCurve": "Medium",
-    "priority": "Low",
-    "dataClassification": "Internal",
-    "owner": "Anshu Jain",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Light research into an AI-native browser for summaries and small web tasks. Not a near-term priority."
+    "notes": "Piloting for ad hoc CSV/spreadsheet analysis and quick visuals. Use sample or internal data only.",
+    "limitations": "Use sample or Internal data only. Not a replacement for governed analytics pipelines.",
+    "whenToUse": "Ad hoc CSV/spreadsheet exploration and quick charts in plain language.",
+    "alternatives": "Power BI Copilot for governed BI; Python notebooks for repeatable analysis.",
+    "costNote": "Freemium; paid plans for larger datasets and collaboration.",
+    "securityTip": "Use sample or Internal data only—no production client extracts.",
+    "approvedModels": [
+      "GPT"
+    ]
   },
   {
     "id": "AIT-017",
     "name": "n8n",
-    "category": "Workflow Automation",
+    "category": "Agents & automation",
     "subcategory": "Workflow Builder",
     "pricing": "Open Source",
     "status": "Archived",
@@ -468,12 +474,18 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Previously used; kept for reference. Prefer newer agent-based automation where possible."
+    "notes": "Previously used; kept for reference. Prefer newer agent-based automation where possible.",
+    "limitations": "Archived for current needs; prefer agent-based automation where possible.",
+    "whenToUse": "Reference only—legacy workflow automation patterns.",
+    "alternatives": "Prefer OpenClaw/Hermes or modern agent pipelines for new work.",
+    "costNote": "Open source; hosting costs if self-run.",
+    "securityTip": "Rotate any old credentials still stored in archived workflows.",
+    "approvedModels": []
   },
   {
     "id": "AIT-018",
     "name": "Gamma",
-    "category": "Presentation",
+    "category": "Creative & productivity",
     "subcategory": "Presentation Generator",
     "pricing": "Freemium",
     "status": "Pilot",
@@ -494,38 +506,20 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Piloting for fast decks and client storytelling. Review branding before external use."
-  },
-  {
-    "id": "AIT-019",
-    "name": "Napkin AI",
-    "category": "Design",
-    "subcategory": "Diagram",
-    "pricing": "Freemium",
-    "status": "Planned",
-    "url": "https://www.napkin.ai",
-    "description": "Text-to-visual tool that turns pasted content into diagrams, flowcharts, mind maps, and infographics without prompt engineering.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Everyone",
-    "useCases": [
-      "Visualization",
-      "Presentation",
-      "Documentation"
-    ],
-    "learningCurve": "Low",
-    "priority": "Low",
-    "dataClassification": "Internal",
-    "owner": "Anshu Jain",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Nice-to-have for turning notes into diagrams and visuals. Explore after higher-priority tools."
+    "notes": "Piloting for fast decks and client storytelling. Review branding before external use.",
+    "limitations": "Review branding and accuracy before external decks. Generated layouts often need manual polish.",
+    "whenToUse": "Fast internal decks and first-draft storytelling slides.",
+    "alternatives": "PowerPoint/Google Slides for brand-locked client deliveries.",
+    "costNote": "Freemium; paid for higher export limits and branding controls.",
+    "securityTip": "Strip confidential metrics before uploading source material.",
+    "approvedModels": [
+      "GPT"
+    ]
   },
   {
     "id": "AIT-020",
     "name": "OpenHands",
-    "category": "AI Agent",
+    "category": "AI Coding",
     "subcategory": "CLI Tool",
     "pricing": "Open Source",
     "status": "Planned",
@@ -548,12 +542,22 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Queued autonomous coding agent. Revisit after Cursor and Antigravity capacity is stable."
+    "notes": "Queued autonomous coding agent. Revisit after Cursor and Antigravity capacity is stable.",
+    "limitations": "Autonomous coding agents can change repos aggressively—use sandboxes and review every diff.",
+    "whenToUse": "Sandboxed end-to-end coding agent experiments.",
+    "alternatives": "Cursor/Antigravity for daily coding.",
+    "costNote": "Open source; model API and sandbox compute costs apply.",
+    "securityTip": "Run only in isolated environments. Review every diff before merge.",
+    "approvedModels": [
+      "Claude",
+      "GPT",
+      "DeepSeek"
+    ]
   },
   {
     "id": "AIT-021",
     "name": "Browser Use",
-    "category": "Browser Automation",
+    "category": "Scraping & browser",
     "subcategory": "Browser Agent",
     "pricing": "Open Source",
     "status": "Testing",
@@ -575,7 +579,17 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "High fit for Python browser automation and agent-driven scraping. Active test candidate with Playwright under the hood."
+    "notes": "High fit for Python browser automation and agent-driven scraping. Active test candidate with Playwright under the hood.",
+    "limitations": "Scripted browsers can break on site changes and may violate site ToS—use responsibly on approved targets.",
+    "whenToUse": "Python agent-driven browser automation and scraping prototypes.",
+    "alternatives": "Firecrawl/Crawl4AI for content extraction; Apify for managed actors.",
+    "costNote": "Open source; you pay for browsers, proxies, and model calls.",
+    "securityTip": "Only automate approved targets. Respect ToS, rate limits, and credentials hygiene.",
+    "approvedModels": [
+      "GPT",
+      "Claude",
+      "Gemini"
+    ]
   },
   {
     "id": "AIT-022",
@@ -602,12 +616,22 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-07-07",
     "lastReviewed": "2026-08-03",
-    "notes": "Core agentic coding platform already used in delivery for vibe coding and accelerated development."
+    "notes": "Core agentic coding platform already used in delivery for vibe coding and accelerated development.",
+    "limitations": "Fast agentic coding still needs human review. Confirm what data leaves the machine under current settings.",
+    "whenToUse": "Agentic coding and accelerated development already used in delivery.",
+    "alternatives": "Cursor for IDE-centric work; OpenHands for open-source agent sandboxes.",
+    "costNote": "Free preview tiers may change—confirm current Google licensing for the team.",
+    "securityTip": "Understand which code/context is sent to cloud models under your settings.",
+    "approvedModels": [
+      "Gemini",
+      "Claude",
+      "GPT"
+    ]
   },
   {
     "id": "AIT-023",
     "name": "Firecrawl",
-    "category": "Browser Automation",
+    "category": "Scraping & browser",
     "subcategory": "API Platform",
     "pricing": "Freemium",
     "status": "Testing",
@@ -631,12 +655,18 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "Strong scraping-to-RAG fit. Testing as a cleaner path than brittle custom parsers for LLM-ready web content."
+    "notes": "Strong scraping-to-RAG fit. Testing as a cleaner path than brittle custom parsers for LLM-ready web content.",
+    "limitations": "Scraping targets must be legally/contractually allowed. Output still needs cleaning before RAG use.",
+    "whenToUse": "Turning allowed websites into clean markdown/JSON for RAG and agents.",
+    "alternatives": "Crawl4AI for in-house Python crawls; Apify for managed scrapers.",
+    "costNote": "Freemium API credits; paid plans for production volume.",
+    "securityTip": "Scrape only permitted sources. Do not store sensitive crawled PII without a plan.",
+    "approvedModels": []
   },
   {
     "id": "AIT-024",
     "name": "Apify",
-    "category": "Browser Automation",
+    "category": "Scraping & browser",
     "subcategory": "Cloud",
     "pricing": "Freemium",
     "status": "Researching",
@@ -658,12 +688,18 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "Evaluating managed scraping actors for ecommerce monitoring and client crawl projects."
+    "notes": "Evaluating managed scraping actors for ecommerce monitoring and client crawl projects.",
+    "limitations": "Actor costs and site ToS apply. Validate scraped data quality before client delivery.",
+    "whenToUse": "Managed scraping actors for ecommerce monitoring and scheduled crawls.",
+    "alternatives": "Firecrawl/Crawl4AI when you want tighter in-house control.",
+    "costNote": "Freemium then usage-based actor/compute pricing.",
+    "securityTip": "Store API tokens in secrets managers. Validate actor permissions and output retention.",
+    "approvedModels": []
   },
   {
     "id": "AIT-025",
     "name": "Crawl4AI",
-    "category": "Browser Automation",
+    "category": "Scraping & browser",
     "subcategory": "CLI Tool",
     "pricing": "Open Source",
     "status": "Testing",
@@ -686,12 +722,18 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "Python-native LLM crawler. Testing as an in-house companion to Browser Use for RAG-ready extraction."
+    "notes": "Python-native LLM crawler. Testing as an in-house companion to Browser Use for RAG-ready extraction.",
+    "limitations": "Self-managed crawlers need rate limits and target approval. Not a turnkey compliance solution.",
+    "whenToUse": "Python-native LLM-ready crawling inside your own pipelines.",
+    "alternatives": "Firecrawl for hosted extraction; Browser Use when interaction is required.",
+    "costNote": "Open source; hosting/proxy/model costs are yours.",
+    "securityTip": "Enforce allowlists, rate limits, and robots/ToS policy in code reviews.",
+    "approvedModels": []
   },
   {
     "id": "AIT-026",
     "name": "Ollama",
-    "category": "LLM",
+    "category": "LLM / Assistants",
     "subcategory": "Self Hosted",
     "pricing": "Open Source",
     "status": "Testing",
@@ -715,12 +757,23 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "Testing local/private models when data should stay on-device. Not a quality replacement for Claude/ChatGPT."
+    "notes": "Testing local/private models when data should stay on-device. Not a quality replacement for Claude/ChatGPT.",
+    "limitations": "Local model quality lags top cloud assistants. Still protect devices that hold sensitive prompts/files.",
+    "whenToUse": "Local/private model experiments when data should stay on-device.",
+    "alternatives": "Cloud ChatGPT/Claude for higher quality; approved private endpoints if available.",
+    "costNote": "Free software; you provide GPU/CPU hardware.",
+    "securityTip": "Secure the workstation. Local does not mean risk-free if disks or shares are exposed.",
+    "approvedModels": [
+      "Llama",
+      "Mistral",
+      "Qwen",
+      "DeepSeek"
+    ]
   },
   {
     "id": "AIT-027",
     "name": "Power BI Copilot",
-    "category": "Data Analytics",
+    "category": "Data & BI",
     "subcategory": "Data Visualization",
     "pricing": "Paid",
     "status": "Testing",
@@ -743,12 +796,20 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "High relevance for DCS Power BI delivery. Confirm Fabric/Copilot licensing before promising on client projects."
+    "notes": "High relevance for DCS Power BI delivery. Confirm Fabric/Copilot licensing before promising on client projects.",
+    "limitations": "Needs correct Fabric/Copilot licensing. Always validate DAX and numbers before publishing.",
+    "whenToUse": "Natural-language report help, DAX assistance, and narrative summaries in Power BI.",
+    "alternatives": "Julius for ad hoc files; standard Power BI authoring for governed releases.",
+    "costNote": "Requires qualifying Fabric/Power BI Copilot capacity—confirm before promising clients.",
+    "securityTip": "Respect dataset RLS and tenant settings. Validate every generated measure.",
+    "approvedModels": [
+      "GPT"
+    ]
   },
   {
     "id": "AIT-028",
     "name": "Dify",
-    "category": "AI Agent",
+    "category": "Agents & automation",
     "subcategory": "Self Hosted",
     "pricing": "Open Source",
     "status": "Planned",
@@ -772,38 +833,24 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "Queued for client RAG demos and internal knowledge bots. Prefer after Firecrawl/Ollama path is clearer; self-host when needed."
-  },
-  {
-    "id": "AIT-029",
-    "name": "Aider",
-    "category": "AI Coding",
-    "subcategory": "CLI Tool",
-    "pricing": "Open Source",
-    "status": "Researching",
-    "url": "https://aider.chat",
-    "description": "Terminal-based AI pair programmer that edits repos, commits changes, and works with your existing Git workflow.",
-    "platform": [
-      "CLI"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Coding",
-      "Debugging",
-      "Code Review"
-    ],
-    "learningCurve": "Medium",
-    "priority": "Low",
-    "dataClassification": "Internal",
-    "owner": "Anshu Jain",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Optional terminal pair-programmer. Compare lightly against Cursor/OpenHands; not a near-term priority."
+    "notes": "Queued for client RAG demos and internal knowledge bots. Prefer after Firecrawl/Ollama path is clearer; self-host when needed.",
+    "limitations": "Self-hosted RAG needs security hardening. Poor chunking/sources produce confident wrong answers.",
+    "whenToUse": "Building self-hosted RAG chatbots and agent demos for clients or internal knowledge.",
+    "alternatives": "NotebookLM for quick doc Q&A; custom app stacks when you need full control.",
+    "costNote": "Open source core; cloud Dify and model APIs are paid.",
+    "securityTip": "Harden the host, auth, and document store before any non-Internal data.",
+    "approvedModels": [
+      "GPT",
+      "Claude",
+      "Gemini",
+      "Llama",
+      "Mistral"
+    ]
   },
   {
     "id": "AIT-030",
     "name": "v0",
-    "category": "UI Generation",
+    "category": "AI Coding",
     "subcategory": "Cloud",
     "pricing": "Freemium",
     "status": "Planned",
@@ -824,44 +871,24 @@ const TOOLS = [
     "owner": "Anshu Jain",
     "dateAdded": "2026-08-03",
     "lastReviewed": "2026-08-03",
-    "notes": "Queued for fast React/Next UI prototypes and client handoff. Compare with Google Stitch."
+    "notes": "Queued for fast React/Next UI prototypes and client handoff. Keep exports for React/Next prototypes.",
+    "limitations": "Generated UI is a starting point, not production-ready by default. Check accessibility and brand fit.",
+    "whenToUse": "Fast React/Next UI prototypes and client mock handoffs.",
+    "alternatives": "hand-coded components for production polish.",
+    "costNote": "Freemium Vercel credits; paid for higher generation volume.",
+    "securityTip": "Do not paste proprietary design systems or customer PII into prompts.",
+    "approvedModels": [
+      "GPT"
+    ]
   }
 ];
 const CATEGORIES = [
-  "LLM",
+  "LLM / Assistants",
   "AI Coding",
-  "AI Agent",
-  "Automation",
-  "Workflow Automation",
-  "Browser Automation",
-  "Research",
-  "Search",
-  "Data Analytics",
-  "SQL",
-  "Database",
-  "Documentation",
-  "Writing",
-  "Productivity",
-  "Presentation",
-  "Meeting Assistant",
-  "Voice AI",
-  "Image Generation",
-  "Video Generation",
-  "UI Generation",
-  "Design",
-  "OCR",
-  "Translation",
-  "Email",
-  "PDF",
-  "Spreadsheet",
-  "Power BI",
-  "MCP",
-  "API",
-  "CLI",
-  "DevOps",
-  "Testing",
-  "Security",
-  "Education",
+  "Agents & automation",
+  "Scraping & browser",
+  "Data & BI",
+  "Creative & productivity",
   "Other"
 ];
 const COMPARISONS = [
@@ -884,16 +911,6 @@ const COMPARISONS = [
     ],
     "winner": "Perplexity",
     "notes": "Best citations"
-  },
-  {
-    "feature": "Image Generation",
-    "tools": [
-      "Midjourney",
-      "Gemini",
-      "ChatGPT"
-    ],
-    "winner": "Midjourney",
-    "notes": "Highest visual quality"
   }
 ];
 const EVALUATIONS = {

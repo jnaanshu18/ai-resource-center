@@ -1,38 +1,10 @@
 List Name,Value
-Categories,LLM
+Categories,LLM / Assistants
 Categories,AI Coding
-Categories,AI Agent
-Categories,Automation
-Categories,Workflow Automation
-Categories,Browser Automation
-Categories,Research
-Categories,Search
-Categories,Data Analytics
-Categories,SQL
-Categories,Database
-Categories,Documentation
-Categories,Writing
-Categories,Productivity
-Categories,Presentation
-Categories,Meeting Assistant
-Categories,Voice AI
-Categories,Image Generation
-Categories,Video Generation
-Categories,UI Generation
-Categories,Design
-Categories,OCR
-Categories,Translation
-Categories,Email
-Categories,PDF
-Categories,Spreadsheet
-Categories,Power BI
-Categories,MCP
-Categories,API
-Categories,CLI
-Categories,DevOps
-Categories,Testing
-Categories,Security
-Categories,Education
+Categories,Agents & automation
+Categories,Scraping & browser
+Categories,Data & BI
+Categories,Creative & productivity
 Categories,Other
 Sub Categories,Chatbot
 Sub Categories,Reasoning

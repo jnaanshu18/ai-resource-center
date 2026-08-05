@@ -30,7 +30,8 @@
         One source of truth so the team stops re-evaluating the same tool twice.
       </p>
       <div class="hero__cta-wrap">
-        <button type="button" class="btn-base btn-primary btn-lg" id="openSuggestHero">Suggest a tool</button>
+        <button type="button" class="btn-base btn-primary btn-lg" id="browseToolsHero">Browse tools</button>
+        <button type="button" class="btn-base btn-secondary btn-lg" id="openSuggestHero">Suggest a tool</button>
       </div>
       <div class="hero__proof">
         <p class="text-caption">Built for teams that need proof, not theatre</p>
@@ -50,11 +51,11 @@
   <div class="content">
     <div class="stats" id="stats" aria-label="Portfolio summary"></div>
 
-  <section class="controls" aria-label="Filter tools">
+  <section class="controls" id="find-tools" aria-label="Filter tools">
     <div class="controls__header">
       <div>
         <h2 class="controls__title">Find the right tool</h2>
-        <p class="controls__desc">Search or filter by status. Open more filters for category and pricing.</p>
+        <p class="controls__desc">Browse the full directory, or narrow by status and category. New joiners: try Start here.</p>
       </div>
     </div>
 
@@ -64,10 +65,12 @@
         <input type="text" id="searchInput" placeholder="Search tools, categories, notes…" autocomplete="off">
       </div>
       <select id="sortSelect" aria-label="Sort by">
-        <option value="name">Sort: Name (A–Z)</option>
-        <option value="status">Sort: Status</option>
-        <option value="category">Sort: Category</option>
-        <option value="pricing">Sort: Pricing</option>
+        <option value="name">Name (A–Z)</option>
+        <option value="priority">Priority</option>
+        <option value="reviewed">Last reviewed</option>
+        <option value="status">Status</option>
+        <option value="category">Category</option>
+        <option value="pricing">Pricing</option>
       </select>
       <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Compare</button>
     </div>
@@ -78,10 +81,10 @@
   <section aria-label="Tool results">
     <div class="resultbar">
       <span id="resultCount"></span>
-      <button id="clearFilters" class="linkbtn" hidden>clear filters</button>
+      <button id="clearFilters" class="linkbtn" hidden>Clear filters</button>
     </div>
     <div class="grid" id="toolGrid"></div>
-    <p class="empty" id="emptyState" hidden>No tools match those filters — <button id="emptyClear" class="linkbtn">clear them</button>.</p>
+    <p class="empty" id="emptyState" hidden>No tools match those filters — <button id="emptyClear" class="linkbtn">Clear them</button>.</p>
   </section>
   </div>
 </main>
@@ -90,8 +93,8 @@
   <div class="compare-bar__inner">
     <span class="compare-bar__text" id="compareBarText">Select 2–3 tools to compare</span>
     <div class="compare-bar__actions">
-      <button type="button" class="linkbtn" id="compareClear">clear</button>
-      <button type="button" class="btn-base btn-primary" id="compareOpen" disabled>Compare selected</button>
+      <button type="button" class="linkbtn" id="compareClear">Clear</button>
+      <button type="button" class="compare-bar__btn" id="compareOpen" disabled>Compare selected</button>
     </div>
   </div>
 </div>
@@ -117,63 +120,109 @@
 
     <div id="suggestFormWrap">
       <h2 class="modal__name" id="suggestTitle">Suggest a tool</h2>
-      <p class="modal__desc">Tell us what you're using or want the team to evaluate. A manager reviews and validates every suggestion before it's added to the directory.</p>
+      <p class="modal__desc">Draft a suggestion below. Nothing is auto-saved — you’ll get a GitHub issue draft (or copy) to send for manager review.</p>
 
-      <form id="suggestForm">
+      <form id="suggestForm" novalidate>
         <div class="field-row">
-          <div class="field">
+          <div class="field" data-field="name">
             <label for="s_name">Tool name <span class="req">*</span></label>
-            <input type="text" id="s_name" required placeholder="e.g. Linear">
+            <input type="text" id="s_name" name="name" maxlength="80" autocomplete="off" placeholder="e.g. Cursor" aria-describedby="s_name_similar s_name_err">
+            <p class="field-warn" id="s_name_similar" hidden></p>
+            <p class="field-error" id="s_name_err" hidden></p>
           </div>
-          <div class="field">
-            <label for="s_category">Category</label>
-            <select id="s_category">
+          <div class="field" data-field="category">
+            <label for="s_category">Category <span class="req">*</span></label>
+            <select id="s_category" name="category" aria-describedby="s_category_err">
               <option value="">Select a category</option>
             </select>
+            <p class="field-error" id="s_category_err" hidden></p>
           </div>
         </div>
 
         <div class="field-row">
-          <div class="field">
-            <label for="s_url">Website / URL</label>
-            <input type="url" id="s_url" placeholder="https://…">
+          <div class="field" data-field="pricing">
+            <label for="s_pricing">Pricing model</label>
+            <select id="s_pricing" name="pricing" aria-describedby="s_pricing_err">
+              <option value="">Optional</option>
+            </select>
+            <p class="field-error" id="s_pricing_err" hidden></p>
           </div>
-          <div class="field">
+          <div class="field" data-field="urgency">
+            <label for="s_urgency">How urgent?</label>
+            <select id="s_urgency" name="urgency" aria-describedby="s_urgency_err">
+              <option value="">Optional</option>
+              <option value="Exploring / learning">Exploring / learning</option>
+              <option value="Nice to have">Nice to have</option>
+              <option value="Useful this quarter">Useful this quarter</option>
+              <option value="Needed for a project soon">Needed for a project soon</option>
+              <option value="Blocking work now">Blocking work now</option>
+            </select>
+            <p class="field-error" id="s_urgency_err" hidden></p>
+          </div>
+        </div>
+
+        <div class="field" data-field="url">
+          <label for="s_url">Website</label>
+          <input type="url" id="s_url" name="url" maxlength="300" placeholder="https://example.com" aria-describedby="s_url_err">
+          <p class="field-error" id="s_url_err" hidden></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field" data-field="submitter">
             <label for="s_submitter">Your name</label>
-            <input type="text" id="s_submitter" placeholder="Optional">
+            <input type="text" id="s_submitter" name="submitter" maxlength="60" autocomplete="name" placeholder="Optional" aria-describedby="s_submitter_err">
+            <p class="field-error" id="s_submitter_err" hidden></p>
+          </div>
+          <div class="field" data-field="dept">
+            <label for="s_dept">Department</label>
+            <select id="s_dept" name="dept" aria-describedby="s_dept_err">
+              <option value="">Optional</option>
+            </select>
+            <p class="field-error" id="s_dept_err" hidden></p>
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" data-field="desc">
           <label for="s_desc">What does it do? <span class="req">*</span></label>
-          <textarea id="s_desc" rows="3" required placeholder="Short description of what it's for"></textarea>
+          <textarea id="s_desc" name="desc" rows="2" maxlength="500" placeholder="Short description of what it's for" aria-describedby="s_desc_err s_sensitive_warn"></textarea>
+          <div class="field-meta">
+            <span class="field-count" id="s_desc_count">0 / 500</span>
+          </div>
+          <p class="field-error" id="s_desc_err" hidden></p>
         </div>
 
-        <div class="field">
+        <div class="field" data-field="reason">
           <label for="s_reason">Why should we evaluate it?</label>
-          <textarea id="s_reason" rows="3" placeholder="Problem it solves, what you tried, expected impact…"></textarea>
+          <textarea id="s_reason" name="reason" rows="2" maxlength="800" placeholder="Problem it solves, what you tried, expected impact…" aria-describedby="s_reason_err s_sensitive_warn"></textarea>
+          <div class="field-meta">
+            <span class="field-count" id="s_reason_count">0 / 800</span>
+          </div>
+          <p class="field-error" id="s_reason_err" hidden></p>
         </div>
 
-        <div class="field">
-          <label for="s_dept">Department</label>
-          <input type="text" id="s_dept" placeholder="Optional">
-        </div>
+        <p class="field-warn" id="s_sensitive_warn" hidden></p>
 
-        <button type="submit" class="modal__cta modal__cta--wide" id="suggestSubmit">Submit for review</button>
-        <p class="field-note">Submissions aren't connected yet — this is a UI preview. Nothing is sent or saved when you submit right now.</p>
+        <p class="field-error field-error--form" id="suggestFormErr" hidden></p>
+        <button type="submit" class="modal__cta modal__cta--wide" id="suggestSubmit">Create suggestion draft</button>
+        <p class="field-note">Opens a GitHub issue draft in the DCS-Resources repo (or copy the text if the popup is blocked). A manager still validates before anything is added to the directory.</p>
       </form>
     </div>
 
     <div id="suggestSuccess" hidden>
-      <h2 class="modal__name">Thanks — got it.</h2>
-      <p class="modal__desc">Your suggestion is queued for a manager to review, test, and validate. Once approved, it'll show up in the directory automatically.</p>
-      <button type="button" class="modal__cta modal__cta--wide" id="suggestAnother">Suggest another tool</button>
+      <h2 class="modal__name">Draft ready</h2>
+      <p class="modal__desc" id="suggestSuccessDesc">Your suggestion draft is ready. Open the GitHub issue to submit it for review, or copy the text and send it another way.</p>
+      <div class="suggest-draft-actions">
+        <a class="modal__cta modal__cta--wide" id="suggestIssueLink" href="#" target="_blank" rel="noopener">Open GitHub issue draft</a>
+        <button type="button" class="modal__cta modal__cta--secondary modal__cta--wide" id="suggestCopyDraft">Copy draft text</button>
+        <button type="button" class="linkbtn" id="suggestAnother">Edit draft again</button>
+      </div>
+      <p class="field-note" id="suggestCopyStatus" hidden></p>
     </div>
   </div>
 </div>
 
 <footer>
-  <p>Data lives in <code>/data/ai_tools_directory.csv</code> on the main branch. Update the sheet or CSV, regenerate <code>docs/data.js</code>, and push — the site rebuilds itself, nothing to redeploy by hand.</p>
+  <p>Internal AI directory for Daily Code Solutions. Data: <code>data/ai_tools_directory.csv</code> · regenerate <code>docs/data.js</code> after edits.</p>
 </footer>
 
 <script src="data.js"></script>

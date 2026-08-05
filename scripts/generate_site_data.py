@@ -59,6 +59,12 @@ def load_tools():
                     "dateAdded": row.get("Date Added") or "",
                     "lastReviewed": row.get("Last Reviewed") or "",
                     "notes": row.get("Notes") or "",
+                    "limitations": row.get("Limitations") or "",
+                    "whenToUse": row.get("When to Use") or "",
+                    "alternatives": row.get("Alternatives") or "",
+                    "costNote": row.get("Cost Note") or "",
+                    "securityTip": row.get("Security Tip") or "",
+                    "approvedModels": split_list(row.get("Approved Models")),
                 }
             )
         return tools

@@ -1,4 +1,3 @@
 Feature,Tool A,Tool B,Tool C,Winner,Notes
 Code Completion,GitHub Copilot,Cursor,Claude,Cursor,Best project context
 Research,Perplexity,ChatGPT,Gemini,Perplexity,Best citations
-Image Generation,Midjourney,Gemini,ChatGPT,Midjourney,Highest visual quality

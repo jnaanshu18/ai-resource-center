@@ -1,22 +1,10 @@
 List Name,Value
-Tool Category,AI Agent
+Tool Category,LLM / Assistants
 Tool Category,AI Coding
-Tool Category,AI Chatbot / LLM
-Tool Category,RAG / Knowledge Management
-Tool Category,Browser Automation
-Tool Category,Workflow Automation
-Tool Category,Web Scraping
-Tool Category,ETL / ELT
-Tool Category,Data Engineering
-Tool Category,Data Analytics
-Tool Category,Business Intelligence / Power BI
-Tool Category,Ecommerce AI
-Tool Category,Document AI / OCR
-Tool Category,QA / Testing
-Tool Category,DevOps
-Tool Category,Security
-Tool Category,Design / UI Generation
-Tool Category,Voice AI
+Tool Category,Agents & automation
+Tool Category,Scraping & browser
+Tool Category,Data & BI
+Tool Category,Creative & productivity
 Lifecycle Status,Proposed
 Lifecycle Status,Researching
 Lifecycle Status,Testing
