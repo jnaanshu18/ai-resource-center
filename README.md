@@ -15,7 +15,6 @@ This project is a Git-friendly export of the "AI Resource Center — DCS AI Capa
 ```
 ai-resource-center/
 ├── README.md
-├── SCORECARD.md
 ├── data/
 │   ├── ai_tools_directory.csv     # Main tool inventory
 │   ├── tool_evaluation.csv
@@ -25,12 +24,7 @@ ai-resource-center/
 │   ├── team_use_cases.csv
 │   ├── prompt_library.csv
 │   ├── learning_resources.csv
-│   ├── ai_news_releases.csv
-│   ├── ideas_backlog.csv
-│   ├── contributors.csv
-│   ├── dashboard.csv
-│   ├── reference_lists.csv
-│   └── dcs_reference_lists.csv
+│   └── reference_lists.csv        # Controlled lists (categories, etc.)
 ├── scripts/generate_site_data.py  # CSV → docs/data.js
 └── docs/                          # GitHub Pages site
 ```
