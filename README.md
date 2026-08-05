@@ -1,80 +1,145 @@
-# AI Resource Center — DCS AI Capability Draft
+# DCS AI Resource Center
 
-A centralized repository to discover, evaluate, compare, and share AI tools, prompts, workflows, learning resources, and team experiences.
+Internal hub for Daily Code Solutions to discover **which AI tools we trust**, copy useful **prompts**, follow **playbooks**, and stop re-evaluating the same options twice.
 
-**Objective:** improve AI adoption, reduce duplicate research, and help team members choose the right AI solution.
+**Live site:** https://daily-code-solutions.github.io/DCS-Resources/
 
-**Focus areas (Daily Code Solutions — AI Capability & Intelligence Center):** Python engineering • Ecommerce • Scraping & automation • ETL/ELT • Data analytics & Power BI • AI agents & RAG
+**Owner:** Anshu Jain
 
-**Repository Owner:** Anshu Jain
+**Focus areas:** Python engineering · Ecommerce · Scraping & automation · ETL/ELT · Data analytics & Power BI · AI agents & RAG
 
-This project is a Git-friendly export of the "AI Resource Center — DCS AI Capability Draft" Google Sheet (each tab exported to CSV under `data/`), so it can be versioned, diffed, and reviewed like code.
+---
 
-## Structure
+## What’s on the site
+
+| Section | Purpose |
+|---|---|
+| **Home** | Job chooser (“what do you need to do?”), Start here shortlist, Tool of the week |
+| **Directory** | Full tool inventory — search, status/category filters, compare 2–3 tools, detail modal |
+| **Compare** | When-to-use / skip-when decision guides + documented head-to-head winners |
+| **Prompts** | Searchable prompt library, role quick filters, Before production checklist, copy prompt / copy link |
+| **Playbooks** | Team use cases + learning resources (search + role filters) |
+| **Contribute** | Suggest a tool or share a win (creates a review draft) |
+
+**Deep links (examples):**
+- `?view=home|directory|guides|prompts|playbooks|contribute`
+- `?tool=Cursor` or `?tool=AIT-005` — open a tool detail
+- `?starter=1` — Directory Start here shortlist
+- `?view=prompts&pid=PRM-013` — jump to a prompt
+- `?view=prompts&pq=production` — prompt keyword search
+- `?view=playbooks&bq=report` — playbook search
+- `?view=contribute&tab=win` — Share a win form
+
+Stack: plain HTML / CSS / vanilla JS in `docs/` (no framework). Data is generated into `docs/data.js` from CSVs.
+
+---
+
+## Repository structure
 
 ```
 ai-resource-center/
 ├── README.md
-├── data/
-│   ├── ai_tools_directory.csv     # Main tool inventory
-│   ├── tool_evaluation.csv
+├── .github/workflows/deploy.yml   # Regenerate data.js + GitHub Pages deploy
+├── data/                          # Source of truth (edit these)
+│   ├── ai_tools_directory.csv     # Tool inventory
+│   ├── tool_evaluation.csv        # Optional scores / notes per tool
 │   ├── tool_comparison.csv        # Head-to-head winners
-│   ├── chooser_jobs.csv           # Home “what do you need?” jobs
-│   ├── decision_guides.csv        # When to use / skip guides
-│   ├── team_use_cases.csv
-│   ├── prompt_library.csv
-│   ├── learning_resources.csv
-│   └── reference_lists.csv        # Controlled lists (categories, etc.)
-├── scripts/generate_site_data.py  # CSV → docs/data.js
-└── docs/                          # GitHub Pages site
+│   ├── chooser_jobs.csv           # Home job → tool recommendations
+│   ├── decision_guides.csv        # Compare tab use-when / skip-when
+│   ├── prompt_library.csv         # Prompt library
+│   ├── team_use_cases.csv         # Playbooks — use cases
+│   ├── learning_resources.csv     # Playbooks — learning links
+│   └── reference_lists.csv        # Controlled lists (e.g. categories)
+├── scripts/
+│   └── generate_site_data.py      # CSV → docs/data.js
+└── docs/                          # Published site (GitHub Pages)
+    ├── index.html
+    ├── style.css
+    ├── script.js
+    ├── data.js                    # Auto-generated — do not edit by hand
+    └── shared/                    # Temporary DCS header chrome
 ```
 
+### Current data snapshot (from generator)
+
+| Source | Count |
+|---|---|
+| Tools | 24 |
+| Categories | 7 |
+| Comparisons | 7 |
+| Evaluations | 9 |
+| Chooser jobs | 10 |
+| Decision guides | 3 |
+| Prompts | 16 |
+| Use cases | 8 |
+| Learning resources | 9 |
+
+---
+
 ## Decision path
-Research → Test with safe data → Pilot → Measure impact → Adopt, extend, reject, or archive.
+
+Research → Test with safe data → Pilot → Measure impact → **Adopt**, extend, reject, or archive.
+
+### Tool status guide
+
+| Status | Meaning |
+|---|---|
+| **Planned** | On the radar, not started |
+| **Researching** | Exploring docs, demos, alternatives |
+| **Testing** | Hands-on trial |
+| **Pilot** | Small-group / time-boxed trial |
+| **Adopted** | Approved for team use |
+| **Production** | Core daily workflow tool |
+| **Deprecated** | Phasing out — don’t start new work |
+| **Archived** | No longer used — kept for history |
+| **Rejected** | Evaluated and declined |
+
+---
 
 ## Data safety
-Never use client secrets, API keys, production data, payment data, PII, or confidential client code in unapproved AI tools.
 
-## Tool Status Guide
-- **Planned** — on the radar, not started yet.
-- **Researching** — exploring docs, demos, and alternatives.
-- **Testing** — hands-on trial by team members.
-- **Pilot** — controlled trial with a small group or time box.
-- **Adopted** — approved for team use.
-- **Production** — core, supported part of daily workflows.
-- **Deprecated** — phasing out; do not start new work.
-- **Archived** — no longer used; kept for history.
-- **Rejected** — evaluated and decided not to use.
+Never paste client secrets, API keys, production data, payment data, PII, or confidential client code into unapproved AI tools or into Contribute drafts.
 
-## Updating this repo
-The Google Sheet remains the live collaborative source for the team. To sync changes into this repo:
-1. Update the relevant tab(s) in the Google Sheet.
-2. Export the updated tab(s) to CSV and replace the corresponding file(s) in `data/`.
-3. Commit with a message describing what changed (e.g. `git commit -m "Update tool status: NotebookLM -> Adopted"`).
+---
 
-## Website
+## Updating content
 
-`docs/` is a multi-section internal hub (plain HTML/CSS/JS, no framework):
+1. Edit the relevant file(s) under `data/` (or re-export from the Google Sheet and replace the CSV).
+2. Push to `main`.
+3. GitHub Actions runs `scripts/generate_site_data.py`, updates `docs/data.js` if needed, and deploys `docs/` to Pages.
 
-- **Home** — job chooser, Start here shortlist, Tool of the week
-- **Directory** — search/filter/compare the full tool inventory
-- **Compare** — when-to-use guides + documented head-to-heads
-- **Prompts** — copyable team prompt library
-- **Playbooks** — use cases + learning by role
-- **Contribute** — suggest a tool or share a win (GitHub issue drafts)
+**Manual regenerate (optional):**
 
-**Setup (one-time):**
-1. On GitHub: repo → **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-2. Push to `main`. The included workflow (`.github/workflows/deploy.yml`) regenerates `docs/data.js` from the CSV and publishes the site automatically.
-3. Your site will be live at `https://daily-code-solutions.github.io/DCS-Resources/`.
+```bash
+python scripts/generate_site_data.py
+```
 
-**Updating the data that employees see:**
-1. Edit CSVs under `data/` (tools, prompts, use cases, learning, chooser jobs, decision guides, comparisons) or re-export from the Google Sheet, then push to `main`.
-2. That's it — the GitHub Action regenerates `docs/data.js` and redeploys automatically. Nothing to run locally.
+**Local preview:** open `docs/index.html` via any static file server (or open the file in a browser).
 
-To regenerate manually instead: `python3 scripts/generate_site_data.py`.
+### Which CSV feeds what
 
-Deep links: `?view=home|directory|guides|prompts|playbooks|contribute`, plus existing `?tool=`, `?starter=1`, filters, and `?tab=win` on Contribute.
+| CSV | Powers |
+|---|---|
+| `ai_tools_directory.csv` | Directory, Home shortlist / Tool of the week, tool modals |
+| `chooser_jobs.csv` | Home job chooser |
+| `decision_guides.csv` | Compare — decision guides |
+| `tool_comparison.csv` | Compare — head-to-heads + Directory compare notes |
+| `tool_evaluation.csv` | Ratings / eval notes on tool details |
+| `prompt_library.csv` | Prompts tab |
+| `team_use_cases.csv` | Playbooks — use cases |
+| `learning_resources.csv` | Playbooks — learning |
+| `reference_lists.csv` | Suggest-form categories (and related lists) |
+
+---
+
+## Deploy setup (one-time)
+
+1. GitHub → repo **Settings → Pages → Build and deployment → Source → GitHub Actions**
+2. Push to `main`
+3. Site: https://daily-code-solutions.github.io/DCS-Resources/
+
+---
 
 ## Source
-Exported from Google Sheets: *AI Resource Center — DCS AI Capability Draft*
+
+Content originated from Google Sheets: *AI Resource Center — DCS AI Capability Draft*. The CSVs under `data/` are the versioned source used by this repo and the live site.
