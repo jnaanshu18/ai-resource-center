@@ -900,7 +900,7 @@ const COMPARISONS = [
       "Claude"
     ],
     "winner": "Cursor",
-    "notes": "Best project context"
+    "notes": "Best project context for multi-file work"
   },
   {
     "feature": "Research",
@@ -910,7 +910,57 @@ const COMPARISONS = [
       "Gemini"
     ],
     "winner": "Perplexity",
-    "notes": "Best citations"
+    "notes": "Best citations for open-web fact-finding"
+  },
+  {
+    "feature": "Everyday writing",
+    "tools": [
+      "ChatGPT",
+      "Claude",
+      "Gemini"
+    ],
+    "winner": "ChatGPT",
+    "notes": "Fast default for drafts and brainstorming"
+  },
+  {
+    "feature": "Long documents",
+    "tools": [
+      "Claude",
+      "ChatGPT",
+      "Gemini"
+    ],
+    "winner": "Claude",
+    "notes": "Strongest long-context careful analysis"
+  },
+  {
+    "feature": "Workspace multimodal",
+    "tools": [
+      "Gemini",
+      "ChatGPT",
+      "Claude"
+    ],
+    "winner": "Gemini",
+    "notes": "Best fit when work lives in Google Workspace"
+  },
+  {
+    "feature": "Agentic coding",
+    "tools": [
+      "Antigravity",
+      "Cursor",
+      "OpenHands"
+    ],
+    "winner": "Antigravity",
+    "notes": "Already used in delivery for agent-first spikes"
+  },
+  {
+    "feature": "Scraping to RAG",
+    "tools": [
+      "Firecrawl",
+      "Crawl4AI",
+      "Browser Use"
+    ],
+    "winner": "Firecrawl",
+    "notes": "Clean hosted path to markdown/JSON for LLMs"
   }
 ];
 const EVALUATIONS = {
@@ -987,3 +1037,608 @@ const EVALUATIONS = {
     "evaluator": ""
   }
 };
+const CHOOSER_JOBS = [
+  {
+    "id": "JOB-001",
+    "label": "Research with citations",
+    "description": "Find current facts and sources before you write.",
+    "tools": [
+      "Perplexity"
+    ],
+    "tip": "Best first stop when sources matter — still verify citations."
+  },
+  {
+    "id": "JOB-002",
+    "label": "Everyday writing & brainstorming",
+    "description": "Drafts emails notes ideas and quick Q&A.",
+    "tools": [
+      "ChatGPT"
+    ],
+    "tip": "Default general assistant for everyday work."
+  },
+  {
+    "id": "JOB-003",
+    "label": "Long docs & careful analysis",
+    "description": "Reason over long documents reports or complex briefs.",
+    "tools": [
+      "Claude"
+    ],
+    "tip": "Preferred for long context careful writing and code review."
+  },
+  {
+    "id": "JOB-004",
+    "label": "Google Workspace & multimodal",
+    "description": "Work inside Docs Drive Gmail or with images/video.",
+    "tools": [
+      "Gemini"
+    ],
+    "tip": "Use when the work lives in Google Workspace."
+  },
+  {
+    "id": "JOB-005",
+    "label": "Code in our repos",
+    "description": "Multi-file coding refactors and project-aware help.",
+    "tools": [
+      "Cursor",
+      "Antigravity"
+    ],
+    "tip": "Cursor for IDE work; Antigravity for agentic coding sessions."
+  },
+  {
+    "id": "JOB-006",
+    "label": "Scrape or browser automation",
+    "description": "Turn websites into clean data or drive a browser with agents.",
+    "tools": [
+      "Firecrawl",
+      "Crawl4AI",
+      "Browser Use"
+    ],
+    "tip": "Only on approved targets — respect ToS and rate limits."
+  },
+  {
+    "id": "JOB-007",
+    "label": "Analyze data & Power BI",
+    "description": "Ad hoc CSV exploration or Power BI report help.",
+    "tools": [
+      "Julius AI",
+      "Power BI Copilot"
+    ],
+    "tip": "Julius for sample/internal files; Power BI Copilot inside Fabric."
+  },
+  {
+    "id": "JOB-008",
+    "label": "Q&A over our documents",
+    "description": "Ask questions grounded in an uploaded doc pack.",
+    "tools": [
+      "NotebookLM"
+    ],
+    "tip": "Do not upload client-confidential files without approval."
+  },
+  {
+    "id": "JOB-009",
+    "label": "Fast first-draft decks",
+    "description": "Generate a first-pass presentation to polish.",
+    "tools": [
+      "Gamma"
+    ],
+    "tip": "Review branding and accuracy before external use."
+  },
+  {
+    "id": "JOB-010",
+    "label": "Automate agents & workflows",
+    "description": "Self-hosted agents across messaging terminal or browser.",
+    "tools": [
+      "OpenClaw",
+      "Hermes Agent"
+    ],
+    "tip": "Lock down channels and keep secrets off unapproved models."
+  }
+];
+const DECISION_GUIDES = [
+  {
+    "id": "GUIDE-001",
+    "title": "Everyday AI assistants",
+    "category": "Assistants",
+    "summary": "Pick ChatGPT, Claude, Gemini, or Perplexity for the job.",
+    "tips": [
+      {
+        "tool": "ChatGPT",
+        "useWhen": "Everyday writing, brainstorming, quick coding help, and general Q&A.",
+        "skipWhen": "When you need citations, very long documents, or Workspace-native workflows.",
+        "order": 1
+      },
+      {
+        "tool": "Claude",
+        "useWhen": "Long-document analysis, careful writing, complex reasoning, and coding reviews.",
+        "skipWhen": "When you mainly need live web citations or quick everyday chat.",
+        "order": 2
+      },
+      {
+        "tool": "Gemini",
+        "useWhen": "Google Workspace workflows, multimodal understanding, and search-linked research.",
+        "skipWhen": "As the team default for writing/reasoning until Workspace data handling is confirmed for client work.",
+        "order": 3
+      },
+      {
+        "tool": "Perplexity",
+        "useWhen": "Fast web research with citations and fact-finding before deeper analysis.",
+        "skipWhen": "When synthesizing your own docs, polishing prose, or deep coding — verify every citation.",
+        "order": 4
+      }
+    ]
+  },
+  {
+    "id": "GUIDE-002",
+    "title": "Coding assistants",
+    "category": "AI Coding",
+    "summary": "Choose the right coding surface for the task.",
+    "tips": [
+      {
+        "tool": "GitHub Copilot",
+        "useWhen": "Inline completions and light pair-programming inside GitHub/IDEs.",
+        "skipWhen": "Multi-file project-aware work — prefer Cursor.",
+        "order": 1
+      },
+      {
+        "tool": "Cursor",
+        "useWhen": "Day-to-day software delivery, refactors, and project-aware coding.",
+        "skipWhen": "When you want a fully agent-first session — try Antigravity.",
+        "order": 2
+      },
+      {
+        "tool": "Antigravity",
+        "useWhen": "Agentic coding and accelerated development already used in delivery.",
+        "skipWhen": "When you need tight IDE-centric control — prefer Cursor; review every agent change.",
+        "order": 3
+      },
+      {
+        "tool": "Claude",
+        "useWhen": "Careful coding reviews and reasoning outside the IDE.",
+        "skipWhen": "As a substitute for Cursor on multi-file repo work.",
+        "order": 4
+      }
+    ]
+  },
+  {
+    "id": "GUIDE-003",
+    "title": "Research & knowledge",
+    "category": "Research",
+    "summary": "Match the research tool to your source of truth.",
+    "tips": [
+      {
+        "tool": "Perplexity",
+        "useWhen": "Open-web discovery and cited fact-finding.",
+        "skipWhen": "Primary research you must verify from originals; confidential briefs.",
+        "order": 1
+      },
+      {
+        "tool": "NotebookLM",
+        "useWhen": "Q&A and briefings grounded in uploaded docs, notes, and source packs.",
+        "skipWhen": "Open-web research; client-confidential uploads without approval.",
+        "order": 2
+      },
+      {
+        "tool": "ChatGPT",
+        "useWhen": "Synthesizing notes into drafts after you already have sources.",
+        "skipWhen": "When citations or live web grounding are required.",
+        "order": 3
+      },
+      {
+        "tool": "Claude",
+        "useWhen": "Deep analysis of long research packs and careful report writing.",
+        "skipWhen": "Quick cited web lookup — start with Perplexity.",
+        "order": 4
+      }
+    ]
+  }
+];
+const PROMPTS = [
+  {
+    "id": "PRM-001",
+    "title": "Meeting summary",
+    "category": "Productivity",
+    "useCase": "Meeting Notes",
+    "text": "Summarize these meeting notes into: (1) decisions, (2) action items with owners and due dates, (3) open questions. Flag anything ambiguous.",
+    "models": [
+      "Claude",
+      "ChatGPT"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-07-07",
+    "role": "Everyone"
+  },
+  {
+    "id": "PRM-002",
+    "title": "Client email draft",
+    "category": "Productivity",
+    "useCase": "Email Writing",
+    "text": "Draft a clear, professional client email. Tone: helpful and direct. Include a short subject line, 3–5 sentence body, and one clear ask or next step. Context: {{context}}",
+    "models": [
+      "ChatGPT",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Everyone"
+  },
+  {
+    "id": "PRM-003",
+    "title": "Code review checklist",
+    "category": "AI Coding",
+    "useCase": "Code Review",
+    "text": "Review this diff like a senior engineer. List: (1) bugs or regressions, (2) security/secrets risks, (3) missing tests, (4) readability issues, (5) suggested fixes. Be specific to line-level changes.",
+    "models": [
+      "Claude",
+      "Cursor"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-004",
+    "title": "Refactor plan",
+    "category": "AI Coding",
+    "useCase": "Coding",
+    "text": "Given this codebase context, propose a safe refactor plan in small PRs. For each step: goal, files touched, risks, and how to verify. Prefer incremental changes over a big rewrite.",
+    "models": [
+      "Cursor",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-005",
+    "title": "Scrape brief",
+    "category": "Scraping & automation",
+    "useCase": "Web Scraping",
+    "text": "Turn this scraping request into a brief: target URLs, fields to extract, rate limits, ToS/robots constraints, output schema (JSON), and failure modes. Do not invent access to blocked pages.",
+    "models": [
+      "ChatGPT",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-006",
+    "title": "Power BI narrative",
+    "category": "Data & BI",
+    "useCase": "Report Writing",
+    "text": "Write a short executive narrative for this Power BI visual/metric set. Cover: what changed, why it might have changed, and 2 questions for the business owner. Do not invent numbers not present in the data.",
+    "models": [
+      "ChatGPT",
+      "Power BI Copilot"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Data"
+  },
+  {
+    "id": "PRM-007",
+    "title": "SQL explore",
+    "category": "Data & BI",
+    "useCase": "SQL",
+    "text": "Given this table schema, propose 3 useful exploratory SQL queries and what each would teach us. Assume read-only access. Flag joins that could explode row counts.",
+    "models": [
+      "ChatGPT",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Data"
+  },
+  {
+    "id": "PRM-008",
+    "title": "Research brief",
+    "category": "Research",
+    "useCase": "Deep Research",
+    "text": "Research {{topic}}. Return: key findings with sources, what is still uncertain, and a recommended next step for our team. Prefer primary sources over blogs.",
+    "models": [
+      "Perplexity"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Everyone"
+  },
+  {
+    "id": "PRM-009",
+    "title": "RAG chunk plan",
+    "category": "AI agents & RAG",
+    "useCase": "Knowledge Management",
+    "text": "Design a chunking and metadata plan for this document set for a RAG chatbot. Include chunk size guidance, metadata fields, and evaluation questions to catch hallucinations.",
+    "models": [
+      "Claude",
+      "ChatGPT"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-010",
+    "title": "Status update",
+    "category": "Productivity",
+    "useCase": "Documentation",
+    "text": "Rewrite these rough notes into a crisp weekly status update: Done / Doing / Blocked / Ask. Max 120 words. No fluff.",
+    "models": [
+      "ChatGPT",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Everyone"
+  },
+  {
+    "id": "PRM-011",
+    "title": "Deck outline",
+    "category": "Creative & productivity",
+    "useCase": "Presentation",
+    "text": "Create a 6-slide outline for {{audience}} about {{topic}}. Each slide: title + 3 bullets max. End with a clear ask.",
+    "models": [
+      "ChatGPT",
+      "Gamma"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Management"
+  },
+  {
+    "id": "PRM-012",
+    "title": "Support reply",
+    "category": "Productivity",
+    "useCase": "Email Writing",
+    "text": "Draft a support reply that acknowledges the issue, explains the next step, and sets expectation on timing. Empathetic but concise. Context: {{ticket}}",
+    "models": [
+      "Claude",
+      "ChatGPT"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Operations"
+  },
+  {
+    "id": "PRM-013",
+    "title": "Pre-prod leftover scan",
+    "category": "AI Coding",
+    "useCase": "Pre-prod checklist",
+    "text": "Scan the current changes / open files / git diff for leftovers that must NOT ship to production. Flag and list with file + line guidance: (1) temporary test code or hard-coded test values, (2) debug logs console.log / print / debugger / TODO-test, (3) commented-out code left for 'just in case', (4) feature flags or if (false) / if (true) test branches, (5) mock data bypasses auth skips or forced returns, (6) secrets API keys or localhost URLs that should be env-based, (7) WIP comments like 'remove before prod' or 'testing only'. For each finding: severity (Blocker/Warn), why it is risky, and the exact cleanup action. If clean, say so explicitly. Do not refactor unrelated code.",
+    "models": [
+      "Cursor",
+      "Antigravity",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-014",
+    "title": "Pre-merge hygiene checklist",
+    "category": "AI Coding",
+    "useCase": "Pre-prod checklist",
+    "text": "Before I open / merge this PR, review the diff like a production gate. Answer only: (1) Any test-only changes still present? (2) Any commented blocks that should be deleted not kept? (3) Any behavior that differs from production intent (hard-coded IDs, skip validation, sample data)? (4) Any logging that is too noisy or leaks sensitive data? (5) Missing cleanup commits I should make now? Output a short PASS / FAIL with a bullet list of required fixes. Prefer deleting dead test code over leaving it commented.",
+    "models": [
+      "Cursor",
+      "Antigravity",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-015",
+    "title": "Strip test scaffolding",
+    "category": "AI Coding",
+    "useCase": "Pre-prod checklist",
+    "text": "Remove all temporary testing scaffolding from the current work while keeping the real feature intact. Delete (do not comment out): debug prints, temporary asserts used only for manual verification, hard-coded test inputs, bypassed checks, and 'testing' branches. Restore production paths (env config, real validation, proper error handling). Summarize what you removed and what you kept. Ask me before changing anything that looks like intentional production behavior.",
+    "models": [
+      "Cursor",
+      "Antigravity"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "PRM-016",
+    "title": "Prod readiness after agent edits",
+    "category": "AI Coding",
+    "useCase": "Pre-prod checklist",
+    "text": "We used Cursor / Antigravity for this change and may have left experimental edits. Re-read the modified files end-to-end for production readiness. Check: unused imports left from experiments, duplicate logic from try-then-keep both versions, mismatched names after renames, incomplete renames, dead code paths, and any 'temporary' comments. Produce: (A) blockers to fix before deploy, (B) nice-to-fix, (C) a minimal cleanup patch plan in order. Be strict — false confidence causes production issues.",
+    "models": [
+      "Cursor",
+      "Antigravity",
+      "Claude"
+    ],
+    "owner": "Anshu Jain",
+    "dateAdded": "2026-08-05",
+    "role": "Engineering"
+  }
+];
+const USE_CASES = [
+  {
+    "id": "UC-001",
+    "title": "Weekly report automation",
+    "department": "Operations",
+    "tool": "ChatGPT",
+    "status": "Adopted",
+    "owner": "Anshu Jain",
+    "impact": "Saves ~2 hours per week drafting ops summaries",
+    "date": "2026-07-07",
+    "role": "Operations"
+  },
+  {
+    "id": "UC-002",
+    "title": "Code review assistant",
+    "department": "Engineering",
+    "tool": "Cursor",
+    "status": "Adopted",
+    "owner": "Anshu Jain",
+    "impact": "Faster first-pass review consistency on PRs",
+    "date": "2026-07-07",
+    "role": "Engineering"
+  },
+  {
+    "id": "UC-003",
+    "title": "Customer email drafting",
+    "department": "Operations",
+    "tool": "Claude",
+    "status": "Pilot",
+    "owner": "Anshu Jain",
+    "impact": "Faster response drafts with clearer tone",
+    "date": "2026-07-07",
+    "role": "Operations"
+  },
+  {
+    "id": "UC-004",
+    "title": "Cited competitor research",
+    "department": "Everyone",
+    "tool": "Perplexity",
+    "status": "Adopted",
+    "owner": "Anshu Jain",
+    "impact": "Cuts discovery time before proposal writing",
+    "date": "2026-08-05",
+    "role": "Everyone"
+  },
+  {
+    "id": "UC-005",
+    "title": "Doc-pack briefings",
+    "department": "Everyone",
+    "tool": "NotebookLM",
+    "status": "Pilot",
+    "owner": "Anshu Jain",
+    "impact": "Quick Q&A over internal briefing packs",
+    "date": "2026-08-05",
+    "role": "Everyone"
+  },
+  {
+    "id": "UC-006",
+    "title": "Agentic coding spikes",
+    "department": "Engineering",
+    "tool": "Antigravity",
+    "status": "Production",
+    "owner": "Anshu Jain",
+    "impact": "Accelerates prototypes that humans then harden",
+    "date": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "UC-007",
+    "title": "Website-to-RAG extraction",
+    "department": "Engineering",
+    "tool": "Firecrawl",
+    "status": "Testing",
+    "owner": "Anshu Jain",
+    "impact": "Cleaner markdown/JSON for LLM pipelines",
+    "date": "2026-08-05",
+    "role": "Engineering"
+  },
+  {
+    "id": "UC-008",
+    "title": "Ad hoc CSV analysis",
+    "department": "Data Engineering",
+    "tool": "Julius AI",
+    "status": "Pilot",
+    "owner": "Anshu Jain",
+    "impact": "Faster exploratory charts on sample datasets",
+    "date": "2026-08-05",
+    "role": "Data"
+  }
+];
+const LEARNING = [
+  {
+    "id": "RES-001",
+    "title": "Prompt Engineering Guide",
+    "type": "Documentation",
+    "skillLevel": "Intermediate",
+    "role": "Everyone",
+    "url": "https://platform.openai.com/docs/guides/prompt-engineering",
+    "description": "Official OpenAI prompt engineering guide for clearer outputs.",
+    "dateAdded": "2026-07-07"
+  },
+  {
+    "id": "RES-002",
+    "title": "Google AI Essentials",
+    "type": "Course",
+    "skillLevel": "Beginner",
+    "role": "Everyone",
+    "url": "https://grow.google/ai",
+    "description": "Introductory AI course for business users and new joiners.",
+    "dateAdded": "2026-07-07"
+  },
+  {
+    "id": "RES-003",
+    "title": "Claude Documentation",
+    "type": "Documentation",
+    "skillLevel": "Advanced",
+    "role": "Engineering",
+    "url": "https://docs.anthropic.com",
+    "description": "Anthropic model and API documentation for deeper Claude use.",
+    "dateAdded": "2026-07-07"
+  },
+  {
+    "id": "RES-004",
+    "title": "Cursor Docs",
+    "type": "Documentation",
+    "skillLevel": "Intermediate",
+    "role": "Engineering",
+    "url": "https://docs.cursor.com",
+    "description": "How to use Cursor for project-aware coding and agents.",
+    "dateAdded": "2026-08-05"
+  },
+  {
+    "id": "RES-005",
+    "title": "Perplexity Help Center",
+    "type": "Documentation",
+    "skillLevel": "Beginner",
+    "role": "Everyone",
+    "url": "https://www.perplexity.ai/hub",
+    "description": "Tips for cited research and verifying sources.",
+    "dateAdded": "2026-08-05"
+  },
+  {
+    "id": "RES-006",
+    "title": "Power BI Copilot docs",
+    "type": "Documentation",
+    "skillLevel": "Intermediate",
+    "role": "Data",
+    "url": "https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-introduction",
+    "description": "Microsoft guidance for Copilot inside Power BI / Fabric.",
+    "dateAdded": "2026-08-05"
+  },
+  {
+    "id": "RES-007",
+    "title": "NotebookLM overview",
+    "type": "Documentation",
+    "skillLevel": "Beginner",
+    "role": "Everyone",
+    "url": "https://support.google.com/notebooklm",
+    "description": "How to ground answers in your own document packs.",
+    "dateAdded": "2026-08-05"
+  },
+  {
+    "id": "RES-008",
+    "title": "OWASP LLM Top 10",
+    "type": "Documentation",
+    "skillLevel": "Intermediate",
+    "role": "Engineering",
+    "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
+    "description": "Security risks to watch when building or using LLM apps.",
+    "dateAdded": "2026-08-05"
+  },
+  {
+    "id": "RES-009",
+    "title": "Internal AI safety reminder",
+    "type": "Playbook",
+    "skillLevel": "Beginner",
+    "role": "Everyone",
+    "url": "https://daily-code-solutions.github.io/DCS-Resources/?view=guides",
+    "description": "Never paste client secrets PII or production data into unapproved tools.",
+    "dateAdded": "2026-08-05"
+  }
+];
