@@ -15,20 +15,24 @@ This project is a Git-friendly export of the "AI Resource Center — DCS AI Capa
 ```
 ai-resource-center/
 ├── README.md
-├── SCORECARD.md              # DCS AI Scorecard summary (portfolio health, readiness, evidence)
-└── data/
-    ├── ai_tools_directory.csv     # Main tool inventory (22 tools)
-    ├── tool_evaluation.csv        # Scored evaluations
-    ├── tool_comparison.csv        # Head-to-head feature comparisons
-    ├── team_use_cases.csv         # Documented team use cases
-    ├── prompt_library.csv         # Reusable prompts
-    ├── learning_resources.csv     # Courses, docs, tutorials
-    ├── ai_news_releases.csv       # Tracked AI news items
-    ├── ideas_backlog.csv          # Future enhancement ideas
-    ├── contributors.csv           # Who contributed what
-    ├── dashboard.csv              # Summary KPIs
-    ├── reference_lists.csv        # Dropdown/source values (Categories, Status, etc.)
-    └── dcs_reference_lists.csv    # DCS-specific controlled values
+├── SCORECARD.md
+├── data/
+│   ├── ai_tools_directory.csv     # Main tool inventory
+│   ├── tool_evaluation.csv
+│   ├── tool_comparison.csv        # Head-to-head winners
+│   ├── chooser_jobs.csv           # Home “what do you need?” jobs
+│   ├── decision_guides.csv        # When to use / skip guides
+│   ├── team_use_cases.csv
+│   ├── prompt_library.csv
+│   ├── learning_resources.csv
+│   ├── ai_news_releases.csv
+│   ├── ideas_backlog.csv
+│   ├── contributors.csv
+│   ├── dashboard.csv
+│   ├── reference_lists.csv
+│   └── dcs_reference_lists.csv
+├── scripts/generate_site_data.py  # CSV → docs/data.js
+└── docs/                          # GitHub Pages site
 ```
 
 ## Decision path
@@ -56,7 +60,14 @@ The Google Sheet remains the live collaborative source for the team. To sync cha
 
 ## Website
 
-`docs/` contains a live, browsable directory of every tool — search, filter by status/category, click any card for full details. Plain HTML/CSS/JS, no framework, no backend.
+`docs/` is a multi-section internal hub (plain HTML/CSS/JS, no framework):
+
+- **Home** — job chooser, Start here shortlist, Tool of the week
+- **Directory** — search/filter/compare the full tool inventory
+- **Compare** — when-to-use guides + documented head-to-heads
+- **Prompts** — copyable team prompt library
+- **Playbooks** — use cases + learning by role
+- **Contribute** — suggest a tool or share a win (GitHub issue drafts)
 
 **Setup (one-time):**
 1. On GitHub: repo → **Settings → Pages → Build and deployment → Source → GitHub Actions**.
@@ -64,10 +75,12 @@ The Google Sheet remains the live collaborative source for the team. To sync cha
 3. Your site will be live at `https://daily-code-solutions.github.io/DCS-Resources/`.
 
 **Updating the data that employees see:**
-1. Edit `data/ai_tools_directory.csv` (or re-export it from the Google Sheet) and push to `main`.
+1. Edit CSVs under `data/` (tools, prompts, use cases, learning, chooser jobs, decision guides, comparisons) or re-export from the Google Sheet, then push to `main`.
 2. That's it — the GitHub Action regenerates `docs/data.js` and redeploys automatically. Nothing to run locally.
 
 To regenerate manually instead: `python3 scripts/generate_site_data.py`.
+
+Deep links: `?view=home|directory|guides|prompts|playbooks|contribute`, plus existing `?tool=`, `?starter=1`, filters, and `?tab=win` on Contribute.
 
 ## Source
 Exported from Google Sheets: *AI Resource Center — DCS AI Capability Draft*

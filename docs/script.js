@@ -27,7 +27,10 @@ const START_HERE_NAMES = ["Cursor", "Antigravity", "ChatGPT", "Claude", "Perplex
 
 const SUGGEST_ISSUE_REPO = "https://github.com/Daily-Code-Solutions/DCS-Resources/issues/new";
 
+const VIEWS = ["home", "directory", "guides", "prompts", "playbooks", "contribute"];
+
 const state = {
+  view: "home",
   search: "",
   status: null,
   statusBucket: null, // default: show full directory
@@ -37,7 +40,22 @@ const state = {
   sort: "name",
   compareMode: false,
   compareIds: [],
+  promptRole: "All",
+  promptUseCase: "All",
+  promptSearch: "",
+  playbookRole: "All",
+  playbookSearch: "",
+  promptId: null,
+  contribTab: "suggest",
+  chooserJobId: null,
 };
+
+const jobsData = () => (typeof CHOOSER_JOBS !== "undefined" ? CHOOSER_JOBS : []);
+const guidesData = () => (typeof DECISION_GUIDES !== "undefined" ? DECISION_GUIDES : []);
+const promptsData = () => (typeof PROMPTS !== "undefined" ? PROMPTS : []);
+const useCasesData = () => (typeof USE_CASES !== "undefined" ? USE_CASES : []);
+const learningData = () => (typeof LEARNING !== "undefined" ? LEARNING : []);
+const comparisonsData = () => (typeof COMPARISONS !== "undefined" ? COMPARISONS : []);
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -490,10 +508,13 @@ function setToolQueryParam(tool) {
   syncUrl({ tool });
 }
 
-/** Persist filters + optional tool deep link for Slack/share URLs. */
+/** Persist view + filters + optional tool deep link for Slack/share URLs. */
 function syncUrl({ tool } = {}) {
   const url = new URL(window.location.href);
   const params = url.searchParams;
+
+  if (state.view && state.view !== "home") params.set("view", state.view);
+  else params.delete("view");
 
   if (state.starter) params.set("starter", "1");
   else params.delete("starter");
@@ -517,20 +538,59 @@ function syncUrl({ tool } = {}) {
   if (state.sort && state.sort !== "name") params.set("sort", state.sort);
   else params.delete("sort");
 
+  if (state.view === "prompts" && state.promptRole && state.promptRole !== "All") {
+    params.set("role", state.promptRole);
+  } else if (state.view === "playbooks" && state.playbookRole && state.playbookRole !== "All") {
+    params.set("role", state.playbookRole);
+  } else {
+    params.delete("role");
+  }
+
+  if (state.view === "prompts" && state.promptUseCase && state.promptUseCase !== "All") {
+    params.set("puse", state.promptUseCase);
+  } else {
+    params.delete("puse");
+  }
+
+  if (state.view === "prompts" && state.promptSearch.trim()) {
+    params.set("pq", state.promptSearch.trim());
+  } else {
+    params.delete("pq");
+  }
+
+  if (state.view === "prompts" && state.promptId) {
+    params.set("pid", state.promptId);
+  } else {
+    params.delete("pid");
+  }
+
+  if (state.view === "playbooks" && state.playbookSearch.trim()) {
+    params.set("bq", state.playbookSearch.trim());
+  } else {
+    params.delete("bq");
+  }
+
+  if (state.view === "contribute" && state.contribTab === "win") params.set("tab", "win");
+  else params.delete("tab");
+
   if (tool === null) params.delete("tool");
   else if (tool && tool.name) params.set("tool", tool.name);
 
   history.replaceState(null, "", url);
 }
 
-/** Restore filters from ?bucket=&status=&category=&pricing=&q=&sort=&starter= */
+/** Restore view + filters from URL params. */
 function applyFiltersFromUrl() {
   const params = new URLSearchParams(window.location.search);
+
+  const view = params.get("view");
+  if (view && VIEWS.includes(view)) state.view = view;
 
   if (params.get("starter") === "1") {
     state.starter = true;
     state.status = null;
     state.statusBucket = null;
+    if (!view) state.view = "directory";
   } else {
     state.starter = false;
     const status = params.get("status");
@@ -538,20 +598,24 @@ function applyFiltersFromUrl() {
     if (status && STATUS_ORDER.includes(status)) {
       state.status = status;
       state.statusBucket = null;
+      if (!view) state.view = "directory";
     } else if (bucket && STATUS_BUCKETS[bucket]) {
       state.status = null;
       state.statusBucket = bucket;
+      if (!view) state.view = "directory";
     }
   }
 
   const category = params.get("category");
   if (category && TOOLS.some(t => t.category === category)) {
     state.category = category;
+    if (!view) state.view = "directory";
   }
 
   const pricing = params.get("pricing");
   if (pricing && TOOLS.some(t => t.pricing === pricing)) {
     state.pricing = pricing;
+    if (!view) state.view = "directory";
   }
 
   const q = params.get("q");
@@ -559,6 +623,7 @@ function applyFiltersFromUrl() {
     state.search = q;
     const input = document.getElementById("searchInput");
     if (input) input.value = q;
+    if (!view) state.view = "directory";
   }
 
   const sort = params.get("sort");
@@ -567,6 +632,51 @@ function applyFiltersFromUrl() {
     state.sort = sort;
     sortSelect.value = sort;
   }
+
+  const role = params.get("role");
+  if (role) {
+    if (state.view === "prompts") state.promptRole = role;
+    if (state.view === "playbooks") state.playbookRole = role;
+  }
+
+  const puse = params.get("puse");
+  if (puse && state.view === "prompts") {
+    state.promptUseCase = puse;
+  }
+
+  // Legacy pcat links collapse into search so old URLs still help
+  const pcat = params.get("pcat");
+  if (pcat && state.view === "prompts" && !params.get("pq")) {
+    state.promptSearch = pcat;
+  }
+
+  const pq = params.get("pq");
+  if (pq && state.view === "prompts") {
+    state.promptSearch = pq;
+  }
+
+  const pid = params.get("pid");
+  if (pid && state.view === "prompts") {
+    state.promptId = pid;
+  } else if (pid && !params.get("view")) {
+    state.view = "prompts";
+    state.promptId = pid;
+  }
+
+  const bq = params.get("bq");
+  if (bq && (state.view === "playbooks" || !params.get("view"))) {
+    if (!params.get("view")) state.view = "playbooks";
+    state.playbookSearch = bq;
+  }
+
+  if (params.get("tab") === "win") {
+    state.contribTab = "win";
+    if (!view) state.view = "contribute";
+  }
+
+  if (params.get("compare") === "1" || params.get("tool")) {
+    if (!view) state.view = "directory";
+  }
 }
 
 /** Open a tool from ?tool=Name or ?tool=AIT-001 (e.g. shared Slack links). */
@@ -574,6 +684,9 @@ function openToolFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const tool = findToolByQuery(params.get("tool"));
   if (!tool) return;
+  if (state.view !== "directory" && state.view !== "home" && state.view !== "guides") {
+    // keep current view; modal works globally
+  }
   openModal(tool);
 }
 
@@ -621,17 +734,813 @@ function clearFilters() {
   state.statusBucket = null;
   state.category = null;
   state.pricing = null;
-  document.getElementById("searchInput").value = "";
+  const input = document.getElementById("searchInput");
+  if (input) input.value = "";
   rerender();
 }
 
-/** Hero “Browse tools”: scroll to the full directory without forcing Start here. */
-function browseTools() {
-  document.getElementById("find-tools")?.scrollIntoView({ behavior: "smooth", block: "start" });
+/** Navigate to directory (optionally Start here / compare mode). */
+function browseTools({ starter = false, compare = false } = {}) {
+  if (starter) {
+    state.starter = true;
+    state.status = null;
+    state.statusBucket = null;
+  }
+  if (compare) {
+    state.compareMode = true;
+  }
+  showView("directory");
+  requestAnimationFrame(() => {
+    document.getElementById("find-tools")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function showView(view) {
+  if (!VIEWS.includes(view)) view = "home";
+  state.view = view;
+
+  document.querySelectorAll("[data-view-panel]").forEach(panel => {
+    panel.hidden = panel.dataset.viewPanel !== view;
+  });
+
+  document.querySelectorAll(".app-nav__link").forEach(btn => {
+    const active = btn.dataset.view === view;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-current", active ? "page" : "false");
+  });
+
+  document.body.classList.toggle("has-compare-bar", view === "directory" && state.compareMode);
+  const compareBar = document.getElementById("compareBar");
+  if (compareBar && view !== "directory") {
+    // Keep selection but hide bar off directory
+    compareBar.hidden = true;
+  } else if (view === "directory") {
+    syncCompareUI();
+  }
+
+  renderCurrentView();
+  syncUrl();
+  window.scrollTo(0, 0);
+}
+
+function renderCurrentView() {
+  if (state.view === "home") renderHome();
+  else if (state.view === "guides") renderGuides();
+  else if (state.view === "prompts") renderPrompts();
+  else if (state.view === "playbooks") renderPlaybooks();
+  else if (state.view === "contribute") renderContribute();
+  else if (state.view === "directory") {
+    renderStats();
+    renderChips();
+    renderCards();
+    syncCompareUI();
+  }
+}
+
+function findToolByName(name) {
+  const q = String(name || "").trim().toLowerCase();
+  return TOOLS.find(t => (t.name || "").toLowerCase() === q) || null;
+}
+
+function isoWeekNumber(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+function toolOfTheWeek() {
+  const preferred = START_HERE_NAMES.map(n => findToolByName(n)).filter(Boolean);
+  const pool = preferred.length
+    ? preferred
+    : TOOLS.filter(t => ["Production", "Adopted"].includes(t.status));
+  if (!pool.length) return null;
+  return pool[isoWeekNumber() % pool.length];
+}
+
+function miniToolCard(tool, { tip = "" } = {}) {
+  if (!tool) return "";
+  const group = STATUS_GROUP[tool.status] || "blue";
+  return `
+    <button type="button" class="mini-card" data-open-tool="${escapeHtml(tool.id)}">
+      <div class="mini-card__top">
+        ${logoHtml(tool)}
+        <div>
+          <div class="mini-card__name">${escapeHtml(tool.name)}</div>
+          <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
+        </div>
+      </div>
+      <p class="mini-card__desc">${escapeHtml(tip || tool.whenToUse || tool.description)}</p>
+    </button>
+  `;
+}
+
+function renderHome() {
+  const grid = document.getElementById("chooserGrid");
+  const result = document.getElementById("chooserResult");
+  const starter = document.getElementById("starterRow");
+  const totw = document.getElementById("toolOfWeek");
+  if (!grid) return;
+
+  grid.innerHTML = jobsData().map(job => `
+    <button type="button" class="chooser-card${state.chooserJobId === job.id ? " is-active" : ""}" data-job="${escapeHtml(job.id)}">
+      <span class="chooser-card__label">${escapeHtml(job.label)}</span>
+      <span class="chooser-card__desc">${escapeHtml(job.description)}</span>
+    </button>
+  `).join("");
+
+  if (state.chooserJobId) {
+    const job = jobsData().find(j => j.id === state.chooserJobId);
+    if (job) {
+      const tools = job.tools.map(findToolByName).filter(Boolean);
+      result.hidden = false;
+      result.innerHTML = `
+        <div class="chooser-result__head">
+          <h3 class="chooser-result__title">${escapeHtml(job.label)}</h3>
+          <p class="chooser-result__tip">${escapeHtml(job.tip)}</p>
+        </div>
+        <div class="starter-row">
+          ${tools.map(t => miniToolCard(t)).join("") || "<p class='empty'>No matching tools in the directory yet.</p>"}
+        </div>
+      `;
+    }
+  } else {
+    result.hidden = true;
+    result.innerHTML = "";
+  }
+
+  starter.innerHTML = START_HERE_NAMES.map(findToolByName).filter(Boolean).map(t => miniToolCard(t)).join("");
+
+  const featured = toolOfTheWeek();
+  if (featured && totw) {
+    const group = STATUS_GROUP[featured.status] || "blue";
+    totw.innerHTML = `
+      <div class="totw">
+        <div class="totw__identity">
+          ${logoHtml(featured)}
+          <div>
+            <h3 class="totw__name">${escapeHtml(featured.name)}</h3>
+            <div class="totw__meta">
+              <span class="badge badge--${group}">${escapeHtml(featured.status)}</span>
+              <span class="totw__cat">${escapeHtml(featured.category)}</span>
+            </div>
+          </div>
+        </div>
+        <p class="totw__desc">${escapeHtml(featured.description)}</p>
+        <p class="totw__guide"><strong>Try it for:</strong> ${escapeHtml(featured.whenToUse || "Everyday team work")}</p>
+        <div class="totw__actions">
+          <button type="button" class="btn-base btn-primary totw__btn" data-open-tool="${escapeHtml(featured.id)}">View details</button>
+          ${featured.url ? `<a class="btn-base btn-secondary totw__btn" href="${escapeHtml(featured.url)}" target="_blank" rel="noopener">Open tool</a>` : ""}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function guideTone(category) {
+  const key = String(category || "").toLowerCase();
+  if (key.includes("assistant") || key.includes("llm") || key.includes("chat")) return "assistants";
+  if (key.includes("coding") || key.includes("code") || key.includes("dev")) return "coding";
+  if (key.includes("research") || key.includes("knowledge")) return "research";
+  return "default";
+}
+
+function renderGuides() {
+  const list = document.getElementById("guidesList");
+  const comps = document.getElementById("comparisonsList");
+  if (!list) return;
+
+  list.innerHTML = guidesData().map(guide => {
+    const tone = guideTone(guide.category);
+    return `
+    <article class="guide-card guide-tone--${tone}">
+      <div class="guide-card__head">
+        <span class="guide-card__cat">${escapeHtml(guide.category)}</span>
+        <h3 class="guide-card__title">${escapeHtml(guide.title)}</h3>
+        <p class="guide-card__summary">${escapeHtml(guide.summary)}</p>
+      </div>
+      <div class="guide-tips">
+        ${guide.tips.map(tip => {
+          const tool = findToolByName(tip.tool);
+          return `
+            <div class="guide-tip">
+              <div class="guide-tip__tool">
+                ${tool ? logoHtml(tool) : ""}
+                <button type="button" class="linkbtn" data-open-tool-name="${escapeHtml(tip.tool)}">${escapeHtml(tip.tool)}</button>
+              </div>
+              <div class="guide-tip__cols">
+                <div class="guide-tip__col guide-tip__col--go">
+                  <span class="guide-tip__label guide-tip__label--go">Use when</span>
+                  <p>${escapeHtml(tip.useWhen)}</p>
+                </div>
+                <div class="guide-tip__col guide-tip__col--skip">
+                  <span class="guide-tip__label guide-tip__label--skip">Skip when</span>
+                  <p>${escapeHtml(tip.skipWhen)}</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </article>
+  `;
+  }).join("") || `<p class="empty">No decision guides yet.</p>`;
+
+  comps.innerHTML = comparisonsData().map(c => `
+    <article class="compare-note compare-note--page compare-note--slate">
+      <div class="compare-note__kind">Head-to-head</div>
+      <strong class="compare-note__feature">${escapeHtml(c.feature)}</strong>
+      <p class="compare-note__matchup">${escapeHtml(c.tools.join(" vs "))}</p>
+      <p class="compare-note__winner">Winner: <em>${escapeHtml(c.winner || "—")}</em></p>
+      ${c.notes ? `<p class="compare-note__body">${escapeHtml(c.notes)}</p>` : ""}
+      <div class="compare-note__actions">
+        ${c.tools.map(name => {
+          const t = findToolByName(name);
+          const isWinner = c.winner && name === c.winner;
+          const chipClass = `chip${isWinner ? " chip--winner" : ""}`;
+          return t
+            ? `<button type="button" class="${chipClass}" data-open-tool="${escapeHtml(t.id)}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</button>`
+            : `<span class="${chipClass}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</span>`;
+        }).join("")}
+      </div>
+    </article>
+  `).join("") || `<p class="empty">No comparisons yet.</p>`;
+}
+
+function uniqueRoles(items, key = "role") {
+  const roles = [...new Set(items.map(i => i[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  return ["All", ...roles.filter(r => r !== "All")];
+}
+
+function renderFilterChips(containerId, values, active, dataAttr) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = values.map(value => `
+    <button type="button" class="chip${active === value ? " active" : ""}" data-${dataAttr}="${escapeHtml(value)}">${escapeHtml(value)}</button>
+  `).join("");
+}
+
+function promptMatchesSearch(prompt, query) {
+  const q = String(query || "").trim().toLowerCase();
+  if (!q) return true;
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const haystack = [
+    prompt.id,
+    prompt.title,
+    prompt.category,
+    prompt.useCase,
+    prompt.role,
+    prompt.owner,
+    prompt.text,
+    ...(prompt.models || []),
+  ].join(" ").toLowerCase();
+  // Every word must match somewhere (meaningful multi-keyword search)
+  return tokens.every(token => haystack.includes(token));
+}
+
+function syncPromptQuickChips() {
+  document.querySelectorAll("[data-prompt-quick]").forEach(btn => {
+    const key = btn.getAttribute("data-prompt-quick");
+    let active = false;
+    if (key === "all") {
+      active = state.promptRole === "All" && state.promptUseCase === "All";
+    } else if (key === "preprod") {
+      active = state.promptUseCase === "Pre-prod checklist";
+    } else {
+      active = state.promptUseCase === "All" && state.promptRole === key;
+    }
+    btn.classList.toggle("active", active);
+  });
+}
+
+function promptShareUrl(id) {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.searchParams.set("view", "prompts");
+  url.searchParams.set("pid", id);
+  return url.toString();
+}
+
+function renderPrompts() {
+  const grid = document.getElementById("promptGrid");
+  const empty = document.getElementById("promptEmpty");
+  const countEl = document.getElementById("promptResultCount");
+  const clearBtn = document.getElementById("promptClearFilters");
+  const searchInput = document.getElementById("promptSearchInput");
+  if (!grid) return;
+
+  if (searchInput && searchInput.value !== state.promptSearch) {
+    searchInput.value = state.promptSearch;
+  }
+
+  const all = promptsData();
+  syncPromptQuickChips();
+
+  let list = all.filter(p => {
+    const roleOk = state.promptRole === "All" || p.role === state.promptRole;
+    const useOk = state.promptUseCase === "All" || p.useCase === state.promptUseCase;
+    const searchOk = promptMatchesSearch(p, state.promptSearch);
+    return roleOk && useOk && searchOk;
+  });
+
+  // Deep-linked prompt stays visible even if filters would hide it
+  if (state.promptId) {
+    const linked = all.find(p => p.id === state.promptId);
+    if (linked && !list.some(p => p.id === linked.id)) {
+      list = [linked, ...list];
+    }
+  }
+
+  const filtersOn = state.promptRole !== "All" || state.promptUseCase !== "All" || Boolean(state.promptSearch.trim());
+  if (clearBtn) clearBtn.hidden = !filtersOn;
+  if (countEl) {
+    countEl.textContent = `${list.length} of ${all.length} prompt${all.length === 1 ? "" : "s"}`;
+  }
+
+  empty.hidden = list.length > 0;
+  grid.innerHTML = list.map(p => `
+    <article class="prompt-card${state.promptId === p.id ? " prompt-card--focus" : ""}" id="prompt-${escapeHtml(p.id)}" data-prompt-id="${escapeHtml(p.id)}">
+      <div class="prompt-card__top">
+        <h3 class="prompt-card__title">${escapeHtml(p.title)}</h3>
+        <span class="card__tag">${escapeHtml(p.role || "Everyone")}</span>
+      </div>
+      <p class="prompt-card__meta">${escapeHtml(p.category)}${p.useCase ? ` · ${escapeHtml(p.useCase)}` : ""}</p>
+      ${(p.models || []).length ? `<div class="card__tags">${p.models.map(m => `<span class="card__tag">${escapeHtml(m)}</span>`).join("")}</div>` : ""}
+      <pre class="prompt-card__text">${escapeHtml(p.text)}</pre>
+      <div class="prompt-card__actions">
+        <button type="button" class="btn-base btn-primary btn-copy" data-copy-prompt="${escapeHtml(p.id)}">Copy prompt</button>
+        <button type="button" class="btn-base btn-secondary btn-copy-link" data-copy-prompt-link="${escapeHtml(p.id)}">Copy link</button>
+      </div>
+    </article>
+  `).join("");
+
+  if (state.promptId) {
+    requestAnimationFrame(() => {
+      document.getElementById(`prompt-${state.promptId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+}
+
+function clearPromptFilters() {
+  state.promptRole = "All";
+  state.promptUseCase = "All";
+  state.promptSearch = "";
+  state.promptId = null;
+  const searchInput = document.getElementById("promptSearchInput");
+  if (searchInput) searchInput.value = "";
+  renderPrompts();
+  syncUrl();
+}
+
+function applyPromptQuickFilter(key) {
+  if (key === "all") {
+    state.promptRole = "All";
+    state.promptUseCase = "All";
+  } else if (key === "preprod") {
+    state.promptUseCase = "Pre-prod checklist";
+    state.promptRole = "All";
+  } else {
+    state.promptRole = key;
+    state.promptUseCase = "All";
+  }
+  renderPrompts();
+  syncUrl();
+}
+
+function applyPromptSearchFromInput() {
+  const searchInput = document.getElementById("promptSearchInput");
+  state.promptSearch = searchInput ? searchInput.value : "";
+  renderPrompts();
+  syncUrl();
+}
+
+function playbookTone(role) {
+  const key = String(role || "Everyone").toLowerCase();
+  if (key.includes("engineer") || key.includes("develop")) return "engineering";
+  if (key.includes("data")) return "data";
+  if (key.includes("operation") || key.includes("support")) return "operations";
+  if (key.includes("manage")) return "management";
+  if (key.includes("every")) return "everyone";
+  return "default";
+}
+
+function playbookMatchesSearch(item, query) {
+  const q = String(query || "").trim().toLowerCase();
+  if (!q) return true;
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const haystack = [
+    item.id,
+    item.title,
+    item.department,
+    item.tool,
+    item.status,
+    item.owner,
+    item.impact,
+    item.role,
+    item.type,
+    item.skillLevel,
+    item.description,
+  ].filter(Boolean).join(" ").toLowerCase();
+  return tokens.every(token => haystack.includes(token));
+}
+
+function renderPlaybooks() {
+  const useGrid = document.getElementById("useCaseGrid");
+  const learnGrid = document.getElementById("learnGrid");
+  const countEl = document.getElementById("playbookResultCount");
+  const clearBtn = document.getElementById("playbookClearFilters");
+  const searchInput = document.getElementById("playbookSearchInput");
+  if (!useGrid || !learnGrid) return;
+
+  if (searchInput && searchInput.value !== state.playbookSearch) {
+    searchInput.value = state.playbookSearch;
+  }
+
+  const cases = useCasesData();
+  const learning = learningData();
+  const roles = uniqueRoles([...cases, ...learning]);
+  renderFilterChips("playbookRoleChips", roles, state.playbookRole, "playbook-role");
+
+  const matches = (item) =>
+    (state.playbookRole === "All" || item.role === state.playbookRole) &&
+    playbookMatchesSearch(item, state.playbookSearch);
+
+  const shownCases = cases.filter(matches);
+  const shownLearning = learning.filter(matches);
+
+  const filtersOn = state.playbookRole !== "All" || Boolean(state.playbookSearch.trim());
+  if (clearBtn) clearBtn.hidden = !filtersOn;
+  if (countEl) {
+    const total = cases.length + learning.length;
+    const shown = shownCases.length + shownLearning.length;
+    countEl.textContent = `${shown} of ${total} items`;
+  }
+
+  useGrid.innerHTML = shownCases.map(uc => {
+    const tool = findToolByName(uc.tool);
+    const group = STATUS_GROUP[uc.status] || "blue";
+    const tone = playbookTone(uc.role || uc.department);
+    return `
+      <article class="usecase-card playbook-card playbook-card--usecase playbook-tone--${tone}">
+        <div class="playbook-card__kind">Use case</div>
+        <div class="usecase-card__top">
+          <h3 class="usecase-card__title">${escapeHtml(uc.title)}</h3>
+          <span class="badge badge--${group}">${escapeHtml(uc.status || "—")}</span>
+        </div>
+        <p class="usecase-card__impact">${escapeHtml(uc.impact)}</p>
+        <div class="usecase-card__meta">
+          ${tool
+            ? `<button type="button" class="linkbtn" data-open-tool="${escapeHtml(tool.id)}">${escapeHtml(uc.tool)}</button>`
+            : `<span>${escapeHtml(uc.tool)}</span>`}
+          <span>·</span>
+          <span>${escapeHtml(uc.owner || "Unassigned")}</span>
+          <span>·</span>
+          <span>${escapeHtml(uc.role || uc.department || "")}</span>
+        </div>
+      </article>
+    `;
+  }).join("") || `<p class="empty">No use cases match.</p>`;
+
+  learnGrid.innerHTML = shownLearning.map(res => {
+    const tone = playbookTone(res.role);
+    return `
+      <article class="learn-card playbook-card playbook-card--learn playbook-tone--${tone}">
+        <div class="playbook-card__kind">Learning</div>
+        <div class="learn-card__top">
+          <span class="card__tag">${escapeHtml(res.type)}</span>
+          <span class="card__tag">${escapeHtml(res.skillLevel)}</span>
+          <span class="card__tag">${escapeHtml(res.role)}</span>
+        </div>
+        <h3 class="learn-card__title">${escapeHtml(res.title)}</h3>
+        <p class="learn-card__desc">${escapeHtml(res.description)}</p>
+        ${res.url ? `<a class="card__cta" href="${escapeHtml(res.url)}" target="_blank" rel="noopener">Open resource ↗</a>` : ""}
+      </article>
+    `;
+  }).join("") || `<p class="empty">No learning resources match.</p>`;
+}
+
+function clearPlaybookFilters() {
+  state.playbookRole = "All";
+  state.playbookSearch = "";
+  const searchInput = document.getElementById("playbookSearchInput");
+  if (searchInput) searchInput.value = "";
+  renderPlaybooks();
+  syncUrl();
+}
+
+function applyPlaybookSearchFromInput() {
+  const searchInput = document.getElementById("playbookSearchInput");
+  state.playbookSearch = searchInput ? searchInput.value : "";
+  renderPlaybooks();
+  syncUrl();
+}
+
+function renderContribute() {
+  syncContributeTabs();
+  populateWinToolDropdown();
+}
+
+function syncContributeTabs() {
+  const suggestPanel = document.getElementById("contribSuggestPanel");
+  const winPanel = document.getElementById("contribWinPanel");
+  const tabSuggest = document.getElementById("tabSuggest");
+  const tabWin = document.getElementById("tabWin");
+  if (!suggestPanel || !winPanel) return;
+
+  const isWin = state.contribTab === "win";
+  suggestPanel.hidden = isWin;
+  winPanel.hidden = !isWin;
+  tabSuggest?.classList.toggle("is-active", !isWin);
+  tabWin?.classList.toggle("is-active", isWin);
+  tabSuggest?.setAttribute("aria-selected", String(!isWin));
+  tabWin?.setAttribute("aria-selected", String(isWin));
+}
+
+function populateWinToolDropdown() {
+  const select = document.getElementById("w_tool");
+  if (!select || select.dataset.ready === "1") return;
+  const opts = TOOLS
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`)
+    .join("");
+  select.insertAdjacentHTML("beforeend", opts);
+  select.dataset.ready = "1";
+}
+
+function setWinFieldError(key, message) {
+  const err = document.getElementById(`${key}_err`);
+  const field = document.querySelector(`[data-field="${key}"]`);
+  if (field) field.classList.toggle("is-invalid", Boolean(message));
+  if (!err) return;
+  if (message) {
+    err.hidden = false;
+    err.textContent = message;
+  } else {
+    err.hidden = true;
+    err.textContent = "";
+  }
+}
+
+function updateWinCounts() {
+  const impact = document.getElementById("w_impact");
+  const how = document.getElementById("w_how");
+  const ic = document.getElementById("w_impact_count");
+  const hc = document.getElementById("w_how_count");
+  if (impact && ic) ic.textContent = `${impact.value.length} / 400`;
+  if (how && hc) hc.textContent = `${how.value.length} / 600`;
+}
+
+function validateWinForm() {
+  ["w_title", "w_tool", "w_impact"].forEach(k => setWinFieldError(k, ""));
+  const formErr = document.getElementById("winFormErr");
+  if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
+
+  const title = (document.getElementById("w_title").value || "").trim();
+  const tool = (document.getElementById("w_tool").value || "").trim();
+  const impact = (document.getElementById("w_impact").value || "").trim();
+  let ok = true;
+
+  if (!title || title.length < 4) {
+    setWinFieldError("w_title", "Add a short title (at least 4 characters).");
+    ok = false;
+  }
+  if (!tool) {
+    setWinFieldError("w_tool", "Pick the tool you used.");
+    ok = false;
+  }
+  if (!impact || impact.length < 12) {
+    setWinFieldError("w_impact", "Describe the impact (at least 12 characters).");
+    ok = false;
+  }
+  if (!ok && formErr) {
+    formErr.hidden = false;
+    formErr.textContent = "Please fix the highlighted fields before submitting.";
+  }
+  return ok;
+}
+
+function buildWinDraft() {
+  const title = (document.getElementById("w_title").value || "").trim();
+  const tool = (document.getElementById("w_tool").value || "").trim();
+  const name = (document.getElementById("w_name").value || "").trim();
+  const role = (document.getElementById("w_role").value || "").trim();
+  const impact = (document.getElementById("w_impact").value || "").trim();
+  const how = (document.getElementById("w_how").value || "").trim();
+  return [
+    `## Team win: ${title}`,
+    "",
+    `- **Tool:** ${tool}`,
+    `- **Shared by:** ${name || "—"}`,
+    `- **Role:** ${role || "—"}`,
+    "",
+    "### Impact",
+    impact,
+    "",
+    "### How we used it",
+    how || "—",
+    "",
+    "_Submitted via AI Resource Center share-a-win form._",
+  ].join("\n");
+}
+
+function showWinDraft() {
+  const title = (document.getElementById("w_title").value || "").trim();
+  const body = buildWinDraft();
+  window.__winDraftText = body;
+  const issueUrl = new URL(SUGGEST_ISSUE_REPO);
+  issueUrl.searchParams.set("title", `Team win: ${title}`);
+  issueUrl.searchParams.set("body", body);
+  document.getElementById("winIssueLink").href = issueUrl.toString();
+  document.getElementById("winCopyStatus").hidden = true;
+  document.getElementById("winForm").hidden = true;
+  document.getElementById("winSuccess").hidden = false;
+}
+
+function resetWinForm() {
+  document.getElementById("winForm").reset();
+  document.getElementById("winForm").hidden = false;
+  document.getElementById("winSuccess").hidden = true;
+  ["w_title", "w_tool", "w_impact"].forEach(k => setWinFieldError(k, ""));
+  updateWinCounts();
+}
+
+async function copyText(text, statusEl) {
+  try {
+    await navigator.clipboard.writeText(text);
+    statusEl.hidden = false;
+    statusEl.textContent = "Copied — paste into Slack, email, or your review draft.";
+  } catch {
+    statusEl.hidden = false;
+    statusEl.textContent = "Couldn’t copy automatically — open the review draft instead.";
+  }
+}
+
+function openToolByIdOrName(idOrName) {
+  const tool = TOOLS.find(t => t.id === idOrName) || findToolByName(idOrName);
+  if (tool) openModal(tool);
+}
+
+function bindAppNavigation() {
+  document.querySelector(".app-nav")?.addEventListener("click", e => {
+    const btn = e.target.closest("[data-view]");
+    if (!btn) return;
+    showView(btn.dataset.view);
+  });
+
+  document.body.addEventListener("click", e => {
+    const go = e.target.closest("[data-go-view]");
+    if (go) {
+      const view = go.dataset.goView;
+      if (go.dataset.starter === "1") {
+        browseTools({ starter: true });
+        return;
+      }
+      if (go.dataset.compare === "1") {
+        browseTools({ compare: true });
+        return;
+      }
+      if (go.dataset.tab === "win") {
+        state.contribTab = "win";
+      }
+      showView(view);
+      return;
+    }
+
+    const jobBtn = e.target.closest("[data-job]");
+    if (jobBtn && state.view === "home") {
+      const id = jobBtn.dataset.job;
+      state.chooserJobId = state.chooserJobId === id ? null : id;
+      renderHome();
+      return;
+    }
+
+    const openTool = e.target.closest("[data-open-tool]");
+    if (openTool) {
+      openToolByIdOrName(openTool.dataset.openTool);
+      return;
+    }
+
+    const openName = e.target.closest("[data-open-tool-name]");
+    if (openName) {
+      openToolByIdOrName(openName.dataset.openToolName);
+      return;
+    }
+
+    const copyBtn = e.target.closest("[data-copy-prompt]");
+    if (copyBtn) {
+      const prompt = promptsData().find(p => p.id === copyBtn.dataset.copyPrompt);
+      if (!prompt) return;
+      navigator.clipboard.writeText(prompt.text).then(() => {
+        const prev = copyBtn.textContent;
+        copyBtn.textContent = "Copied ✓";
+        copyBtn.classList.add("is-copied");
+        setTimeout(() => {
+          copyBtn.textContent = prev;
+          copyBtn.classList.remove("is-copied");
+        }, 1400);
+      }).catch(() => {
+        copyBtn.textContent = "Copy failed";
+      });
+      return;
+    }
+
+    const copyLinkBtn = e.target.closest("[data-copy-prompt-link]");
+    if (copyLinkBtn) {
+      const id = copyLinkBtn.getAttribute("data-copy-prompt-link");
+      if (!id) return;
+      state.promptId = id;
+      syncUrl();
+      navigator.clipboard.writeText(promptShareUrl(id)).then(() => {
+        const prev = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = "Link copied ✓";
+        setTimeout(() => { copyLinkBtn.textContent = prev; }, 1400);
+      }).catch(() => {
+        copyLinkBtn.textContent = "Copy failed";
+      });
+      return;
+    }
+
+    const promptQuick = e.target.closest("[data-prompt-quick]");
+    if (promptQuick) {
+      applyPromptQuickFilter(promptQuick.getAttribute("data-prompt-quick") || "all");
+      return;
+    }
+
+    const playbookRole = e.target.closest("[data-playbook-role]");
+    if (playbookRole) {
+      const next = playbookRole.getAttribute("data-playbook-role") || "All";
+      state.playbookRole = next;
+      renderPlaybooks();
+      syncUrl();
+    }
+  });
+
+  document.getElementById("promptClearFilters")?.addEventListener("click", clearPromptFilters);
+  document.getElementById("promptEmptyClear")?.addEventListener("click", clearPromptFilters);
+  document.getElementById("playbookClearFilters")?.addEventListener("click", clearPlaybookFilters);
+
+  const promptSearchInput = document.getElementById("promptSearchInput");
+  if (promptSearchInput) {
+    promptSearchInput.addEventListener("input", () => {
+      state.promptSearch = promptSearchInput.value;
+      renderPrompts();
+      syncUrl();
+    });
+    promptSearchInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyPromptSearchFromInput();
+      }
+    });
+  }
+  document.getElementById("promptSearchBtn")?.addEventListener("click", applyPromptSearchFromInput);
+
+  const playbookSearchInput = document.getElementById("playbookSearchInput");
+  if (playbookSearchInput) {
+    playbookSearchInput.addEventListener("input", () => {
+      state.playbookSearch = playbookSearchInput.value;
+      renderPlaybooks();
+      syncUrl();
+    });
+    playbookSearchInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyPlaybookSearchFromInput();
+      }
+    });
+  }
+  document.getElementById("playbookSearchBtn")?.addEventListener("click", applyPlaybookSearchFromInput);
+
+  document.querySelector(".contribute-tabs")?.addEventListener("click", e => {
+    const tab = e.target.closest("[data-contrib]");
+    if (!tab) return;
+    state.contribTab = tab.dataset.contrib;
+    syncContributeTabs();
+    syncUrl();
+  });
+
+  document.getElementById("winForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    if (!validateWinForm()) return;
+    showWinDraft();
+  });
+
+  ["w_impact", "w_how"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", updateWinCounts);
+  });
+
+  document.getElementById("winCopyDraft")?.addEventListener("click", () => {
+    copyText(window.__winDraftText || "", document.getElementById("winCopyStatus"));
+  });
+
+  document.getElementById("winAnother")?.addEventListener("click", resetWinForm);
 }
 
 function populateCategoryDropdown() {
   const select = document.getElementById("s_category");
+  if (!select) return;
   const options = (typeof CATEGORIES !== "undefined" ? CATEGORIES : [])
     .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
     .join("");
@@ -676,8 +1585,10 @@ function populateDepartmentDropdown() {
 function setCompareMode(on) {
   state.compareMode = on;
   const btn = document.getElementById("compareToggle");
-  btn.classList.toggle("is-active", on);
-  btn.setAttribute("aria-pressed", String(on));
+  if (btn) {
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-pressed", String(on));
+  }
   if (!on) {
     state.compareIds = [];
   }
@@ -689,8 +1600,9 @@ function syncCompareUI() {
   const openBtn = document.getElementById("compareOpen");
   const text = document.getElementById("compareBarText");
   const count = state.compareIds.length;
+  const onDirectory = state.view === "directory";
 
-  if (state.compareMode) {
+  if (state.compareMode && onDirectory) {
     bar.hidden = false;
     bar.removeAttribute("hidden");
     bar.classList.add("is-visible");
@@ -698,7 +1610,7 @@ function syncCompareUI() {
     bar.hidden = true;
     bar.classList.remove("is-visible");
   }
-  document.body.classList.toggle("has-compare-bar", state.compareMode);
+  document.body.classList.toggle("has-compare-bar", state.compareMode && onDirectory);
 
   if (!state.compareMode) return;
 
@@ -798,7 +1710,7 @@ function renderComparePanel() {
       `).join("")}
     </div>
   ` : `
-    <p class="compare-empty">No saved head-to-head rows yet for this set. Add them in <code>data/tool_comparison.csv</code>.</p>
+    <p class="compare-empty">No saved head-to-head rows yet for this set.</p>
   `;
 
   document.getElementById("compareBody").innerHTML = `
@@ -848,22 +1760,24 @@ function openCompare() {
 /** Close compare overlay only — keep selection and compare mode. */
 function closeCompare() {
   document.getElementById("compareOverlay").hidden = true;
-  if (document.getElementById("modalOverlay").hidden && document.getElementById("suggestOverlay").hidden) {
+  if (document.getElementById("modalOverlay").hidden) {
     document.body.style.overflow = "";
   }
 }
 
 function init() {
   applyFiltersFromUrl();
-  renderStats();
-  renderChips();
-  renderCards();
   populateCategoryDropdown();
   populatePricingDropdown();
   populateDepartmentDropdown();
-  syncCompareUI();
-  syncUrl();
+  bindAppNavigation();
+  showView(state.view);
   openToolFromUrl();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("compare") === "1") {
+    setCompareMode(true);
+  }
 
   document.getElementById("stats").addEventListener("click", e => {
     const stat = e.target.closest(".stat");
@@ -1009,16 +1923,8 @@ function init() {
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
       closeModal();
-      closeSuggest();
       closeCompare();
     }
-  });
-
-  document.getElementById("browseToolsHero").addEventListener("click", browseTools);
-  document.getElementById("openSuggestHero").addEventListener("click", openSuggest);
-  document.getElementById("suggestClose").addEventListener("click", closeSuggest);
-  document.getElementById("suggestOverlay").addEventListener("click", e => {
-    if (e.target.id === "suggestOverlay") closeSuggest();
   });
 
   bindSuggestValidation();
@@ -1035,10 +1941,10 @@ function init() {
     try {
       await navigator.clipboard.writeText(text);
       status.hidden = false;
-      status.textContent = "Draft copied — paste into Slack, email, or a GitHub issue.";
+      status.textContent = "Draft copied — paste into Slack, email, or your review channel.";
     } catch {
       status.hidden = false;
-      status.textContent = "Couldn’t copy automatically — select the text from the GitHub issue draft instead.";
+      status.textContent = "Couldn’t copy automatically — open the review draft instead.";
     }
   });
 
@@ -1425,7 +2331,6 @@ function bindSuggestValidation() {
       if (!link) return;
       const tool = TOOLS.find(t => t.id === link.dataset.toolId);
       if (!tool) return;
-      closeSuggest();
       openModal(tool);
     });
   }
@@ -1449,19 +2354,19 @@ function bindSuggestValidation() {
 }
 
 function openSuggest() {
+  state.contribTab = "suggest";
+  showView("contribute");
   resetSuggestForm();
   document.getElementById("suggestFormWrap").hidden = false;
   document.getElementById("suggestSuccess").hidden = true;
-  document.getElementById("suggestOverlay").hidden = false;
-  document.body.style.overflow = "hidden";
-  document.getElementById("s_name").focus();
+  requestAnimationFrame(() => {
+    document.getElementById("suggestForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("s_name")?.focus();
+  });
 }
 
 function closeSuggest() {
-  document.getElementById("suggestOverlay").hidden = true;
-  if (document.getElementById("modalOverlay").hidden && document.getElementById("compareOverlay").hidden) {
-    document.body.style.overflow = "";
-  }
+  // Suggest form is inline on Contribute — nothing to dismiss.
 }
 
 init();

@@ -1,0 +1,11 @@
+Job ID,Label,Description,Tool Names,Tip
+JOB-001,Research with citations,Find current facts and sources before you write.,Perplexity,Best first stop when sources matter — still verify citations.
+JOB-002,Everyday writing & brainstorming,Drafts emails notes ideas and quick Q&A.,ChatGPT,Default general assistant for everyday work.
+JOB-003,Long docs & careful analysis,Reason over long documents reports or complex briefs.,Claude,Preferred for long context careful writing and code review.
+JOB-004,Google Workspace & multimodal,Work inside Docs Drive Gmail or with images/video.,Gemini,Use when the work lives in Google Workspace.
+JOB-005,Code in our repos,Multi-file coding refactors and project-aware help.,Cursor;Antigravity,Cursor for IDE work; Antigravity for agentic coding sessions.
+JOB-006,Scrape or browser automation,Turn websites into clean data or drive a browser with agents.,Firecrawl;Crawl4AI;Browser Use,Only on approved targets — respect ToS and rate limits.
+JOB-007,Analyze data & Power BI,Ad hoc CSV exploration or Power BI report help.,Julius AI;Power BI Copilot,Julius for sample/internal files; Power BI Copilot inside Fabric.
+JOB-008,Q&A over our documents,Ask questions grounded in an uploaded doc pack.,NotebookLM,Do not upload client-confidential files without approval.
+JOB-009,Fast first-draft decks,Generate a first-pass presentation to polish.,Gamma,Review branding and accuracy before external use.
+JOB-010,Automate agents & workflows,Self-hosted agents across messaging terminal or browser.,OpenClaw;Hermes Agent,Lock down channels and keep secrets off unapproved models.

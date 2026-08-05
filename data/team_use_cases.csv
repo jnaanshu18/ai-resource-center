@@ -1,4 +1,9 @@
-Use Case ID,Title,Department,Tool Used,Status,Owner,Impact,Date
-UC-001,Weekly Report Automation,Operations,ChatGPT,Adopted,,Saves 2 hours per week,2026-07-07
-UC-002,Code Review Assistant,Engineering,Cursor,Testing,,Improves review consistency,2026-07-07
-UC-003,Customer Email Drafting,Customer Support,Claude,Pilot,,Faster response drafts,2026-07-07
+Use Case ID,Title,Department,Tool Used,Status,Owner,Impact,Date,Role
+UC-001,Weekly report automation,Operations,ChatGPT,Adopted,Anshu Jain,Saves ~2 hours per week drafting ops summaries,2026-07-07,Operations
+UC-002,Code review assistant,Engineering,Cursor,Adopted,Anshu Jain,Faster first-pass review consistency on PRs,2026-07-07,Engineering
+UC-003,Customer email drafting,Operations,Claude,Pilot,Anshu Jain,Faster response drafts with clearer tone,2026-07-07,Operations
+UC-004,Cited competitor research,Everyone,Perplexity,Adopted,Anshu Jain,Cuts discovery time before proposal writing,2026-08-05,Everyone
+UC-005,Doc-pack briefings,Everyone,NotebookLM,Pilot,Anshu Jain,Quick Q&A over internal briefing packs,2026-08-05,Everyone
+UC-006,Agentic coding spikes,Engineering,Antigravity,Production,Anshu Jain,Accelerates prototypes that humans then harden,2026-08-05,Engineering
+UC-007,Website-to-RAG extraction,Engineering,Firecrawl,Testing,Anshu Jain,Cleaner markdown/JSON for LLM pipelines,2026-08-05,Engineering
+UC-008,Ad hoc CSV analysis,Data Engineering,Julius AI,Pilot,Anshu Jain,Faster exploratory charts on sample datasets,2026-08-05,Data

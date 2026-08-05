@@ -1,3 +1,8 @@
 Feature,Tool A,Tool B,Tool C,Winner,Notes
-Code Completion,GitHub Copilot,Cursor,Claude,Cursor,Best project context
-Research,Perplexity,ChatGPT,Gemini,Perplexity,Best citations
+Code Completion,GitHub Copilot,Cursor,Claude,Cursor,Best project context for multi-file work
+Research,Perplexity,ChatGPT,Gemini,Perplexity,Best citations for open-web fact-finding
+Everyday writing,ChatGPT,Claude,Gemini,ChatGPT,Fast default for drafts and brainstorming
+Long documents,Claude,ChatGPT,Gemini,Claude,Strongest long-context careful analysis
+Workspace multimodal,Gemini,ChatGPT,Claude,Gemini,Best fit when work lives in Google Workspace
+Agentic coding,Antigravity,Cursor,OpenHands,Antigravity,Already used in delivery for agent-first spikes
+Scraping to RAG,Firecrawl,Crawl4AI,Browser Use,Firecrawl,Clean hosted path to markdown/JSON for LLMs

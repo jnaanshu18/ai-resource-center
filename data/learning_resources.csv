@@ -1,4 +1,10 @@
-Resource ID,Title,Type,Skill Level,URL,Description,Date Added
-RES-001,Prompt Engineering Guide,Documentation,Intermediate,https://platform.openai.com/docs/guides/prompt-engineering,Official OpenAI prompt engineering guide.,2026-07-07
-RES-002,Google AI Essentials,Course,Beginner,https://grow.google/ai,Introductory AI course for business users.,2026-07-07
-RES-003,Claude Documentation,Documentation,Advanced,https://docs.anthropic.com,Anthropic model and API documentation.,2026-07-07
+Resource ID,Title,Type,Skill Level,Role,URL,Description,Date Added
+RES-001,Prompt Engineering Guide,Documentation,Intermediate,Everyone,https://platform.openai.com/docs/guides/prompt-engineering,Official OpenAI prompt engineering guide for clearer outputs.,2026-07-07
+RES-002,Google AI Essentials,Course,Beginner,Everyone,https://grow.google/ai,Introductory AI course for business users and new joiners.,2026-07-07
+RES-003,Claude Documentation,Documentation,Advanced,Engineering,https://docs.anthropic.com,Anthropic model and API documentation for deeper Claude use.,2026-07-07
+RES-004,Cursor Docs,Documentation,Intermediate,Engineering,https://docs.cursor.com,How to use Cursor for project-aware coding and agents.,2026-08-05
+RES-005,Perplexity Help Center,Documentation,Beginner,Everyone,https://www.perplexity.ai/hub,Tips for cited research and verifying sources.,2026-08-05
+RES-006,Power BI Copilot docs,Documentation,Intermediate,Data,https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-introduction,Microsoft guidance for Copilot inside Power BI / Fabric.,2026-08-05
+RES-007,NotebookLM overview,Documentation,Beginner,Everyone,https://support.google.com/notebooklm,How to ground answers in your own document packs.,2026-08-05
+RES-008,OWASP LLM Top 10,Documentation,Intermediate,Engineering,https://owasp.org/www-project-top-10-for-large-language-model-applications/,Security risks to watch when building or using LLM apps.,2026-08-05
+RES-009,Internal AI safety reminder,Playbook,Beginner,Everyone,https://daily-code-solutions.github.io/DCS-Resources/?view=guides,Never paste client secrets PII or production data into unapproved tools.,2026-08-05
