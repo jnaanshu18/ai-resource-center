@@ -1757,7 +1757,7 @@ const LEARNING = [
     "type": "Playbook",
     "skillLevel": "Beginner",
     "role": "Everyone",
-    "url": "https://daily-code-solutions.github.io/DCS-Resources/?view=guides",
+    "url": "?view=guides",
     "description": "Never paste client secrets PII or production data into unapproved tools.",
     "dateAdded": "2026-08-05"
   }

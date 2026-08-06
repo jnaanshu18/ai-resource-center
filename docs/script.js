@@ -45,7 +45,9 @@ function featuredToolName() {
   return String(SITE_HIGHLIGHTS.toolOfTheWeek || "").trim();
 }
 
-const SUGGEST_ISSUE_REPO = "https://github.com/Daily-Code-Solutions/DCS-Resources/issues/new";
+const SUGGEST_ISSUE_REPO = (typeof getSiteConfig === "function"
+  ? getSiteConfig().issueNewUrl
+  : "https://github.com/jnaanshu18/ai-resource-center/issues/new");
 
 const VIEWS = ["home", "directory", "guides", "prompts", "playbooks", "contribute"];
 

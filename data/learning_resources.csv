@@ -7,4 +7,4 @@ RES-005,Perplexity Help Center,Documentation,Beginner,Everyone,https://www.perpl
 RES-006,Power BI Copilot docs,Documentation,Intermediate,Data,https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-introduction,Microsoft guidance for Copilot inside Power BI / Fabric.,2026-08-05
 RES-007,NotebookLM overview,Documentation,Beginner,Everyone,https://support.google.com/notebooklm,How to ground answers in your own document packs.,2026-08-05
 RES-008,OWASP LLM Top 10,Documentation,Intermediate,Engineering,https://owasp.org/www-project-top-10-for-large-language-model-applications/,Security risks to watch when building or using LLM apps.,2026-08-05
-RES-009,Internal AI safety reminder,Playbook,Beginner,Everyone,https://daily-code-solutions.github.io/DCS-Resources/?view=guides,Never paste client secrets PII or production data into unapproved tools.,2026-08-05
+RES-009,Internal AI safety reminder,Playbook,Beginner,Everyone,?view=guides,Never paste client secrets PII or production data into unapproved tools.,2026-08-05

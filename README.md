@@ -2,11 +2,15 @@
 
 Internal hub for Daily Code Solutions to discover **which AI tools we trust**, copy useful **prompts**, follow **playbooks**, and stop re-evaluating the same options twice.
 
-**Live site:** https://daily-code-solutions.github.io/DCS-Resources/
+**Live site (preview):** https://jnaanshu18.github.io/ai-resource-center/
+
+**Production (after approval):** https://daily-code-solutions.github.io/DCS-Resources/
 
 **Owner:** Anshu Jain
 
 **Focus areas:** Python engineering · Ecommerce · Scraping & automation · ETL/ELT · Data analytics & Power BI · AI agents & RAG
+
+> **Hosting switch:** Contribute drafts (Suggest a tool / Share a win) go to the repo set in `docs/site-config.js`. Keep `environment: "preview"` while testing on the personal repo; set `"production"` when Daily Code Solutions is approved — one line change.
 
 ---
 
@@ -141,7 +145,8 @@ python scripts/generate_site_data.py
 
 1. GitHub → repo **Settings → Pages → Build and deployment → Source → GitHub Actions**
 2. Push to `main`
-3. Site: https://daily-code-solutions.github.io/DCS-Resources/
+3. Preview site: https://jnaanshu18.github.io/ai-resource-center/
+4. When moving to the company repo, set `environment: "production"` in `docs/site-config.js` and push there too.
 
 ---
 
