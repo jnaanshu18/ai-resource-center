@@ -14,21 +14,24 @@ Internal hub for Daily Code Solutions to discover **which AI tools we trust**, c
 
 | Section | Purpose |
 |---|---|
-| **Home** | Job chooser (“what do you need to do?”), Start here shortlist, Tool of the week |
-| **Directory** | Full tool inventory — search, status/category filters, compare 2–3 tools, detail modal |
-| **Compare** | When-to-use / skip-when decision guides + documented head-to-head winners |
+| **AI hub** | Job chooser (“what do you need to do?”); Start here / Tool of the week under a secondary fold |
+| **Directory** | Full tool inventory — search, status buckets, side-by-side of 2–3 tools, detail modal |
+| **Guides** | When-to-use / skip-when decision guides + documented head-to-head winners |
 | **Prompts** | Searchable prompt library, role quick filters, Before production checklist, copy prompt / copy link |
 | **Playbooks** | Team use cases + learning resources (search + role filters) |
 | **Contribute** | Suggest a tool or share a win (creates a review draft) |
 
 **Deep links (examples):**
 - `?view=home|directory|guides|prompts|playbooks|contribute`
+- `?job=JOB-010` — open AI hub with a job chooser selection
 - `?tool=Cursor` or `?tool=AIT-005` — open a tool detail
 - `?starter=1` — Directory Start here shortlist
+- `?bucket=trusted` — Trusted tools (Adopted / Production)
 - `?view=prompts&pid=PRM-013` — jump to a prompt
 - `?view=prompts&pq=production` — prompt keyword search
 - `?view=playbooks&bq=report` — playbook search
 - `?view=contribute&tab=win` — Share a win form
+- `?compare=1` — Directory side-by-side mode
 
 Stack: plain HTML / CSS / vanilla JS in `docs/` (no framework). Data is generated into `docs/data.js` from CSVs.
 
@@ -49,6 +52,7 @@ ai-resource-center/
 │   ├── prompt_library.csv         # Prompt library
 │   ├── team_use_cases.csv         # Playbooks — use cases
 │   ├── learning_resources.csv     # Playbooks — learning links
+│   ├── site_highlights.csv        # Start here shortlist + optional Tool of the week
 │   └── reference_lists.csv        # Controlled lists (e.g. categories)
 ├── scripts/
 │   └── generate_site_data.py      # CSV → docs/data.js
@@ -122,12 +126,13 @@ python scripts/generate_site_data.py
 |---|---|
 | `ai_tools_directory.csv` | Directory, Home shortlist / Tool of the week, tool modals |
 | `chooser_jobs.csv` | Home job chooser |
-| `decision_guides.csv` | Compare — decision guides |
-| `tool_comparison.csv` | Compare — head-to-heads + Directory compare notes |
+| `decision_guides.csv` | Guides — decision guides |
+| `tool_comparison.csv` | Guides — head-to-heads + Directory side-by-side notes |
 | `tool_evaluation.csv` | Ratings / eval notes on tool details |
 | `prompt_library.csv` | Prompts tab |
 | `team_use_cases.csv` | Playbooks — use cases |
 | `learning_resources.csv` | Playbooks — learning |
+| `site_highlights.csv` | Home Start here shortlist; optional fixed Tool of the week (`Kind=Tool of the week`) |
 | `reference_lists.csv` | Suggest-form categories (and related lists) |
 
 ---

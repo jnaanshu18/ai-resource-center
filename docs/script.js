@@ -8,11 +8,19 @@ const STATUS_GROUP = {
   Archived: "coral", Deprecated: "coral", Rejected: "coral",
 };
 
-/** Lifecycle buckets for default “safe to use” filtering and (later) clickable stats. */
+/** Lifecycle buckets for default “safe to use” filtering and clickable stats. */
 const STATUS_BUCKETS = {
-  approved: ["Adopted", "Production"],
-  testing: ["Testing", "Pilot"],
-  research: ["Researching", "Planned"],
+  trusted: ["Adopted", "Production"],
+  trying: ["Testing", "Pilot"],
+  exploring: ["Researching", "Planned"],
+  paused: ["Deprecated", "Archived", "Rejected"],
+};
+
+/** Older ?bucket= values still resolve after the rename. */
+const LEGACY_STATUS_BUCKETS = {
+  approved: "trusted",
+  testing: "trying",
+  research: "exploring",
 };
 
 const STATUS_ORDER = [
@@ -22,8 +30,20 @@ const STATUS_ORDER = [
 
 const COMPARE_MAX = 3;
 
-/** Curated shortlist for new joiners — Production IDEs + everyday LLMs. */
-const START_HERE_NAMES = ["Cursor", "Antigravity", "ChatGPT", "Claude", "Perplexity"];
+/** Fallback if SITE_HIGHLIGHTS is missing from data.js. */
+const START_HERE_FALLBACK = ["Cursor", "Antigravity", "ChatGPT", "Claude", "Perplexity"];
+
+function startHereNames() {
+  const list = (typeof SITE_HIGHLIGHTS !== "undefined" && Array.isArray(SITE_HIGHLIGHTS.startHere))
+    ? SITE_HIGHLIGHTS.startHere.filter(Boolean)
+    : [];
+  return list.length ? list : START_HERE_FALLBACK;
+}
+
+function featuredToolName() {
+  if (typeof SITE_HIGHLIGHTS === "undefined") return "";
+  return String(SITE_HIGHLIGHTS.toolOfTheWeek || "").trim();
+}
 
 const SUGGEST_ISSUE_REPO = "https://github.com/Daily-Code-Solutions/DCS-Resources/issues/new";
 
@@ -70,15 +90,15 @@ function evaluationFor(tool) {
 
 function renderStats() {
   const total = TOOLS.length;
-  const adopted = TOOLS.filter(t => STATUS_BUCKETS.approved.includes(t.status)).length;
-  const testing = TOOLS.filter(t => STATUS_BUCKETS.testing.includes(t.status)).length;
-  const research = TOOLS.filter(t => STATUS_BUCKETS.research.includes(t.status)).length;
+  const trusted = TOOLS.filter(t => STATUS_BUCKETS.trusted.includes(t.status)).length;
+  const trying = TOOLS.filter(t => STATUS_BUCKETS.trying.includes(t.status)).length;
+  const exploring = TOOLS.filter(t => STATUS_BUCKETS.exploring.includes(t.status)).length;
 
   const stats = [
     { label: "Tools tracked", value: total, cls: "", filter: "all" },
-    { label: "In use", value: adopted, cls: "stat--mint", bucket: "approved" },
-    { label: "Testing / pilot", value: testing, cls: "stat--amber", bucket: "testing" },
-    { label: "Researching / planned", value: research, cls: "stat--blue", bucket: "research" },
+    { label: "Trusted", value: trusted, cls: "stat--mint", bucket: "trusted" },
+    { label: "Trying", value: trying, cls: "stat--amber", bucket: "trying" },
+    { label: "Exploring", value: exploring, cls: "stat--blue", bucket: "exploring" },
   ];
 
   document.getElementById("stats").innerHTML = stats.map(s => {
@@ -124,10 +144,14 @@ function renderChips() {
       return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
     });
   const statusCounts = Object.fromEntries(statuses.map(s => [s, TOOLS.filter(t => t.status === s).length]));
-  const approvedCount = TOOLS.filter(t => STATUS_BUCKETS.approved.includes(t.status)).length;
+  const trustedCount = TOOLS.filter(t => STATUS_BUCKETS.trusted.includes(t.status)).length;
+  const tryingCount = TOOLS.filter(t => STATUS_BUCKETS.trying.includes(t.status)).length;
+  const exploringCount = TOOLS.filter(t => STATUS_BUCKETS.exploring.includes(t.status)).length;
+  const pausedCount = TOOLS.filter(t => STATUS_BUCKETS.paused.includes(t.status)).length;
   const categories = countBy("category");
   const pricing = countBy("pricing");
   const moreOpen = Boolean(state.category || state.pricing);
+  const statusOpen = Boolean(state.status);
 
   const statusChips = statuses.map(s => `
     <button class="chip" data-status="${s}" type="button">${s} (${statusCounts[s]})</button>
@@ -139,7 +163,7 @@ function renderChips() {
     <button class="chip" data-pricing="${escapeHtml(c)}" type="button">${escapeHtml(c)} (${pricing.counts[c]})</button>
   `).join("");
 
-  const starterCount = START_HERE_NAMES.filter(n => TOOLS.some(t => t.name === n)).length;
+  const starterCount = startHereNames().filter(n => TOOLS.some(t => t.name === n)).length;
 
   document.getElementById("filterChips").innerHTML = `
     <div class="filter-group">
@@ -147,8 +171,10 @@ function renderChips() {
       <div class="chiprow">
         <button class="chip chip--starter" data-starter="true" type="button">Start here (${starterCount})</button>
         <button class="chip" data-filter="all" type="button">All (${TOOLS.length})</button>
-        <button class="chip" data-bucket="approved" type="button">In use (${approvedCount})</button>
-        ${statusChips}
+        <button class="chip" data-bucket="trusted" type="button">Trusted (${trustedCount})</button>
+        <button class="chip" data-bucket="trying" type="button">Trying (${tryingCount})</button>
+        <button class="chip" data-bucket="exploring" type="button">Exploring (${exploringCount})</button>
+        <button class="chip" data-bucket="paused" type="button">Not for new work (${pausedCount})</button>
       </div>
       <details class="status-guide">
         <summary class="status-guide__summary">What do these mean?</summary>
@@ -156,6 +182,22 @@ function renderChips() {
           <div class="status-guide__row">
             <dt><span class="status-guide__swatch status-guide__swatch--starter"></span>Start here</dt>
             <dd>Shortlist for new joiners</dd>
+          </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Trusted</dt>
+            <dd>Adopted or Production — safe for team work</dd>
+          </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--amber"></span>Trying</dt>
+            <dd>Testing or Pilot — evaluate carefully</dd>
+          </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Exploring</dt>
+            <dd>Planned or Researching — not day-to-day yet</dd>
+          </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Not for new work</dt>
+            <dd>Deprecated, Archived, or Rejected</dd>
           </div>
           <div class="status-guide__row">
             <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Production</dt>
@@ -173,7 +215,28 @@ function renderChips() {
             <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Planned / Researching</dt>
             <dd>Not ready for day-to-day work</dd>
           </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Deprecated</dt>
+            <dd>Phasing out — don’t start new work</dd>
+          </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Archived</dt>
+            <dd>No longer used — kept for history</dd>
+          </div>
+          <div class="status-guide__row">
+            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Rejected</dt>
+            <dd>Evaluated and declined</dd>
+          </div>
         </dl>
+      </details>
+      <details class="filter-more" id="statusExact"${statusOpen ? " open" : ""}>
+        <summary class="filter-more__summary">
+          Exact status
+          <span class="filter-more__hint">Production · Pilot · Archived…</span>
+        </summary>
+        <div class="filter-more__body">
+          <div class="chiprow">${statusChips}</div>
+        </div>
       </details>
     </div>
     <details class="filter-more" id="filterMore"${moreOpen ? " open" : ""}>
@@ -200,7 +263,7 @@ function getFiltered() {
   const q = state.search.trim().toLowerCase();
   let list = TOOLS.filter(t => {
     if (state.starter) {
-      if (!START_HERE_NAMES.includes(t.name)) return false;
+      if (!startHereNames().includes(t.name)) return false;
     } else if (state.status) {
       if (t.status !== state.status) return false;
     } else if (state.statusBucket) {
@@ -226,8 +289,9 @@ function getFiltered() {
 
   list.sort((a, b) => {
     if (state.starter && state.sort === "name") {
-      const ia = START_HERE_NAMES.indexOf(a.name);
-      const ib = START_HERE_NAMES.indexOf(b.name);
+      const names = startHereNames();
+      const ia = names.indexOf(a.name);
+      const ib = names.indexOf(b.name);
       return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
     }
     if (state.sort === "status") {
@@ -301,6 +365,13 @@ function starsHtml(evalData) {
   `;
 }
 
+/** Stars when scored; otherwise an explicit “not scored” label so blank ≠ bad. */
+function ratingHtml(evalData) {
+  const stars = starsHtml(evalData);
+  if (stars) return stars;
+  return `<span class="rating-pending">Not scored yet</span>`;
+}
+
 function hasScoredEval(evalData) {
   if (!evalData || evalData.score === "" || evalData.score == null) return false;
   return !Number.isNaN(parseFloat(evalData.score));
@@ -348,11 +419,11 @@ function renderCards() {
     const selected = isCompared(t.id);
     const guide = t.whenToUse || "";
     return `
-      <article class="card${selected ? " card--selected" : ""}" data-id="${escapeHtml(t.id)}" style="animation-delay:${Math.min(i * 30, 300)}ms" tabindex="0" role="button" aria-label="View details for ${escapeHtml(t.name)}">
+      <article class="card${selected ? " card--selected" : ""}" data-id="${escapeHtml(t.id)}" style="animation-delay:${Math.min(i * 30, 300)}ms">
         ${state.compareMode ? `
-          <label class="card__compare" onclick="event.stopPropagation()">
+          <label class="card__compare">
             <input type="checkbox" data-compare-id="${escapeHtml(t.id)}" ${selected ? "checked" : ""} ${!selected && state.compareIds.length >= COMPARE_MAX ? "disabled" : ""}>
-            <span>Compare</span>
+            <span>Select</span>
           </label>
         ` : ""}
         <div class="card__top">
@@ -371,9 +442,12 @@ function renderCards() {
           ${t.lastReviewed ? `<span>Reviewed ${escapeHtml(t.lastReviewed)}</span>` : `<span>Not reviewed</span>`}
         </div>
         ${tagListHtml(t, { includePlatform: true })}
-        ${t.url
-          ? `<a class="card__cta" href="${escapeHtml(t.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Visit tool</a>`
-          : `<span class="card__cta card__cta--muted">View details</span>`}
+        <div class="card__actions">
+          <button type="button" class="card__cta" data-open-details="${escapeHtml(t.id)}">View details</button>
+          ${t.url
+            ? `<a class="card__cta-secondary" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Open site</a>`
+            : ""}
+        </div>
       </article>
     `;
   }).join("");
@@ -412,7 +486,7 @@ function openModal(tool) {
         <h2 class="modal__name" id="modalName">${escapeHtml(tool.name)}</h2>
         <div class="modal__meta">
           <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
-          ${starsHtml(evalData)}
+          ${ratingHtml(evalData)}
           ${tagListHtml(tool)}
         </div>
       </div>
@@ -455,7 +529,7 @@ function openModal(tool) {
       ${hasUsefulEval(evalData) ? `
         <div class="modal__notes modal__eval">
           <strong>Evaluation</strong>
-          ${hasScoredEval(evalData) ? `<div class="modal__stars-row">${starsHtml(evalData)}</div>` : ""}
+          <div class="modal__stars-row">${ratingHtml(evalData)}</div>
           ${evalData.criteria ? `
             <div class="eval-row">
               <span class="eval-label">Criteria</span>
@@ -472,7 +546,7 @@ function openModal(tool) {
     </div>
     <div class="modal__actions">
       <button type="button" class="modal__cta modal__cta--secondary" id="modalCompareBtn" data-id="${escapeHtml(tool.id)}">
-        ${isCompared(tool.id) ? "Remove from compare" : state.compareIds.length >= COMPARE_MAX ? "Compare list is full" : "Add to compare"}
+        ${isCompared(tool.id) ? "Remove from side-by-side" : state.compareIds.length >= COMPARE_MAX ? "Side-by-side list is full" : "Add to side-by-side"}
       </button>
       ${tool.url ? `<a class="modal__cta" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener">Open ${escapeHtml(tool.name)}</a>` : ""}
     </div>
@@ -573,6 +647,9 @@ function syncUrl({ tool } = {}) {
   if (state.view === "contribute" && state.contribTab === "win") params.set("tab", "win");
   else params.delete("tab");
 
+  if (state.view === "home" && state.chooserJobId) params.set("job", state.chooserJobId);
+  else params.delete("job");
+
   if (tool === null) params.delete("tool");
   else if (tool && tool.name) params.set("tool", tool.name);
 
@@ -599,10 +676,15 @@ function applyFiltersFromUrl() {
       state.status = status;
       state.statusBucket = null;
       if (!view) state.view = "directory";
-    } else if (bucket && STATUS_BUCKETS[bucket]) {
-      state.status = null;
-      state.statusBucket = bucket;
-      if (!view) state.view = "directory";
+    } else if (bucket) {
+      const resolved = STATUS_BUCKETS[bucket]
+        ? bucket
+        : LEGACY_STATUS_BUCKETS[bucket];
+      if (resolved && STATUS_BUCKETS[resolved]) {
+        state.status = null;
+        state.statusBucket = resolved;
+        if (!view) state.view = "directory";
+      }
     }
   }
 
@@ -631,6 +713,12 @@ function applyFiltersFromUrl() {
   if (sort && sortSelect && [...sortSelect.options].some(o => o.value === sort)) {
     state.sort = sort;
     sortSelect.value = sort;
+  }
+
+  const job = params.get("job");
+  if (job && jobsData().some(j => j.id === job)) {
+    state.chooserJobId = job;
+    if (!view) state.view = "home";
   }
 
   const role = params.get("role");
@@ -811,19 +899,53 @@ function isoWeekNumber(date = new Date()) {
 }
 
 function toolOfTheWeek() {
-  const preferred = START_HERE_NAMES.map(n => findToolByName(n)).filter(Boolean);
+  const fixed = featuredToolName();
+  if (fixed) {
+    const tool = findToolByName(fixed);
+    if (tool) return tool;
+  }
+  const preferred = startHereNames().map(n => findToolByName(n)).filter(Boolean);
   const pool = preferred.length
     ? preferred
-    : TOOLS.filter(t => ["Production", "Adopted"].includes(t.status));
+    : TOOLS.filter(t => STATUS_BUCKETS.trusted.includes(t.status));
   if (!pool.length) return null;
   return pool[isoWeekNumber() % pool.length];
+}
+
+function chooserTone(job, index = 0) {
+  const text = `${job.label || ""} ${job.description || ""}`.toLowerCase();
+  if (text.includes("research") || text.includes("citation")) return "research";
+  if (text.includes("writ") || text.includes("brainstorm")) return "writing";
+  if (text.includes("long doc") || text.includes("analysis") || text.includes("careful")) return "analysis";
+  if (text.includes("workspace") || text.includes("multimodal") || text.includes("google")) return "workspace";
+  if (text.includes("code") || text.includes("repo")) return "coding";
+  if (text.includes("scrape") || text.includes("browser")) return "scrape";
+  if (text.includes("data") || text.includes("power bi") || text.includes("analyz")) return "data";
+  if (text.includes("document") || text.includes("q&a") || text.includes("notebook")) return "docs";
+  if (text.includes("deck") || text.includes("present")) return "decks";
+  if (text.includes("agent") || text.includes("automat") || text.includes("workflow")) return "agents";
+  const fallback = ["research", "writing", "analysis", "workspace", "coding", "scrape", "data", "docs", "decks", "agents"];
+  return fallback[index % fallback.length];
+}
+
+function homeToolTone(tool) {
+  const cat = String(tool?.category || "").toLowerCase();
+  if (cat.includes("llm") || cat.includes("assistant")) return "assistants";
+  if (cat.includes("coding")) return "coding";
+  if (cat.includes("scrap") || cat.includes("browser")) return "scrape";
+  if (cat.includes("data")) return "data";
+  if (cat.includes("agent")) return "agents";
+  if (cat.includes("creative")) return "decks";
+  if (cat.includes("knowledge")) return "docs";
+  return "default";
 }
 
 function miniToolCard(tool, { tip = "" } = {}) {
   if (!tool) return "";
   const group = STATUS_GROUP[tool.status] || "blue";
+  const tone = homeToolTone(tool);
   return `
-    <button type="button" class="mini-card" data-open-tool="${escapeHtml(tool.id)}">
+    <button type="button" class="mini-card mini-card--tone-${tone}" data-open-tool="${escapeHtml(tool.id)}">
       <div class="mini-card__top">
         ${logoHtml(tool)}
         <div>
@@ -843,8 +965,8 @@ function renderHome() {
   const totw = document.getElementById("toolOfWeek");
   if (!grid) return;
 
-  grid.innerHTML = jobsData().map(job => `
-    <button type="button" class="chooser-card${state.chooserJobId === job.id ? " is-active" : ""}" data-job="${escapeHtml(job.id)}">
+  grid.innerHTML = jobsData().map((job, i) => `
+    <button type="button" class="chooser-card chooser-tone--${chooserTone(job, i)}${state.chooserJobId === job.id ? " is-active" : ""}" data-job="${escapeHtml(job.id)}">
       <span class="chooser-card__label">${escapeHtml(job.label)}</span>
       <span class="chooser-card__desc">${escapeHtml(job.description)}</span>
     </button>
@@ -856,25 +978,33 @@ function renderHome() {
       const tools = job.tools.map(findToolByName).filter(Boolean);
       result.hidden = false;
       result.innerHTML = `
+        <div class="chooser-result__badge" aria-hidden="true">Recommended for this job</div>
         <div class="chooser-result__head">
           <h3 class="chooser-result__title">${escapeHtml(job.label)}</h3>
           <p class="chooser-result__tip">${escapeHtml(job.tip)}</p>
         </div>
+        <p class="chooser-result__tools-label">Trusted tools</p>
         <div class="starter-row">
           ${tools.map(t => miniToolCard(t)).join("") || "<p class='empty'>No matching tools in the directory yet.</p>"}
         </div>
       `;
+      result.classList.remove("is-flash");
+      void result.offsetWidth;
+      result.classList.add("is-flash");
     }
   } else {
     result.hidden = true;
     result.innerHTML = "";
+    result.classList.remove("is-flash");
   }
 
-  starter.innerHTML = START_HERE_NAMES.map(findToolByName).filter(Boolean).map(t => miniToolCard(t)).join("");
+  starter.innerHTML = startHereNames().map(findToolByName).filter(Boolean).map(t => miniToolCard(t)).join("");
 
   const featured = toolOfTheWeek();
   if (featured && totw) {
     const group = STATUS_GROUP[featured.status] || "blue";
+    const panel = totw.closest(".panel--feature");
+    if (panel) panel.className = "panel panel--feature";
     totw.innerHTML = `
       <div class="totw">
         <div class="totw__identity">
@@ -1000,17 +1130,11 @@ function promptMatchesSearch(prompt, query) {
 }
 
 function syncPromptQuickChips() {
-  document.querySelectorAll("[data-prompt-quick]").forEach(btn => {
-    const key = btn.getAttribute("data-prompt-quick");
-    let active = false;
-    if (key === "all") {
-      active = state.promptRole === "All" && state.promptUseCase === "All";
-    } else if (key === "preprod") {
-      active = state.promptUseCase === "Pre-prod checklist";
-    } else {
-      active = state.promptUseCase === "All" && state.promptRole === key;
-    }
-    btn.classList.toggle("active", active);
+  document.querySelectorAll("[data-prompt-usecase]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-prompt-usecase") === state.promptUseCase);
+  });
+  document.querySelectorAll("[data-prompt-role]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-prompt-role") === state.promptRole);
   });
 }
 
@@ -1093,17 +1217,14 @@ function clearPromptFilters() {
   syncUrl();
 }
 
-function applyPromptQuickFilter(key) {
-  if (key === "all") {
-    state.promptRole = "All";
-    state.promptUseCase = "All";
-  } else if (key === "preprod") {
-    state.promptUseCase = "Pre-prod checklist";
-    state.promptRole = "All";
-  } else {
-    state.promptRole = key;
-    state.promptUseCase = "All";
-  }
+function applyPromptUseCaseFilter(value) {
+  state.promptUseCase = value || "All";
+  renderPrompts();
+  syncUrl();
+}
+
+function applyPromptRoleFilter(value) {
+  state.promptRole = value || "All";
   renderPrompts();
   syncUrl();
 }
@@ -1411,8 +1532,18 @@ function bindAppNavigation() {
     const jobBtn = e.target.closest("[data-job]");
     if (jobBtn && state.view === "home") {
       const id = jobBtn.dataset.job;
-      state.chooserJobId = state.chooserJobId === id ? null : id;
+      const selecting = state.chooserJobId !== id;
+      state.chooserJobId = selecting ? id : null;
       renderHome();
+      syncUrl();
+      if (selecting) {
+        requestAnimationFrame(() => {
+          document.getElementById("chooserResult")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
       return;
     }
 
@@ -1462,9 +1593,15 @@ function bindAppNavigation() {
       return;
     }
 
-    const promptQuick = e.target.closest("[data-prompt-quick]");
-    if (promptQuick) {
-      applyPromptQuickFilter(promptQuick.getAttribute("data-prompt-quick") || "all");
+    const promptUseCase = e.target.closest("[data-prompt-usecase]");
+    if (promptUseCase) {
+      applyPromptUseCaseFilter(promptUseCase.getAttribute("data-prompt-usecase") || "All");
+      return;
+    }
+
+    const promptRole = e.target.closest("[data-prompt-role]");
+    if (promptRole) {
+      applyPromptRoleFilter(promptRole.getAttribute("data-prompt-role") || "All");
       return;
     }
 
@@ -1495,7 +1632,6 @@ function bindAppNavigation() {
       }
     });
   }
-  document.getElementById("promptSearchBtn")?.addEventListener("click", applyPromptSearchFromInput);
 
   const playbookSearchInput = document.getElementById("playbookSearchInput");
   if (playbookSearchInput) {
@@ -1511,7 +1647,6 @@ function bindAppNavigation() {
       }
     });
   }
-  document.getElementById("playbookSearchBtn")?.addEventListener("click", applyPlaybookSearchFromInput);
 
   document.querySelector(".contribute-tabs")?.addEventListener("click", e => {
     const tab = e.target.closest("[data-contrib]");
@@ -1597,12 +1732,14 @@ function setCompareMode(on) {
 
 function syncCompareUI() {
   const bar = document.getElementById("compareBar");
+  const banner = document.getElementById("compareBanner");
   const openBtn = document.getElementById("compareOpen");
   const text = document.getElementById("compareBarText");
   const count = state.compareIds.length;
   const onDirectory = state.view === "directory";
+  const selecting = state.compareMode && onDirectory;
 
-  if (state.compareMode && onDirectory) {
+  if (selecting) {
     bar.hidden = false;
     bar.removeAttribute("hidden");
     bar.classList.add("is-visible");
@@ -1610,11 +1747,12 @@ function syncCompareUI() {
     bar.hidden = true;
     bar.classList.remove("is-visible");
   }
-  document.body.classList.toggle("has-compare-bar", state.compareMode && onDirectory);
+  if (banner) banner.hidden = !selecting;
+  document.body.classList.toggle("has-compare-bar", selecting);
 
   if (!state.compareMode) return;
 
-  if (count === 0) text.textContent = "Select 2–3 tools to compare";
+  if (count === 0) text.textContent = "Select 2–3 tools for side-by-side";
   else if (count === 1) text.textContent = "1 tool selected — pick at least one more";
   else text.textContent = `${count} of ${COMPARE_MAX} tools selected`;
 
@@ -1682,7 +1820,7 @@ function renderComparePanel() {
       label: "Rating",
       values: tools.map(t => {
         const ev = evaluationFor(t);
-        return starsHtml(ev) || "—";
+        return ratingHtml(ev);
       }),
       html: true,
     },
@@ -1757,11 +1895,16 @@ function openCompare() {
   document.body.style.overflow = "hidden";
 }
 
-/** Close compare overlay only — keep selection and compare mode. */
+/** Close side-by-side overlay and exit selection mode (hides bottom bar). */
 function closeCompare() {
-  document.getElementById("compareOverlay").hidden = true;
+  const overlay = document.getElementById("compareOverlay");
+  const wasOpen = overlay && !overlay.hidden;
+  if (overlay) overlay.hidden = true;
   if (document.getElementById("modalOverlay").hidden) {
     document.body.style.overflow = "";
+  }
+  if (wasOpen && state.compareMode) {
+    setCompareMode(false);
   }
 }
 
@@ -1885,28 +2028,11 @@ function init() {
   });
 
   document.getElementById("toolGrid").addEventListener("click", e => {
-    if (e.target.closest(".card__compare") || e.target.closest(".card__cta")) return;
-    const card = e.target.closest(".card");
-    if (!card) return;
-    if (state.compareMode) {
-      toggleCompareId(card.dataset.id);
-      return;
+    const detailsBtn = e.target.closest("[data-open-details]");
+    if (detailsBtn) {
+      const tool = TOOLS.find(t => t.id === detailsBtn.dataset.openDetails);
+      if (tool) openModal(tool);
     }
-    const tool = TOOLS.find(t => t.id === card.dataset.id);
-    if (tool) openModal(tool);
-  });
-
-  document.getElementById("toolGrid").addEventListener("keydown", e => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    const card = e.target.closest(".card");
-    if (!card) return;
-    e.preventDefault();
-    if (state.compareMode) {
-      toggleCompareId(card.dataset.id);
-      return;
-    }
-    const tool = TOOLS.find(t => t.id === card.dataset.id);
-    if (tool) openModal(tool);
   });
 
   document.getElementById("modalClose").addEventListener("click", closeModal);
@@ -1921,10 +2047,12 @@ function init() {
     }
   });
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      closeModal();
+    if (e.key !== "Escape") return;
+    if (!document.getElementById("compareOverlay").hidden) {
       closeCompare();
+      return;
     }
+    closeModal();
   });
 
   bindSuggestValidation();

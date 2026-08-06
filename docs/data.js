@@ -969,72 +969,192 @@ const EVALUATIONS = {
     "criteria": "Quality, Speed, Cost",
     "recommendation": "★★★★★",
     "date": "2026-07-07",
-    "notes": "Strong general-purpose assistant",
-    "evaluator": ""
+    "notes": "Strong general-purpose assistant — everyday writing and brainstorming default",
+    "evaluator": "DCS catalog review"
   },
   "Claude": {
     "score": "4.7",
     "criteria": "Reasoning, Context, Safety",
     "recommendation": "★★★★★",
     "date": "2026-07-07",
-    "notes": "Excellent for long documents",
-    "evaluator": ""
+    "notes": "Excellent for long documents and careful analysis",
+    "evaluator": "DCS catalog review"
   },
   "Cursor": {
-    "score": "4.3",
-    "criteria": "Coding, IDE Integration",
-    "recommendation": "★★★★☆",
-    "date": "2026-07-07",
-    "notes": "High productivity for developers",
-    "evaluator": ""
+    "score": "4.8",
+    "criteria": "Coding, IDE Integration, Project context",
+    "recommendation": "★★★★★",
+    "date": "2026-08-06",
+    "notes": "Core Production coding IDE for multi-file delivery work — top team rating",
+    "evaluator": "DCS catalog review"
   },
   "Perplexity": {
-    "score": "",
+    "score": "4.4",
     "criteria": "Citations, Speed, Accuracy",
-    "recommendation": "",
-    "date": "2026-08-03",
+    "recommendation": "★★★★☆",
+    "date": "2026-08-05",
     "notes": "Best first stop for cited web research when sources matter",
-    "evaluator": ""
+    "evaluator": "DCS catalog review"
+  },
+  "Gemini": {
+    "score": "4.0",
+    "criteria": "Workspace fit, Multimodal, Quality",
+    "recommendation": "★★★★☆",
+    "date": "2026-08-05",
+    "notes": "Adopted for Workspace/multimodal; not the primary default versus ChatGPT/Claude",
+    "evaluator": "DCS catalog review"
   },
   "GitHub Copilot": {
-    "score": "",
+    "score": "3.9",
     "criteria": "Code Completion, IDE Integration, Speed",
-    "recommendation": "",
-    "date": "2026-08-03",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
     "notes": "Solid baseline pair programmer; Cursor preferred for deeper project-aware work",
-    "evaluator": ""
+    "evaluator": "DCS catalog review"
   },
   "Notion AI": {
-    "score": "",
+    "score": "3.7",
     "criteria": "Writing, Summarization, Workspace Fit",
-    "recommendation": "",
-    "date": "2026-08-03",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
     "notes": "Useful inside Notion for drafts and summaries; not a replacement for research or coding tools",
-    "evaluator": ""
+    "evaluator": "DCS catalog review"
   },
   "OpenClaw": {
-    "score": "",
+    "score": "4.5",
     "criteria": "Autonomy, Integrations, Self-hosting",
-    "recommendation": "",
-    "date": "2026-08-03",
-    "notes": "Team-adopted local agent gateway across messaging channels; keep secrets off unapproved models",
-    "evaluator": ""
+    "recommendation": "★★★★★",
+    "date": "2026-08-06",
+    "notes": "Production messaging-gateway agent; lock down channels and keep secrets off unapproved models",
+    "evaluator": "DCS catalog review"
   },
   "Hermes Agent": {
-    "score": "",
+    "score": "4.5",
     "criteria": "Autonomy, Memory, Scheduling",
-    "recommendation": "",
-    "date": "2026-08-03",
-    "notes": "Self-hosted agent for terminal browser and cron-style automations",
-    "evaluator": ""
+    "recommendation": "★★★★★",
+    "date": "2026-08-06",
+    "notes": "Production self-hosted agent for terminal browser and cron-style automations",
+    "evaluator": "DCS catalog review"
   },
   "Antigravity": {
-    "score": "",
+    "score": "4.5",
     "criteria": "Agent Coding, Speed, Team Adoption",
-    "recommendation": "",
-    "date": "2026-08-03",
-    "notes": "In production use for agentic coding and accelerated development workflows",
-    "evaluator": ""
+    "recommendation": "★★★★★",
+    "date": "2026-08-06",
+    "notes": "Production agentic coding already used in delivery; human review still required",
+    "evaluator": "DCS catalog review"
+  },
+  "NotebookLM": {
+    "score": "3.7",
+    "criteria": "Doc grounding, Briefings, Ease of use",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Pilot for document Q&A and briefing packs — no client-confidential uploads without approval",
+    "evaluator": "DCS catalog review"
+  },
+  "CodeRabbit": {
+    "score": "3.9",
+    "criteria": "PR review quality, Security signals, Noise",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "High-value Testing candidate for first-pass PR review; humans still own merge decisions",
+    "evaluator": "DCS catalog review"
+  },
+  "Julius AI": {
+    "score": "3.6",
+    "criteria": "Ad hoc analysis, Charts, Data safety",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Pilot for CSV/spreadsheet exploration — Internal/sample data only",
+    "evaluator": "DCS catalog review"
+  },
+  "n8n": {
+    "score": "2.8",
+    "criteria": "Workflow fit, Maintainability, Current need",
+    "recommendation": "★★☆☆☆",
+    "date": "2026-08-05",
+    "notes": "Archived reference — prefer OpenClaw/Hermes or modern agent pipelines for new work",
+    "evaluator": "DCS catalog review"
+  },
+  "Gamma": {
+    "score": "3.5",
+    "criteria": "Speed, Deck quality, Brand polish",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Pilot for fast internal decks; review branding before external client use",
+    "evaluator": "DCS catalog review"
+  },
+  "OpenHands": {
+    "score": "3.2",
+    "criteria": "Autonomy, Sandbox safety, Review burden",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Planned — revisit after Cursor/Antigravity capacity is stable; sandbox-only experiments",
+    "evaluator": "DCS catalog review"
+  },
+  "Browser Use": {
+    "score": "3.9",
+    "criteria": "Python fit, Playwright control, Reliability",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Strong Testing fit for agent-driven browser automation on approved targets",
+    "evaluator": "DCS catalog review"
+  },
+  "Firecrawl": {
+    "score": "4.0",
+    "criteria": "Clean extraction, RAG readiness, Hosted ease",
+    "recommendation": "★★★★☆",
+    "date": "2026-08-05",
+    "notes": "Testing winner for scraping-to-RAG markdown/JSON versus brittle custom parsers",
+    "evaluator": "DCS catalog review"
+  },
+  "Apify": {
+    "score": "3.4",
+    "criteria": "Managed actors, Ecommerce fit, Cost clarity",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Researching managed scrapers for ecommerce monitoring — validate ToS and actor costs",
+    "evaluator": "DCS catalog review"
+  },
+  "Crawl4AI": {
+    "score": "3.8",
+    "criteria": "Python-native crawl, LLM-ready output, Control",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Testing in-house companion to Browser Use for RAG-ready extraction",
+    "evaluator": "DCS catalog review"
+  },
+  "Ollama": {
+    "score": "3.7",
+    "criteria": "Privacy, Local quality, Offline use",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Testing local/private models when data should stay on-device — quality lags top cloud assistants",
+    "evaluator": "DCS catalog review"
+  },
+  "Power BI Copilot": {
+    "score": "4.0",
+    "criteria": "DAX help, Report speed, DCS delivery fit",
+    "recommendation": "★★★★☆",
+    "date": "2026-08-05",
+    "notes": "High relevance for Power BI delivery; confirm Fabric/Copilot licensing before client promises",
+    "evaluator": "DCS catalog review"
+  },
+  "Dify": {
+    "score": "3.3",
+    "criteria": "RAG studio, Self-hosting, Security hardening",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Planned for client RAG demos after Firecrawl/Ollama path is clearer",
+    "evaluator": "DCS catalog review"
+  },
+  "v0": {
+    "score": "3.4",
+    "criteria": "UI speed, React/Next export, Production polish",
+    "recommendation": "★★★☆☆",
+    "date": "2026-08-05",
+    "notes": "Planned for fast React/Next prototypes — starting point only; check a11y and brand",
+    "evaluator": "DCS catalog review"
   }
 };
 const CHOOSER_JOBS = [
@@ -1642,3 +1762,13 @@ const LEARNING = [
     "dateAdded": "2026-08-05"
   }
 ];
+const SITE_HIGHLIGHTS = {
+  "startHere": [
+    "Cursor",
+    "Antigravity",
+    "ChatGPT",
+    "Claude",
+    "Perplexity"
+  ],
+  "toolOfTheWeek": ""
+};

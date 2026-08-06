@@ -11,6 +11,7 @@ Sources:
   - data/prompt_library.csv
   - data/team_use_cases.csv
   - data/learning_resources.csv
+  - data/site_highlights.csv
 
 Run this after editing the CSVs (or re-exporting them from the Google
 Sheet), then commit + push. GitHub Pages serves docs/ directly, so the
@@ -219,6 +220,27 @@ def load_learning():
     ]
 
 
+def load_site_highlights():
+    """Start here shortlist + optional fixed Tool of the week from CSV."""
+    start_here = []
+    featured = ""
+    for row in load_csv_dicts(DATA / "site_highlights.csv"):
+        kind = (row.get("Kind") or "").strip().lower()
+        name = (row.get("Tool Name") or "").strip()
+        if not name:
+            continue
+        order = int(row.get("Sort Order") or 99)
+        if kind == "start here":
+            start_here.append({"name": name, "order": order})
+        elif kind in ("tool of the week", "featured"):
+            featured = name
+    start_here.sort(key=lambda item: (item["order"], item["name"]))
+    return {
+        "startHere": [item["name"] for item in start_here],
+        "toolOfTheWeek": featured,
+    }
+
+
 def main():
     tools = load_tools()
     categories = load_categories()
@@ -229,6 +251,7 @@ def main():
     prompts = load_prompts()
     use_cases = load_use_cases()
     learning = load_learning()
+    highlights = load_site_highlights()
 
     js = (
         "// Auto-generated from data/*.csv — do not edit by hand.\n"
@@ -241,6 +264,7 @@ def main():
         f"const PROMPTS = {json.dumps(prompts, indent=2, ensure_ascii=False)};\n"
         f"const USE_CASES = {json.dumps(use_cases, indent=2, ensure_ascii=False)};\n"
         f"const LEARNING = {json.dumps(learning, indent=2, ensure_ascii=False)};\n"
+        f"const SITE_HIGHLIGHTS = {json.dumps(highlights, indent=2, ensure_ascii=False)};\n"
     )
 
     OUT_PATH.write_text(js, encoding="utf-8")
@@ -248,7 +272,8 @@ def main():
         f"Wrote {len(tools)} tools, {len(categories)} categories, "
         f"{len(comparisons)} comparisons, {len(evaluations)} evaluations, "
         f"{len(jobs)} jobs, {len(guides)} guides, {len(prompts)} prompts, "
-        f"{len(use_cases)} use cases, {len(learning)} learning "
+        f"{len(use_cases)} use cases, {len(learning)} learning, "
+        f"{len(highlights['startHere'])} start-here "
         f"to {OUT_PATH.relative_to(ROOT)}"
     )
 

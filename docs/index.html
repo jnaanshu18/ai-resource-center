@@ -22,9 +22,9 @@
 
 <nav class="app-nav" aria-label="AI Resource Center">
   <div class="app-nav__inner">
-    <button type="button" class="app-nav__link is-active" data-view="home">Home</button>
+    <button type="button" class="app-nav__link is-active" data-view="home">AI hub</button>
     <button type="button" class="app-nav__link" data-view="directory">Directory</button>
-    <button type="button" class="app-nav__link" data-view="guides">Compare</button>
+    <button type="button" class="app-nav__link" data-view="guides">Guides</button>
     <button type="button" class="app-nav__link" data-view="prompts">Prompts</button>
     <button type="button" class="app-nav__link" data-view="playbooks">Playbooks</button>
     <button type="button" class="app-nav__link" data-view="contribute">Contribute</button>
@@ -36,17 +36,13 @@
   <section class="view" id="view-home" data-view-panel="home">
     <section class="hero hero--home">
       <div class="hero__container">
-        <p class="hero-kicker">Internal · Daily Code Solutions</p>
+        <p class="hero-kicker">Internal · Daily Code Solutions · AI Resource Center</p>
         <h1 class="hero-heading">
           Stuck on a task? <span class="text-gradient">We’ll tell you which AI we trust.</span>
         </h1>
         <p class="hero-text">
-          Pick a job below, start with the shortlist, or check this week’s featured tool.
+          Pick a job below — we’ll recommend tools the team already trusts.
         </p>
-        <div class="hero__cta-wrap">
-          <button type="button" class="btn-base btn-primary btn-lg" data-go-view="directory">Browse directory</button>
-          <button type="button" class="btn-base btn-secondary btn-lg" data-go-view="contribute">Suggest or share a win</button>
-        </div>
       </div>
     </section>
 
@@ -55,35 +51,39 @@
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="chooserTitle">What do you need to do?</h2>
-            <p class="panel__desc">Tap a job — we’ll recommend the tools the team already trusts.</p>
+            <p class="panel__desc">Tap a job — recommendations appear right here.</p>
           </div>
+          <button type="button" class="linkbtn" data-go-view="directory">Browse full directory →</button>
         </div>
         <div class="chooser-grid" id="chooserGrid"></div>
         <div class="chooser-result" id="chooserResult" hidden></div>
       </section>
 
-      <div class="home-split">
-        <section class="panel" aria-labelledby="startHereTitle">
-          <div class="panel__head">
-            <div>
-              <h2 class="panel__title" id="startHereTitle">Start here</h2>
-              <p class="panel__desc">Shortlist for new joiners and everyday work.</p>
+      <details class="home-more" id="homeMore">
+        <summary class="home-more__summary">Start here shortlist &amp; tool of the week</summary>
+        <div class="home-split">
+          <section class="panel" aria-labelledby="startHereTitle">
+            <div class="panel__head">
+              <div>
+                <h2 class="panel__title" id="startHereTitle">Start here</h2>
+                <p class="panel__desc">Shortlist for new joiners and everyday work.</p>
+              </div>
+              <button type="button" class="linkbtn" data-go-view="directory" data-starter="1">See in directory →</button>
             </div>
-            <button type="button" class="linkbtn" data-go-view="directory" data-starter="1">See in directory →</button>
-          </div>
-          <div class="starter-row" id="starterRow"></div>
-        </section>
+            <div class="starter-row" id="starterRow"></div>
+          </section>
 
-        <section class="panel panel--feature" aria-labelledby="totwTitle">
-          <div class="panel__head">
-            <div>
-              <p class="panel__eyebrow">This week</p>
-              <h2 class="panel__title" id="totwTitle">Tool of the week</h2>
+          <section class="panel panel--feature" aria-labelledby="totwTitle">
+            <div class="panel__head">
+              <div>
+                <p class="panel__eyebrow">This week</p>
+                <h2 class="panel__title" id="totwTitle">Tool of the week</h2>
+              </div>
             </div>
-          </div>
-          <div id="toolOfWeek"></div>
-        </section>
-      </div>
+            <div id="toolOfWeek"></div>
+          </section>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -92,7 +92,7 @@
     <header class="page-hero">
       <div class="page-hero__inner">
         <h1 class="page-hero__title">Tool directory</h1>
-        <p class="page-hero__desc">Every AI tool we run — search, filter, compare, and open full details.</p>
+        <p class="page-hero__desc">Every AI tool we run — search, filter, open details, or pick tools for side-by-side.</p>
       </div>
     </header>
 
@@ -103,7 +103,7 @@
         <div class="controls__header">
           <div>
             <h2 class="controls__title">Find the right tool</h2>
-            <p class="controls__desc">Browse the full directory, or narrow by status and category. New joiners: try Start here.</p>
+            <p class="controls__desc">Browse the full directory, or narrow by status bucket. New joiners: try Start here. Exact statuses are under Exact status.</p>
           </div>
         </div>
 
@@ -120,13 +120,16 @@
             <option value="category">Category</option>
             <option value="pricing">Pricing</option>
           </select>
-          <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Compare</button>
+          <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Side-by-side</button>
         </div>
 
         <div class="filter-groups" id="filterChips" aria-label="Filter tools"></div>
       </section>
 
       <section aria-label="Tool results">
+        <div class="compare-banner" id="compareBanner" hidden role="status">
+          Selecting tools for side-by-side — click a card to add (up to 3).
+        </div>
         <div class="resultbar">
           <span id="resultCount"></span>
           <button id="clearFilters" class="linkbtn" hidden>Clear filters</button>
@@ -137,12 +140,12 @@
     </div>
   </section>
 
-  <!-- GUIDES / COMPARE -->
+  <!-- GUIDES -->
   <section class="view" id="view-guides" data-view-panel="guides" hidden>
     <header class="page-hero">
       <div class="page-hero__inner">
-        <h1 class="page-hero__title">Compare &amp; when to use</h1>
-        <p class="page-hero__desc">Pick the right tool for the job — use-when / skip-when guides and documented winners.</p>
+        <h1 class="page-hero__title">When to use</h1>
+        <p class="page-hero__desc">Use-when / skip-when guides and documented head-to-head winners. For a live pick of 2–3 tools, use Side-by-side in Directory.</p>
       </div>
     </header>
     <div class="content">
@@ -162,7 +165,7 @@
             <h2 class="panel__title" id="compTitle">Documented head-to-heads</h2>
             <p class="panel__desc">Winners the team already logged from side-by-side reviews.</p>
           </div>
-          <button type="button" class="btn-base btn-secondary" data-go-view="directory" data-compare="1">Compare any tools →</button>
+          <button type="button" class="btn-base btn-secondary" data-go-view="directory" data-compare="1">Open side-by-side →</button>
         </div>
         <div id="comparisonsList"></div>
       </section>
@@ -183,17 +186,27 @@
           <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <input type="search" id="promptSearchInput" placeholder="Search prompts — e.g. production, email, code review, cursor…" autocomplete="off" aria-label="Search prompts">
         </div>
-        <button type="button" class="btn-base btn-primary" id="promptSearchBtn">Search</button>
       </div>
 
-      <div class="prompt-quick" aria-label="Quick filters">
-        <button type="button" class="chip" data-prompt-quick="all">All</button>
-        <button type="button" class="chip chip--starter" data-prompt-quick="preprod">Before production</button>
-        <button type="button" class="chip" data-prompt-quick="Engineering">Engineering</button>
-        <button type="button" class="chip" data-prompt-quick="Everyone">Everyone</button>
-        <button type="button" class="chip" data-prompt-quick="Data">Data</button>
-        <button type="button" class="chip" data-prompt-quick="Operations">Operations</button>
-        <button type="button" class="chip" data-prompt-quick="Management">Management</button>
+      <div class="prompt-filters" aria-label="Prompt filters">
+        <div class="filter-block">
+          <div class="filter-block__label">Checklist</div>
+          <div class="prompt-quick" role="group" aria-label="Checklist filters">
+            <button type="button" class="chip" data-prompt-usecase="All">All</button>
+            <button type="button" class="chip chip--starter" data-prompt-usecase="Pre-prod checklist">Before production</button>
+          </div>
+        </div>
+        <div class="filter-block">
+          <div class="filter-block__label">Role</div>
+          <div class="prompt-quick" role="group" aria-label="Role filters">
+            <button type="button" class="chip" data-prompt-role="All">All roles</button>
+            <button type="button" class="chip" data-prompt-role="Engineering">Engineering</button>
+            <button type="button" class="chip" data-prompt-role="Everyone">Everyone</button>
+            <button type="button" class="chip" data-prompt-role="Data">Data</button>
+            <button type="button" class="chip" data-prompt-role="Operations">Operations</button>
+            <button type="button" class="chip" data-prompt-role="Management">Management</button>
+          </div>
+        </div>
         <button type="button" id="promptClearFilters" class="linkbtn" hidden>Clear</button>
       </div>
 
@@ -219,7 +232,6 @@
           <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <input type="search" id="playbookSearchInput" placeholder="Search use cases & learning — e.g. report, Power BI, Cursor…" autocomplete="off" aria-label="Search playbooks">
         </div>
-        <button type="button" class="btn-base btn-primary" id="playbookSearchBtn">Search</button>
       </div>
       <div class="role-chips" id="playbookRoleChips" aria-label="Filter playbooks by role"></div>
       <div class="resultbar">
@@ -441,10 +453,10 @@
 
 <div class="compare-bar" id="compareBar" hidden>
   <div class="compare-bar__inner">
-    <span class="compare-bar__text" id="compareBarText">Select 2–3 tools to compare</span>
+    <span class="compare-bar__text" id="compareBarText">Select 2–3 tools for side-by-side</span>
     <div class="compare-bar__actions">
       <button type="button" class="linkbtn" id="compareClear">Clear</button>
-      <button type="button" class="compare-bar__btn" id="compareOpen" disabled>Compare selected</button>
+      <button type="button" class="compare-bar__btn" id="compareOpen" disabled>View side-by-side</button>
     </div>
   </div>
 </div>
@@ -452,7 +464,7 @@
 <div class="modal-overlay" id="compareOverlay" hidden>
   <div class="modal modal--wide" id="compareModal" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
     <button class="modal__close" id="compareClose" aria-label="Close">✕</button>
-    <h2 class="modal__name" id="compareTitle">Tool comparison</h2>
+    <h2 class="modal__name" id="compareTitle">Side-by-side comparison</h2>
     <div id="compareBody"></div>
   </div>
 </div>

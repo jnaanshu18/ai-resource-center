@@ -1,10 +1,25 @@
 Tool Name,Evaluator,Score,Criteria,Recommendation,Evaluation Date,Notes
-ChatGPT,,4.5,"Quality, Speed, Cost",★★★★★,2026-07-07,Strong general-purpose assistant
-Claude,,4.7,"Reasoning, Context, Safety",★★★★★,2026-07-07,Excellent for long documents
-Cursor,,4.3,"Coding, IDE Integration",★★★★☆,2026-07-07,High productivity for developers
-Perplexity,,,"Citations, Speed, Accuracy",,2026-08-03,Best first stop for cited web research when sources matter
-GitHub Copilot,,,"Code Completion, IDE Integration, Speed",,2026-08-03,Solid baseline pair programmer; Cursor preferred for deeper project-aware work
-Notion AI,,,"Writing, Summarization, Workspace Fit",,2026-08-03,Useful inside Notion for drafts and summaries; not a replacement for research or coding tools
-OpenClaw,,,"Autonomy, Integrations, Self-hosting",,2026-08-03,Team-adopted local agent gateway across messaging channels; keep secrets off unapproved models
-Hermes Agent,,,"Autonomy, Memory, Scheduling",,2026-08-03,Self-hosted agent for terminal browser and cron-style automations
-Antigravity,,,"Agent Coding, Speed, Team Adoption",,2026-08-03,In production use for agentic coding and accelerated development workflows
+ChatGPT,DCS catalog review,4.5,"Quality, Speed, Cost",★★★★★,2026-07-07,Strong general-purpose assistant — everyday writing and brainstorming default
+Claude,DCS catalog review,4.7,"Reasoning, Context, Safety",★★★★★,2026-07-07,Excellent for long documents and careful analysis
+Cursor,DCS catalog review,4.8,"Coding, IDE Integration, Project context",★★★★★,2026-08-06,Core Production coding IDE for multi-file delivery work — top team rating
+Perplexity,DCS catalog review,4.4,"Citations, Speed, Accuracy",★★★★☆,2026-08-05,Best first stop for cited web research when sources matter
+Gemini,DCS catalog review,4.0,"Workspace fit, Multimodal, Quality",★★★★☆,2026-08-05,Adopted for Workspace/multimodal; not the primary default versus ChatGPT/Claude
+GitHub Copilot,DCS catalog review,3.9,"Code Completion, IDE Integration, Speed",★★★☆☆,2026-08-05,Solid baseline pair programmer; Cursor preferred for deeper project-aware work
+Notion AI,DCS catalog review,3.7,"Writing, Summarization, Workspace Fit",★★★☆☆,2026-08-05,Useful inside Notion for drafts and summaries; not a replacement for research or coding tools
+OpenClaw,DCS catalog review,4.5,"Autonomy, Integrations, Self-hosting",★★★★★,2026-08-06,Production messaging-gateway agent; lock down channels and keep secrets off unapproved models
+Hermes Agent,DCS catalog review,4.5,"Autonomy, Memory, Scheduling",★★★★★,2026-08-06,Production self-hosted agent for terminal browser and cron-style automations
+Antigravity,DCS catalog review,4.5,"Agent Coding, Speed, Team Adoption",★★★★★,2026-08-06,Production agentic coding already used in delivery; human review still required
+NotebookLM,DCS catalog review,3.7,"Doc grounding, Briefings, Ease of use",★★★☆☆,2026-08-05,Pilot for document Q&A and briefing packs — no client-confidential uploads without approval
+CodeRabbit,DCS catalog review,3.9,"PR review quality, Security signals, Noise",★★★☆☆,2026-08-05,High-value Testing candidate for first-pass PR review; humans still own merge decisions
+Julius AI,DCS catalog review,3.6,"Ad hoc analysis, Charts, Data safety",★★★☆☆,2026-08-05,Pilot for CSV/spreadsheet exploration — Internal/sample data only
+n8n,DCS catalog review,2.8,"Workflow fit, Maintainability, Current need",★★☆☆☆,2026-08-05,Archived reference — prefer OpenClaw/Hermes or modern agent pipelines for new work
+Gamma,DCS catalog review,3.5,"Speed, Deck quality, Brand polish",★★★☆☆,2026-08-05,Pilot for fast internal decks; review branding before external client use
+OpenHands,DCS catalog review,3.2,"Autonomy, Sandbox safety, Review burden",★★★☆☆,2026-08-05,Planned — revisit after Cursor/Antigravity capacity is stable; sandbox-only experiments
+Browser Use,DCS catalog review,3.9,"Python fit, Playwright control, Reliability",★★★☆☆,2026-08-05,Strong Testing fit for agent-driven browser automation on approved targets
+Firecrawl,DCS catalog review,4.0,"Clean extraction, RAG readiness, Hosted ease",★★★★☆,2026-08-05,Testing winner for scraping-to-RAG markdown/JSON versus brittle custom parsers
+Apify,DCS catalog review,3.4,"Managed actors, Ecommerce fit, Cost clarity",★★★☆☆,2026-08-05,Researching managed scrapers for ecommerce monitoring — validate ToS and actor costs
+Crawl4AI,DCS catalog review,3.8,"Python-native crawl, LLM-ready output, Control",★★★☆☆,2026-08-05,Testing in-house companion to Browser Use for RAG-ready extraction
+Ollama,DCS catalog review,3.7,"Privacy, Local quality, Offline use",★★★☆☆,2026-08-05,Testing local/private models when data should stay on-device — quality lags top cloud assistants
+Power BI Copilot,DCS catalog review,4.0,"DAX help, Report speed, DCS delivery fit",★★★★☆,2026-08-05,High relevance for Power BI delivery; confirm Fabric/Copilot licensing before client promises
+Dify,DCS catalog review,3.3,"RAG studio, Self-hosting, Security hardening",★★★☆☆,2026-08-05,Planned for client RAG demos after Firecrawl/Ollama path is clearer
+v0,DCS catalog review,3.4,"UI speed, React/Next export, Production polish",★★★☆☆,2026-08-05,Planned for fast React/Next prototypes — starting point only; check a11y and brand
