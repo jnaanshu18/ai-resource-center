@@ -84,6 +84,18 @@
           </section>
         </div>
       </details>
+
+      <section class="panel" aria-labelledby="recentTitle">
+        <div class="panel__head">
+          <div>
+            <h2 class="panel__title" id="recentTitle">Recently added</h2>
+            <p class="panel__desc">Tools approved and added to the directory in the last 45 days.</p>
+          </div>
+          <button type="button" class="linkbtn" data-go-view="directory">Open directory →</button>
+        </div>
+        <div class="starter-row" id="recentToolsRow"></div>
+        <p class="empty" id="recentToolsEmpty" hidden>No tools added in the last 45 days.</p>
+      </section>
     </div>
   </section>
 
@@ -447,6 +459,35 @@
           <p class="field-note" id="winCopyStatus" hidden></p>
         </div>
       </div>
+
+      <section class="panel" aria-labelledby="pendingReviewTitle">
+        <div class="panel__head">
+          <div>
+            <h2 class="panel__title" id="pendingReviewTitle">Pending review</h2>
+            <p class="panel__desc">Open GitHub suggestions and wins waiting for a decision. Refresh after someone submits a draft.</p>
+          </div>
+          <button type="button" class="linkbtn" id="pendingReviewRefresh">Refresh</button>
+        </div>
+        <div id="pendingReviewList" class="pending-list" aria-live="polite">
+          <p class="pending-list__status">Loading open submissions…</p>
+        </div>
+      </section>
+
+      <section class="panel panel--review-howto" aria-labelledby="reviewHowTitle">
+        <div class="panel__head">
+          <div>
+            <h2 class="panel__title" id="reviewHowTitle">How to approve or reject</h2>
+            <p class="panel__desc">Managers — review happens in GitHub Issues, then the directory CSV is updated for approvals.</p>
+          </div>
+        </div>
+        <ol class="review-steps">
+          <li><strong>Open</strong> a pending item above (or the issue link from someone’s draft).</li>
+          <li><strong>Approve:</strong> add the tool to <code>data/ai_tools_directory.csv</code>, push to <code>main</code>, then close the issue with a short “Approved &amp; added” comment.</li>
+          <li><strong>Reject:</strong> close the issue and comment why (duplicate, unsafe, not a fit, etc.). Nothing is added to the directory.</li>
+          <li>After an approval push, the live site updates and the tool appears under <strong>Recently added</strong> / Directory.</li>
+        </ol>
+        <p class="field-note" id="reviewIssuesLinkWrap"></p>
+      </section>
     </div>
   </section>
 </main>

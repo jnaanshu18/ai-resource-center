@@ -49,6 +49,31 @@ const SUGGEST_ISSUE_REPO = (typeof getSiteConfig === "function"
   ? getSiteConfig().issueNewUrl
   : "https://github.com/jnaanshu18/ai-resource-center/issues/new");
 
+const RECENT_DAYS = 45;
+
+function buildIssueDraftUrl({ title, body, label }) {
+  const url = new URL(SUGGEST_ISSUE_REPO);
+  url.searchParams.set("title", title);
+  url.searchParams.set("body", body);
+  if (label) url.searchParams.set("labels", label);
+  return url.toString();
+}
+
+function isRecentlyAdded(tool, withinDays = RECENT_DAYS) {
+  const raw = tool?.dateAdded || tool?.lastReviewed || "";
+  if (!raw) return false;
+  const added = new Date(`${raw}T00:00:00`);
+  if (Number.isNaN(added.getTime())) return false;
+  const cutoff = Date.now() - withinDays * 24 * 60 * 60 * 1000;
+  return added.getTime() >= cutoff;
+}
+
+function recentlyAddedTools() {
+  return TOOLS
+    .filter(t => isRecentlyAdded(t))
+    .sort((a, b) => String(b.dateAdded || "").localeCompare(String(a.dateAdded || "")) || a.name.localeCompare(b.name));
+}
+
 const VIEWS = ["home", "directory", "guides", "prompts", "playbooks", "contribute"];
 
 const state = {
@@ -434,6 +459,7 @@ function renderCards() {
             <h3 class="card__name">${escapeHtml(t.name)}</h3>
           </div>
           <div class="card__badges">
+            ${isRecentlyAdded(t) ? `<span class="card__new">New</span>` : ""}
             ${t.status === "Production" ? `<span class="card__default">Team default</span>` : ""}
             <span class="badge badge--${group}">${escapeHtml(t.status)}</span>
           </div>
@@ -1002,6 +1028,16 @@ function renderHome() {
 
   starter.innerHTML = startHereNames().map(findToolByName).filter(Boolean).map(t => miniToolCard(t)).join("");
 
+  const recentRow = document.getElementById("recentToolsRow");
+  const recentEmpty = document.getElementById("recentToolsEmpty");
+  if (recentRow) {
+    const recent = recentlyAddedTools();
+    recentRow.innerHTML = recent.map(t => miniToolCard(t, {
+      tip: t.dateAdded ? `Added ${t.dateAdded}` : (t.whenToUse || t.description),
+    })).join("");
+    if (recentEmpty) recentEmpty.hidden = recent.length > 0;
+  }
+
   const featured = toolOfTheWeek();
   if (featured && totw) {
     const group = STATUS_GROUP[featured.status] || "blue";
@@ -1362,6 +1398,74 @@ function applyPlaybookSearchFromInput() {
 function renderContribute() {
   syncContributeTabs();
   populateWinToolDropdown();
+  renderReviewHowto();
+  loadPendingReviews();
+}
+
+function renderReviewHowto() {
+  const wrap = document.getElementById("reviewIssuesLinkWrap");
+  if (!wrap || typeof getSiteConfig !== "function") return;
+  const cfg = getSiteConfig();
+  const issuesUrl = `https://github.com/${cfg.githubOwner}/${cfg.githubRepo}/issues`;
+  wrap.innerHTML = `All open items: <a href="${escapeHtml(issuesUrl)}" target="_blank" rel="noopener">${escapeHtml(cfg.githubOwner)}/${escapeHtml(cfg.githubRepo)} issues</a>`;
+}
+
+async function loadPendingReviews() {
+  const list = document.getElementById("pendingReviewList");
+  if (!list || typeof getSiteConfig !== "function") return;
+
+  const cfg = getSiteConfig();
+  list.innerHTML = `<p class="pending-list__status">Loading open submissions…</p>`;
+
+  try {
+    const api = `https://api.github.com/repos/${encodeURIComponent(cfg.githubOwner)}/${encodeURIComponent(cfg.githubRepo)}/issues?state=open&per_page=30`;
+    const res = await fetch(api, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const issues = await res.json();
+    const items = (Array.isArray(issues) ? issues : [])
+      .filter(issue => !issue.pull_request)
+      .filter(issue => {
+        const labels = (issue.labels || []).map(l => (l.name || "").toLowerCase());
+        const title = String(issue.title || "");
+        const isSuggestion = labels.includes(String(cfg.suggestionLabel || "").toLowerCase())
+          || /^tool suggestion:/i.test(title);
+        const isWin = labels.includes(String(cfg.winLabel || "").toLowerCase())
+          || /^team win:/i.test(title);
+        return isSuggestion || isWin;
+      });
+
+    if (!items.length) {
+      list.innerHTML = `<p class="pending-list__status">No pending suggestions or wins right now.</p>`;
+      return;
+    }
+
+    list.innerHTML = items.map(issue => {
+      const labels = (issue.labels || []).map(l => (l.name || "").toLowerCase());
+      const title = String(issue.title || "Untitled");
+      const kind = labels.includes(String(cfg.winLabel || "").toLowerCase()) || /^team win:/i.test(title)
+        ? "Win"
+        : "Tool suggestion";
+      const created = issue.created_at ? new Date(issue.created_at).toLocaleDateString() : "";
+      return `
+        <article class="pending-item">
+          <div class="pending-item__meta">
+            <span class="pending-item__kind">${escapeHtml(kind)}</span>
+            <span class="pending-item__status">Pending review</span>
+            ${created ? `<span class="pending-item__date">${escapeHtml(created)}</span>` : ""}
+          </div>
+          <a class="pending-item__title" href="${escapeHtml(issue.html_url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
+          <p class="pending-item__hint">Open on GitHub to approve (add to CSV + close) or reject (close with comment).</p>
+        </article>
+      `;
+    }).join("");
+  } catch (err) {
+    list.innerHTML = `
+      <p class="pending-list__status">Couldn’t load pending items from GitHub (repo must be public, or try Refresh later).</p>
+      <p class="field-note">Fallback: open <a href="https://github.com/${escapeHtml(cfg.githubOwner)}/${escapeHtml(cfg.githubRepo)}/issues" target="_blank" rel="noopener">Issues</a> directly.</p>
+    `;
+  }
 }
 
 function syncContributeTabs() {
@@ -1472,10 +1576,12 @@ function showWinDraft() {
   const title = (document.getElementById("w_title").value || "").trim();
   const body = buildWinDraft();
   window.__winDraftText = body;
-  const issueUrl = new URL(SUGGEST_ISSUE_REPO);
-  issueUrl.searchParams.set("title", `Team win: ${title}`);
-  issueUrl.searchParams.set("body", body);
-  document.getElementById("winIssueLink").href = issueUrl.toString();
+  const cfg = typeof getSiteConfig === "function" ? getSiteConfig() : {};
+  document.getElementById("winIssueLink").href = buildIssueDraftUrl({
+    title: `Team win: ${title}`,
+    body,
+    label: cfg.winLabel || "team-win",
+  });
   document.getElementById("winCopyStatus").hidden = true;
   document.getElementById("winForm").hidden = true;
   document.getElementById("winSuccess").hidden = false;
@@ -1673,6 +1779,10 @@ function bindAppNavigation() {
   });
 
   document.getElementById("winAnother")?.addEventListener("click", resetWinForm);
+
+  document.getElementById("pendingReviewRefresh")?.addEventListener("click", () => {
+    loadPendingReviews();
+  });
 }
 
 function populateCategoryDropdown() {
@@ -2122,13 +2232,14 @@ function showSuggestDraft() {
   const name = suggestValue("s_name");
   const body = buildSuggestDraft();
   window.__suggestDraftText = body;
-
-  const issueUrl = new URL(SUGGEST_ISSUE_REPO);
-  issueUrl.searchParams.set("title", `Tool suggestion: ${name}`);
-  issueUrl.searchParams.set("body", body);
+  const cfg = typeof getSiteConfig === "function" ? getSiteConfig() : {};
 
   const link = document.getElementById("suggestIssueLink");
-  link.href = issueUrl.toString();
+  link.href = buildIssueDraftUrl({
+    title: `Tool suggestion: ${name}`,
+    body,
+    label: cfg.suggestionLabel || "tool-suggestion",
+  });
 
   document.getElementById("suggestCopyStatus").hidden = true;
   document.getElementById("suggestFormWrap").hidden = true;

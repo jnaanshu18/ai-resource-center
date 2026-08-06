@@ -710,6 +710,17 @@ select {
   padding: 3px 8px;
   white-space: nowrap;
 }
+.card__new {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #1e40af;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 999px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
 
 .card__identity {
   display: flex;
@@ -2504,4 +2515,67 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
     animation: none;
     transition: none;
   }
+}
+
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.pending-list__status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.pending-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 0.85rem 1rem;
+}
+.pending-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.pending-item__kind { color: #4338ca; }
+.pending-item__status { color: #b45309; }
+.pending-item__date {
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.pending-item__title {
+  display: inline-block;
+  font-weight: 650;
+  color: var(--text);
+  text-decoration: none;
+  margin-bottom: 0.25rem;
+}
+.pending-item__title:hover { color: var(--brand); text-decoration: underline; }
+.pending-item__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.review-steps {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text);
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+.review-steps li { margin-bottom: 0.45rem; }
+.review-steps code {
+  font-size: 0.84em;
+  background: #f3f4f6;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
 }

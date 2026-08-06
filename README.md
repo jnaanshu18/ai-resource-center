@@ -23,7 +23,7 @@ Internal hub for Daily Code Solutions to discover **which AI tools we trust**, c
 | **Guides** | When-to-use / skip-when decision guides + documented head-to-head winners |
 | **Prompts** | Searchable prompt library, role quick filters, Before production checklist, copy prompt / copy link |
 | **Playbooks** | Team use cases + learning resources (search + role filters) |
-| **Contribute** | Suggest a tool or share a win (creates a review draft) |
+| **Contribute** | Suggest a tool or share a win (creates a review draft); pending GitHub items listed for review |
 
 **Deep links (examples):**
 - `?view=home|directory|guides|prompts|playbooks|contribute`
