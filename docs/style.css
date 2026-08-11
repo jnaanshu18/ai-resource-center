@@ -2261,30 +2261,136 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   margin-bottom: 1rem;
   background: var(--bg-soft);
 }
+
+/* Decision guides — expandable category sections */
+.guides-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.guide-category {
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  overflow: hidden;
+}
+.guide-category__summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem 0.75rem;
+  padding: 0.95rem 1rem;
+  user-select: none;
+}
+.guide-category__summary::-webkit-details-marker { display: none; }
+.guide-category__chev {
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  opacity: 0.55;
+  transition: transform 0.15s ease;
+  color: var(--text-muted);
+}
+.guide-category[open] .guide-category__chev {
+  transform: rotate(90deg);
+}
+.guide-category__summary:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.guide-category__badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+.guide-category__head {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.guide-category__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+.guide-category__desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.guide-category__count {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.guide-category__body {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.guide-category__body .guide-tips {
+  padding-top: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .guide-category__summary {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "chev badge"
+      "head head"
+      "count count";
+  }
+  .guide-category__chev { grid-area: chev; }
+  .guide-category__badge { grid-area: badge; justify-self: start; }
+  .guide-category__head { grid-area: head; }
+  .guide-category__count { grid-area: count; justify-self: start; }
+}
+
 .guide-tone--assistants {
   background: #e8eaf6;
   border-color: #c5cae9;
   border-left-color: #3949ab;
 }
-.guide-tone--assistants .guide-card__cat { color: #303f9f; }
+.guide-tone--assistants .guide-card__cat,
+.guide-tone--assistants .guide-category__badge { color: #303f9f; }
 .guide-tone--coding {
   background: #e3f2fd;
   border-color: #90caf9;
   border-left-color: #1565c0;
 }
-.guide-tone--coding .guide-card__cat { color: #0d47a1; }
+.guide-tone--coding .guide-card__cat,
+.guide-tone--coding .guide-category__badge { color: #0d47a1; }
 .guide-tone--research {
   background: #f3e5f5;
   border-color: #ce93d8;
   border-left-color: #7b1fa2;
 }
-.guide-tone--research .guide-card__cat { color: #6a1b9a; }
+.guide-tone--research .guide-card__cat,
+.guide-tone--research .guide-category__badge { color: #6a1b9a; }
 .guide-tone--default {
   background: #eceff1;
   border-color: #cfd8dc;
   border-left-color: #546e7a;
 }
-.guide-tone--default .guide-card__cat { color: #455a64; }
+.guide-tone--default .guide-card__cat,
+.guide-tone--default .guide-category__badge { color: #455a64; }
 
 .guide-card__cat {
   display: inline-block;
@@ -2366,6 +2472,97 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   border-radius: var(--radius);
   padding: 0.95rem 1rem;
 }
+
+/* Documented head-to-heads — expandable rows */
+.compare-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.compare-category {
+  border: 1px solid #cfd8dc;
+  border-left: 4px solid #546e7a;
+  border-radius: var(--radius);
+  background: #eceff1;
+  overflow: hidden;
+}
+.compare-category__summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem 0.75rem;
+  padding: 0.95rem 1rem;
+  user-select: none;
+}
+.compare-category__summary::-webkit-details-marker { display: none; }
+.compare-category__chev {
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  opacity: 0.55;
+  transition: transform 0.15s ease;
+  color: var(--text-muted);
+}
+.compare-category[open] .compare-category__chev {
+  transform: rotate(90deg);
+}
+.compare-category__summary:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.compare-category__head {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.compare-category__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+.compare-category__matchup {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.compare-category__winner {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: #047857;
+  white-space: nowrap;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(4, 120, 87, 0.18);
+}
+.compare-category__body {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.compare-category__body .compare-note__body {
+  margin: 0.85rem 0 0;
+}
+.compare-category__body .compare-note__actions {
+  margin-top: 0.65rem;
+}
+
+@media (max-width: 640px) {
+  .compare-category__summary {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "chev head"
+      "winner winner";
+  }
+  .compare-category__chev { grid-area: chev; }
+  .compare-category__head { grid-area: head; }
+  .compare-category__winner { grid-area: winner; justify-self: start; }
+}
+
 .compare-note__kind {
   font-size: 0.68rem;
   font-weight: 750;

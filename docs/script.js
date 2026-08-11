@@ -1762,66 +1762,117 @@ function guideTone(category) {
   return "default";
 }
 
+function guideCategoryLabel(category) {
+  const tone = guideTone(category);
+  if (tone === "assistants") return "Assistants";
+  if (tone === "coding") return "Coding";
+  if (tone === "research") return "Research";
+  return category || "Other";
+}
+
+function renderGuideTips(guide) {
+  return (guide.tips || []).map(tip => {
+    const tool = findToolByName(tip.tool);
+    return `
+      <div class="guide-tip">
+        <div class="guide-tip__tool">
+          ${tool ? logoHtml(tool) : ""}
+          <button type="button" class="linkbtn" data-open-tool-name="${escapeHtml(tip.tool)}">${escapeHtml(tip.tool)}</button>
+        </div>
+        <div class="guide-tip__cols">
+          <div class="guide-tip__col guide-tip__col--go">
+            <span class="guide-tip__label guide-tip__label--go">Use when</span>
+            <p>${escapeHtml(tip.useWhen)}</p>
+          </div>
+          <div class="guide-tip__col guide-tip__col--skip">
+            <span class="guide-tip__label guide-tip__label--skip">Skip when</span>
+            <p>${escapeHtml(tip.skipWhen)}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderComparisonActions(c) {
+  return (c.tools || []).map(name => {
+    const t = findToolByName(name);
+    const isWinner = c.winner && name === c.winner;
+    const chipClass = `chip${isWinner ? " chip--winner" : ""}`;
+    return t
+      ? `<button type="button" class="${chipClass}" data-open-tool="${escapeHtml(t.id)}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</button>`
+      : `<span class="${chipClass}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</span>`;
+  }).join("");
+}
+
+function renderComparisonsList() {
+  const comparisons = comparisonsData();
+  if (!comparisons.length) {
+    return `<p class="empty">No comparisons yet.</p>`;
+  }
+
+  return `
+    <div class="compare-categories">
+      ${comparisons.map(c => `
+        <details class="compare-category compare-category--page">
+          <summary class="compare-category__summary">
+            <span class="compare-category__chev" aria-hidden="true"></span>
+            <span class="compare-category__head">
+              <span class="compare-category__title">${escapeHtml(c.feature)}</span>
+              <span class="compare-category__matchup">${escapeHtml(c.tools.join(" vs "))}</span>
+            </span>
+            <span class="compare-category__winner">Winner: ${escapeHtml(c.winner || "—")}</span>
+          </summary>
+          <div class="compare-category__body">
+            ${c.notes ? `<p class="compare-note__body">${escapeHtml(c.notes)}</p>` : ""}
+            <div class="compare-note__actions">${renderComparisonActions(c)}</div>
+          </div>
+        </details>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderGuides() {
   const list = document.getElementById("guidesList");
   const comps = document.getElementById("comparisonsList");
   if (!list) return;
 
-  list.innerHTML = guidesData().map(guide => {
-    const tone = guideTone(guide.category);
-    return `
-    <article class="guide-card guide-tone--${tone}">
-      <div class="guide-card__head">
-        <span class="guide-card__cat">${escapeHtml(guide.category)}</span>
-        <h3 class="guide-card__title">${escapeHtml(guide.title)}</h3>
-        <p class="guide-card__summary">${escapeHtml(guide.summary)}</p>
-      </div>
-      <div class="guide-tips">
-        ${guide.tips.map(tip => {
-          const tool = findToolByName(tip.tool);
+  const guides = guidesData();
+
+  if (!guides.length) {
+    list.innerHTML = `<p class="empty">No decision guides yet.</p>`;
+  } else {
+    list.innerHTML = `
+      <div class="guides-categories">
+        ${guides.map(guide => {
+          const tone = guideTone(guide.category);
+          const label = guideCategoryLabel(guide.category);
+          const toolCount = guide.tips?.length || 0;
           return `
-            <div class="guide-tip">
-              <div class="guide-tip__tool">
-                ${tool ? logoHtml(tool) : ""}
-                <button type="button" class="linkbtn" data-open-tool-name="${escapeHtml(tip.tool)}">${escapeHtml(tip.tool)}</button>
+            <details class="guide-category guide-tone--${tone}" data-guide-tone="${tone}">
+              <summary class="guide-category__summary">
+                <span class="guide-category__chev" aria-hidden="true"></span>
+                <span class="guide-category__badge">${escapeHtml(label)}</span>
+                <span class="guide-category__head">
+                  <span class="guide-category__title">${escapeHtml(guide.title)}</span>
+                  <span class="guide-category__desc">${escapeHtml(guide.summary)}</span>
+                </span>
+                <span class="guide-category__count">${toolCount} ${toolCount === 1 ? "tool" : "tools"}</span>
+              </summary>
+              <div class="guide-category__body">
+                <div class="guide-tips">${renderGuideTips(guide)}</div>
               </div>
-              <div class="guide-tip__cols">
-                <div class="guide-tip__col guide-tip__col--go">
-                  <span class="guide-tip__label guide-tip__label--go">Use when</span>
-                  <p>${escapeHtml(tip.useWhen)}</p>
-                </div>
-                <div class="guide-tip__col guide-tip__col--skip">
-                  <span class="guide-tip__label guide-tip__label--skip">Skip when</span>
-                  <p>${escapeHtml(tip.skipWhen)}</p>
-                </div>
-              </div>
-            </div>
+            </details>
           `;
         }).join("")}
       </div>
-    </article>
-  `;
-  }).join("") || `<p class="empty">No decision guides yet.</p>`;
+    `;
+  }
 
-  comps.innerHTML = comparisonsData().map(c => `
-    <article class="compare-note compare-note--page compare-note--slate">
-      <div class="compare-note__kind">Head-to-head</div>
-      <strong class="compare-note__feature">${escapeHtml(c.feature)}</strong>
-      <p class="compare-note__matchup">${escapeHtml(c.tools.join(" vs "))}</p>
-      <p class="compare-note__winner">Winner: <em>${escapeHtml(c.winner || "—")}</em></p>
-      ${c.notes ? `<p class="compare-note__body">${escapeHtml(c.notes)}</p>` : ""}
-      <div class="compare-note__actions">
-        ${c.tools.map(name => {
-          const t = findToolByName(name);
-          const isWinner = c.winner && name === c.winner;
-          const chipClass = `chip${isWinner ? " chip--winner" : ""}`;
-          return t
-            ? `<button type="button" class="${chipClass}" data-open-tool="${escapeHtml(t.id)}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</button>`
-            : `<span class="${chipClass}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</span>`;
-        }).join("")}
-      </div>
-    </article>
-  `).join("") || `<p class="empty">No comparisons yet.</p>`;
+  if (comps) {
+    comps.innerHTML = renderComparisonsList();
+  }
 }
 
 function uniqueRoles(items, key = "role") {
