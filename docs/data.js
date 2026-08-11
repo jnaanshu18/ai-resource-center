@@ -141,7 +141,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -219,7 +219,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -260,7 +260,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -299,7 +299,7 @@ const TOOLS = [
     "learningCurve": "High",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -341,7 +341,7 @@ const TOOLS = [
     "learningCurve": "High",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -381,7 +381,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -418,7 +418,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -456,7 +456,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -495,7 +495,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "Low",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -529,7 +529,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -567,7 +567,7 @@ const TOOLS = [
     "learningCurve": "High",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -606,7 +606,7 @@ const TOOLS = [
     "learningCurve": "High",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-07-07",
@@ -686,7 +686,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -721,7 +721,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -757,7 +757,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -794,7 +794,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -835,7 +835,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -874,7 +874,7 @@ const TOOLS = [
     "learningCurve": "High",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -914,7 +914,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-03",
@@ -951,7 +951,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-06",
@@ -990,7 +990,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-06",
@@ -1024,7 +1024,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-06",
@@ -1063,7 +1063,7 @@ const TOOLS = [
     "learningCurve": "Medium",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-06",
@@ -1098,7 +1098,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-06",
@@ -1137,7 +1137,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "High",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "",
     "testingNotes": "",
     "dateAdded": "2026-08-06",
@@ -1171,7 +1171,7 @@ const TOOLS = [
     "learningCurve": "Low",
     "priority": "Medium",
     "dataClassification": "Internal",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "assignedTo": "Akshay",
     "testingNotes": "Try a simple internal dashboard from a prompt. Compare speed and polish with Lovable.",
     "dateAdded": "2026-08-10",
@@ -1723,7 +1723,7 @@ const PROMPTS = [
       "Claude",
       "ChatGPT"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-07-07",
     "role": "Everyone"
   },
@@ -1737,7 +1737,7 @@ const PROMPTS = [
       "ChatGPT",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Everyone"
   },
@@ -1751,7 +1751,7 @@ const PROMPTS = [
       "Claude",
       "Cursor"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1765,7 +1765,7 @@ const PROMPTS = [
       "Cursor",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1779,7 +1779,7 @@ const PROMPTS = [
       "ChatGPT",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1793,7 +1793,7 @@ const PROMPTS = [
       "ChatGPT",
       "Power BI Copilot"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Data"
   },
@@ -1807,7 +1807,7 @@ const PROMPTS = [
       "ChatGPT",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Data"
   },
@@ -1820,7 +1820,7 @@ const PROMPTS = [
     "models": [
       "Perplexity"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Everyone"
   },
@@ -1834,7 +1834,7 @@ const PROMPTS = [
       "Claude",
       "ChatGPT"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1848,7 +1848,7 @@ const PROMPTS = [
       "ChatGPT",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Everyone"
   },
@@ -1862,7 +1862,7 @@ const PROMPTS = [
       "ChatGPT",
       "Gamma"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Management"
   },
@@ -1876,7 +1876,7 @@ const PROMPTS = [
       "Claude",
       "ChatGPT"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Operations"
   },
@@ -1891,7 +1891,7 @@ const PROMPTS = [
       "Antigravity",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1906,7 +1906,7 @@ const PROMPTS = [
       "Antigravity",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1920,7 +1920,7 @@ const PROMPTS = [
       "Cursor",
       "Antigravity"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   },
@@ -1935,7 +1935,7 @@ const PROMPTS = [
       "Antigravity",
       "Claude"
     ],
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "dateAdded": "2026-08-05",
     "role": "Engineering"
   }
@@ -1947,7 +1947,7 @@ const USE_CASES = [
     "department": "Operations",
     "tool": "ChatGPT",
     "status": "Approved",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Saves ~2 hours per week drafting ops summaries",
     "date": "2026-07-07",
     "role": "Operations"
@@ -1958,7 +1958,7 @@ const USE_CASES = [
     "department": "Engineering",
     "tool": "Cursor",
     "status": "Approved",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Faster first-pass review consistency on PRs",
     "date": "2026-07-07",
     "role": "Engineering"
@@ -1969,7 +1969,7 @@ const USE_CASES = [
     "department": "Operations",
     "tool": "Claude",
     "status": "Testing",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Faster response drafts with clearer tone",
     "date": "2026-07-07",
     "role": "Operations"
@@ -1980,7 +1980,7 @@ const USE_CASES = [
     "department": "Everyone",
     "tool": "Perplexity",
     "status": "Approved",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Cuts discovery time before proposal writing",
     "date": "2026-08-05",
     "role": "Everyone"
@@ -1991,7 +1991,7 @@ const USE_CASES = [
     "department": "Everyone",
     "tool": "NotebookLM",
     "status": "Testing",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Quick Q&A over internal briefing packs",
     "date": "2026-08-05",
     "role": "Everyone"
@@ -2002,7 +2002,7 @@ const USE_CASES = [
     "department": "Engineering",
     "tool": "Antigravity",
     "status": "Production",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Accelerates prototypes that humans then harden",
     "date": "2026-08-05",
     "role": "Engineering"
@@ -2013,7 +2013,7 @@ const USE_CASES = [
     "department": "Engineering",
     "tool": "Firecrawl",
     "status": "Testing",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Cleaner markdown/JSON for LLM pipelines",
     "date": "2026-08-05",
     "role": "Engineering"
@@ -2024,7 +2024,7 @@ const USE_CASES = [
     "department": "Data Engineering",
     "tool": "Julius AI",
     "status": "Testing",
-    "owner": "Anshu Jain",
+    "owner": "Admin",
     "impact": "Faster exploratory charts on sample datasets",
     "date": "2026-08-05",
     "role": "Data"
@@ -2136,7 +2136,7 @@ const TEAM_MEMBERS = [
   {
     "id": "TM-001",
     "name": "Anshu Jain",
-    "email": "anshu@dailycodesolutions.com",
+    "email": "jnaanshu@gmail.com",
     "department": "Engineering",
     "role": "Admin",
     "active": true

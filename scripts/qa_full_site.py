@@ -545,7 +545,7 @@ def main() -> int:
         "name": "Tavily QA Probe",
         "category": "LLM / Assistants",
         "url": "https://tavily.com",
-        "submitter": "Anshu Jain",
+        "submitter": "Admin",
         "desc": "Search API for AI agents with clean cited web results for RAG.",
     })
     record("PASS" if not good else "FAIL", "Contribute", f"Valid suggest payload errors={good or 'none'}")
@@ -554,7 +554,7 @@ def main() -> int:
         "name": "Cursor",
         "category": "AI Coding",
         "url": "https://cursor.com",
-        "submitter": "Anshu Jain",
+        "submitter": "Admin",
         "desc": "Already listed tool used to verify duplicate blocking works correctly.",
     })
     record("PASS" if "dup" in bad_dup else "FAIL", "Contribute", f"Duplicate blocked: {bad_dup}")
@@ -563,7 +563,7 @@ def main() -> int:
         "name": "Unique Tool XYZ",
         "category": "Other",
         "url": "",
-        "submitter": "Anshu Jain",
+        "submitter": "Admin",
         "desc": "Long enough description text for the contribute form minimum.",
     })
     record("PASS" if "url" in bad_url else "FAIL", "Contribute", f"Missing URL blocked: {bad_url}")
