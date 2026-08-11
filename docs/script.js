@@ -2,18 +2,18 @@
 // Reads TOOLS / COMPARISONS / EVALUATIONS from data.js, no backend required.
 
 const STATUS_GROUP = {
-  Adopted: "mint", Production: "mint",
-  Testing: "amber", Pilot: "amber",
-  Researching: "blue", Planned: "blue",
-  Archived: "coral", Deprecated: "coral", Rejected: "coral",
+  Production: "mint", Approved: "mint",
+  Testing: "amber",
+  Exploring: "blue",
+  Archived: "coral", Rejected: "coral",
 };
 
-/** Lifecycle buckets for default “safe to use” filtering and clickable stats. */
+/** Optional grouped filters (URL legacy + Start here trusted). */
 const STATUS_BUCKETS = {
-  trusted: ["Adopted", "Production"],
-  trying: ["Testing", "Pilot"],
-  exploring: ["Researching", "Planned"],
-  paused: ["Deprecated", "Archived", "Rejected"],
+  trusted: ["Production", "Approved"],
+  trying: ["Testing"],
+  exploring: ["Exploring"],
+  paused: ["Archived", "Rejected"],
 };
 
 /** Older ?bucket= values still resolve after the rename. */
@@ -24,11 +24,13 @@ const LEGACY_STATUS_BUCKETS = {
 };
 
 const STATUS_ORDER = [
-  "Production", "Adopted", "Testing", "Pilot",
-  "Researching", "Planned", "Archived", "Deprecated", "Rejected",
+  "Production", "Approved", "Testing", "Exploring", "Archived", "Rejected",
 ];
 
 const COMPARE_MAX = 3;
+const TOOL_ASSIGNMENT_KEY = "dcs-ai-rc-tool-assignments";
+const TEAM_REGISTER_PENDING_KEY = "dcs-ai-rc-team-register-pending";
+const TOOL_ASSIGNABLE_STATUSES = new Set(["Testing", "Exploring"]);
 
 /** Fallback if SITE_HIGHLIGHTS is missing from data.js. */
 const START_HERE_FALLBACK = ["Cursor", "Antigravity", "ChatGPT", "Claude", "Perplexity"];
@@ -49,7 +51,7 @@ const SUGGEST_ISSUE_REPO = (typeof getSiteConfig === "function"
   ? getSiteConfig().issueNewUrl
   : "https://github.com/jnaanshu18/ai-resource-center/issues/new");
 
-const RECENT_DAYS = 45;
+const RECENT_DAYS = 15;
 
 function buildIssueDraftUrl({ title, body, label }) {
   const url = new URL(SUGGEST_ISSUE_REPO);
@@ -82,6 +84,7 @@ const state = {
   status: null,
   statusBucket: null, // default: show full directory
   starter: false,
+  recent: false,
   category: null,
   pricing: null,
   sort: "name",
@@ -115,25 +118,34 @@ function evaluationFor(tool) {
   return EVALUATIONS[tool.name] || null;
 }
 
+/** Scores for Production / Approved, and kept for Archived / Rejected history. */
+function toolCanHaveScore(tool) {
+  return tool && ["Production", "Approved", "Archived", "Rejected"].includes(tool.status);
+}
+
 function renderStats() {
   const total = TOOLS.length;
-  const trusted = TOOLS.filter(t => STATUS_BUCKETS.trusted.includes(t.status)).length;
-  const trying = TOOLS.filter(t => STATUS_BUCKETS.trying.includes(t.status)).length;
-  const exploring = TOOLS.filter(t => STATUS_BUCKETS.exploring.includes(t.status)).length;
+  const byStatus = Object.fromEntries(STATUS_ORDER.map(s => [s, TOOLS.filter(t => t.status === s).length]));
+
+  const starterCount = startHereNames().filter(n => TOOLS.some(t => t.name === n)).length;
+  const recentCount = recentlyAddedTools().length;
 
   const stats = [
     { label: "Tools tracked", value: total, cls: "", filter: "all" },
-    { label: "Trusted", value: trusted, cls: "stat--mint", bucket: "trusted" },
-    { label: "Trying", value: trying, cls: "stat--amber", bucket: "trying" },
-    { label: "Exploring", value: exploring, cls: "stat--blue", bucket: "exploring" },
+    { label: "Start here", value: starterCount, cls: "stat--starter", starter: true },
+    { label: "New", value: recentCount, cls: "stat--new", recent: true },
+    { label: "Production", value: byStatus.Production, cls: "stat--mint", status: "Production" },
+    { label: "Approved", value: byStatus.Approved, cls: "stat--mint", status: "Approved" },
   ];
 
   document.getElementById("stats").innerHTML = stats.map(s => {
-    const scope = s.filter
-      ? `data-filter="${s.filter}"`
-      : `data-bucket="${s.bucket}"`;
+    let scope = "";
+    if (s.filter) scope = `data-filter="${s.filter}"`;
+    else if (s.starter) scope = `data-starter="true"`;
+    else if (s.recent) scope = `data-recent="true"`;
+    else if (s.status) scope = `data-status="${s.status}"`;
     return `
-      <button type="button" class="stat ${s.cls}" ${scope} title="Filter tools by this group">
+      <button type="button" class="stat ${s.cls}" ${scope} title="Filter tools">
         <span class="stat__value">${s.value}</span>
         <span class="stat__label">${s.label}</span>
       </button>
@@ -145,12 +157,16 @@ function renderStats() {
 function syncStatsUI() {
   document.querySelectorAll("#stats .stat").forEach(el => {
     let active = false;
-    if (state.starter) {
+    if (el.dataset.starter === "true") {
+      active = state.starter;
+    } else if (el.dataset.recent === "true") {
+      active = state.recent;
+    } else if (state.starter || state.recent) {
       active = false;
     } else if (el.dataset.filter === "all") {
       active = !state.status && !state.statusBucket;
-    } else if (el.dataset.bucket) {
-      active = !state.status && el.dataset.bucket === state.statusBucket;
+    } else if (el.dataset.status) {
+      active = !state.statusBucket && el.dataset.status === state.status;
     }
     el.classList.toggle("is-active", active);
     el.setAttribute("aria-pressed", String(active));
@@ -164,25 +180,18 @@ function countBy(key) {
 }
 
 function renderChips() {
-  const statuses = [...new Set(TOOLS.map(t => t.status))]
-    .sort((a, b) => {
-      const ia = STATUS_ORDER.indexOf(a);
-      const ib = STATUS_ORDER.indexOf(b);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-    });
-  const statusCounts = Object.fromEntries(statuses.map(s => [s, TOOLS.filter(t => t.status === s).length]));
-  const trustedCount = TOOLS.filter(t => STATUS_BUCKETS.trusted.includes(t.status)).length;
-  const tryingCount = TOOLS.filter(t => STATUS_BUCKETS.trying.includes(t.status)).length;
-  const exploringCount = TOOLS.filter(t => STATUS_BUCKETS.exploring.includes(t.status)).length;
-  const pausedCount = TOOLS.filter(t => STATUS_BUCKETS.paused.includes(t.status)).length;
   const categories = countBy("category");
   const pricing = countBy("pricing");
-  const moreOpen = Boolean(state.category || state.pricing);
-  const statusOpen = Boolean(state.status);
+  const archivedCount = TOOLS.filter(t => t.status === "Archived").length;
+  const rejectedCount = TOOLS.filter(t => t.status === "Rejected").length;
+  const testingCount = TOOLS.filter(t => t.status === "Testing").length;
+  const exploringCount = TOOLS.filter(t => t.status === "Exploring").length;
+  const moreOpen = Boolean(
+    state.category
+    || state.pricing
+    || ["Testing", "Exploring", "Archived", "Rejected"].includes(state.status)
+  );
 
-  const statusChips = statuses.map(s => `
-    <button class="chip" data-status="${s}" type="button">${s} (${statusCounts[s]})</button>
-  `).join("");
   const categoryChips = categories.values.map(c => `
     <button class="chip" data-category="${escapeHtml(c)}" type="button">${escapeHtml(c)} (${categories.counts[c]})</button>
   `).join("");
@@ -190,61 +199,52 @@ function renderChips() {
     <button class="chip" data-pricing="${escapeHtml(c)}" type="button">${escapeHtml(c)} (${pricing.counts[c]})</button>
   `).join("");
 
-  const starterCount = startHereNames().filter(n => TOOLS.some(t => t.name === n)).length;
-
   document.getElementById("filterChips").innerHTML = `
+    <details class="filter-more" id="filterMore"${moreOpen ? " open" : ""}>
+      <summary class="filter-more__summary">
+        More filters
+        <span class="filter-more__hint">Category · Pricing · Status</span>
+      </summary>
+      <div class="filter-more__body">
+        <div class="filter-group">
+          <div class="filter-group__label">Category</div>
+          <div class="chiprow">${categoryChips}</div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group__label">Pricing</div>
+          <div class="chiprow">${pricingChips}</div>
+        </div>
     <div class="filter-group">
       <div class="filter-group__label">Status</div>
       <div class="chiprow">
-        <button class="chip chip--starter" data-starter="true" type="button">Start here (${starterCount})</button>
-        <button class="chip" data-filter="all" type="button">All (${TOOLS.length})</button>
-        <button class="chip" data-bucket="trusted" type="button">Trusted (${trustedCount})</button>
-        <button class="chip" data-bucket="trying" type="button">Trying (${tryingCount})</button>
-        <button class="chip" data-bucket="exploring" type="button">Exploring (${exploringCount})</button>
-        <button class="chip" data-bucket="paused" type="button">Not for new work (${pausedCount})</button>
+            <button class="chip" data-status="Testing" type="button">Testing (${testingCount})</button>
+            <button class="chip" data-status="Exploring" type="button">Exploring (${exploringCount})</button>
+            <button class="chip" data-status="Archived" type="button">Archived (${archivedCount})</button>
+            <button class="chip" data-status="Rejected" type="button">Rejected (${rejectedCount})</button>
+          </div>
       </div>
       <details class="status-guide">
-        <summary class="status-guide__summary">What do these mean?</summary>
+          <summary class="status-guide__summary">What do statuses mean?</summary>
         <dl class="status-guide__list">
           <div class="status-guide__row">
             <dt><span class="status-guide__swatch status-guide__swatch--starter"></span>Start here</dt>
             <dd>Shortlist for new joiners</dd>
           </div>
           <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Trusted</dt>
-            <dd>Adopted or Production — safe for team work</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--amber"></span>Trying</dt>
-            <dd>Testing or Pilot — evaluate carefully</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Exploring</dt>
-            <dd>Planned or Researching — not day-to-day yet</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Not for new work</dt>
-            <dd>Deprecated, Archived, or Rejected</dd>
-          </div>
-          <div class="status-guide__row">
             <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Production</dt>
-            <dd>Core daily tools · team default</dd>
+              <dd>Core daily tools</dd>
           </div>
           <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Adopted</dt>
+              <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Approved</dt>
             <dd>Approved for team use</dd>
           </div>
           <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--amber"></span>Testing / Pilot</dt>
+              <dt><span class="status-guide__swatch status-guide__swatch--amber"></span>Testing</dt>
             <dd>Being evaluated now</dd>
           </div>
           <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Planned / Researching</dt>
-            <dd>Not ready for day-to-day work</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Deprecated</dt>
-            <dd>Phasing out — don’t start new work</dd>
+              <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Exploring</dt>
+              <dd>On the radar — not day-to-day yet</dd>
           </div>
           <div class="status-guide__row">
             <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Archived</dt>
@@ -256,41 +256,93 @@ function renderChips() {
           </div>
         </dl>
       </details>
-      <details class="filter-more" id="statusExact"${statusOpen ? " open" : ""}>
-        <summary class="filter-more__summary">
-          Exact status
-          <span class="filter-more__hint">Production · Pilot · Archived…</span>
-        </summary>
-        <div class="filter-more__body">
-          <div class="chiprow">${statusChips}</div>
-        </div>
-      </details>
-    </div>
-    <details class="filter-more" id="filterMore"${moreOpen ? " open" : ""}>
-      <summary class="filter-more__summary">
-        More filters
-        <span class="filter-more__hint">Category · Pricing</span>
-      </summary>
-      <div class="filter-more__body">
-        <div class="filter-group">
-          <div class="filter-group__label">Category</div>
-          <div class="chiprow">${categoryChips}</div>
-        </div>
-        <div class="filter-group">
-          <div class="filter-group__label">Pricing</div>
-          <div class="chiprow">${pricingChips}</div>
-        </div>
       </div>
     </details>
   `;
   syncChipUI();
 }
 
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Split search into words; ignore empty tokens. */
+function searchTokens(query) {
+  return String(query || "")
+    .trim()
+    .toLowerCase()
+    .split(/[^a-z0-9_+./-]+/i)
+    .map(t => t.trim())
+    .filter(Boolean);
+}
+
+/** Match token as a whole word (avoids “ide” in “confidential” / “ideas”). */
+function textHasToken(text, token) {
+  if (!text || !token) return false;
+  const re = new RegExp(
+    `(?:^|[^a-z0-9_+./-])${escapeRegExp(token)}(?![a-z0-9])`,
+    "i"
+  );
+  return re.test(` ${text}`);
+}
+
+/** Primary fields users expect search to hit (not alternatives / approvedModels). */
+function toolSearchPrimary(tool) {
+  return [
+    tool.name, tool.category, tool.subcategory, tool.pricing,
+    tool.description, tool.owner, tool.department, tool.priority,
+    tool.assignedTo,
+    ...(tool.useCases || []),
+  ].join(" ");
+}
+
+/** Notes and tips — used only when primary fields have no hits. */
+function toolSearchSecondary(tool) {
+  return [
+    tool.notes, tool.limitations, tool.whenToUse, tool.costNote, tool.securityTip,
+    tool.learningCurve, tool.dataClassification, tool.status, tool.testingNotes,
+  ].join(" ");
+}
+
+function tokensMatchText(text, tokens) {
+  return tokens.every(tok => textHasToken(text, tok));
+}
+
+function toolMatchesPrimary(tool, tokens) {
+  return tokensMatchText(toolSearchPrimary(tool), tokens);
+}
+
+function toolMatchesSecondary(tool, tokens) {
+  const haystack = `${toolSearchPrimary(tool)} ${toolSearchSecondary(tool)}`;
+  return tokensMatchText(haystack, tokens);
+}
+
+/** Prefer name / category / owner hits when a search is active. */
+function searchRank(tool, query) {
+  const tokens = searchTokens(query);
+  if (!tokens.length) return 0;
+  const name = String(tool.name || "");
+  const category = `${tool.category || ""} ${tool.subcategory || ""}`;
+  const primary = toolSearchPrimary(tool);
+  let rank = 0;
+  tokens.forEach(tok => {
+    if (textHasToken(name, tok)) rank += 12;
+    else if (textHasToken(category, tok)) rank += 5;
+    else if (textHasToken(tool.owner || "", tok)) rank += 4;
+    else if (textHasToken(primary, tok)) rank += 2;
+    else rank += 1;
+  });
+  return rank;
+}
+
 function getFiltered() {
-  const q = state.search.trim().toLowerCase();
+  const q = state.search.trim();
+  const tokens = searchTokens(q);
   let list = TOOLS.filter(t => {
     if (state.starter) {
       if (!startHereNames().includes(t.name)) return false;
+    } else if (state.recent) {
+      if (!isRecentlyAdded(t)) return false;
     } else if (state.status) {
       if (t.status !== state.status) return false;
     } else if (state.statusBucket) {
@@ -299,22 +351,27 @@ function getFiltered() {
     }
     if (state.category && t.category !== state.category) return false;
     if (state.pricing && t.pricing !== state.pricing) return false;
-    if (q) {
-      const haystack = [
-        t.name, t.category, t.subcategory, t.pricing, t.status,
-        t.description, t.notes, t.limitations, t.whenToUse, t.alternatives,
-        t.costNote, t.securityTip, t.owner, t.department, t.priority,
-        t.learningCurve, t.dataClassification,
-        ...(t.platform || []), ...(t.useCases || []), ...(t.approvedModels || []),
-      ].join(" ").toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
     return true;
   });
 
+  // Search: prefer name/description/use-cases; only fall back to notes if nothing matches.
+  if (tokens.length) {
+    const primaryHits = list.filter(t => toolMatchesPrimary(t, tokens));
+    list = primaryHits.length ? primaryHits : list.filter(t => toolMatchesSecondary(t, tokens));
+  }
+
   const PRIORITY_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3, Backlog: 4 };
+  const searching = Boolean(tokens.length);
 
   list.sort((a, b) => {
+    if (searching) {
+      const ra = searchRank(a, q);
+      const rb = searchRank(b, q);
+      if (rb !== ra) return rb - ra;
+    }
+    if (state.recent && state.sort === "name") {
+      return String(b.dateAdded || "").localeCompare(String(a.dateAdded || "")) || a.name.localeCompare(b.name);
+    }
     if (state.starter && state.sort === "name") {
       const names = startHereNames();
       const ia = names.indexOf(a.name);
@@ -372,6 +429,28 @@ function tagListHtml(tool, { includePlatform = false } = {}) {
   `;
 }
 
+/** Modal header tags — category and pricing only. */
+function modalMetaTagsHtml(tool) {
+  const tags = [tool.category, tool.pricing].filter(Boolean);
+  if (!tags.length) return "";
+  return `
+    <div class="card__tags">
+      ${tags.map(tag => `<span class="card__tag">${escapeHtml(tag)}</span>`).join("")}
+    </div>
+  `;
+}
+
+/** Admin assign button or team assignee label — shown next to tags in the modal header. */
+function modalMetaAssignmentHtml(tool) {
+  if (!toolIsInTestTrack(tool)) return "";
+  if (isAdminSession()) {
+    return `<button type="button" class="assignment-meta-btn" id="toolAssignmentOpen">Assign tool</button>`;
+  }
+  const assignee = effectiveAssignment(tool).assignedTo;
+  if (!assignee) return "";
+  return `<span class="card__tag card__tag--assignee">Assigned to: ${escapeHtml(assignee)}</span>`;
+}
+
 function starsHtml(evalData) {
   if (!evalData || evalData.score === "" || evalData.score == null) return "";
   const score = Math.max(0, Math.min(5, parseFloat(evalData.score)));
@@ -392,27 +471,396 @@ function starsHtml(evalData) {
   `;
 }
 
-/** Stars when scored; otherwise an explicit “not scored” label so blank ≠ bad. */
-function ratingHtml(evalData) {
+/** Stars when scored; Testing/Exploring (and other pre-approval) show nothing. */
+function ratingHtml(evalData, tool) {
+  if (tool && !toolCanHaveScore(tool)) return "";
   const stars = starsHtml(evalData);
   if (stars) return stars;
+  if (tool && toolCanHaveScore(tool)) {
   return `<span class="rating-pending">Not scored yet</span>`;
+  }
+  return "";
 }
 
-function hasScoredEval(evalData) {
+function hasScoredEval(evalData, tool) {
+  if (tool && !toolCanHaveScore(tool)) return false;
   if (!evalData || evalData.score === "" || evalData.score == null) return false;
   return !Number.isNaN(parseFloat(evalData.score));
 }
 
-function hasUsefulEval(evalData) {
+function hasUsefulEval(evalData, tool) {
   if (!evalData) return false;
-  return hasScoredEval(evalData) || Boolean(evalData.criteria) || Boolean(evalData.notes) || Boolean(evalData.date);
+  if (tool && !toolCanHaveScore(tool)) {
+    // Keep notes/criteria for context, but never treat score as useful pre-approval.
+    return Boolean(evalData.criteria) || Boolean(evalData.notes) || Boolean(evalData.date);
+  }
+  return hasScoredEval(evalData, tool) || Boolean(evalData.criteria) || Boolean(evalData.notes) || Boolean(evalData.date);
+}
+
+function toolAssignmentsEnabled() {
+  return typeof getToolAssignmentConfig === "function"
+    ? getToolAssignmentConfig().enabled
+    : true;
+}
+
+function teamDirectoryEnabled() {
+  return typeof getTeamDirectoryConfig === "function"
+    ? getTeamDirectoryConfig().enabled
+    : true;
+}
+
+function teamMembersData() {
+  return Array.isArray(typeof TEAM_MEMBERS !== "undefined" ? TEAM_MEMBERS : null)
+    ? TEAM_MEMBERS
+    : [];
+}
+
+function getActiveTeamMembers() {
+  return teamMembersData()
+    .filter(member => member.active !== false && member.name && member.email)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function findTeamMemberByName(name) {
+  const key = String(name || "").trim().toLowerCase();
+  if (!key) return null;
+  return getActiveTeamMembers().find(member => member.name.toLowerCase() === key) || null;
+}
+
+function readTeamRegisterPending() {
+  try {
+    const raw = localStorage.getItem(TEAM_REGISTER_PENDING_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeTeamRegisterPending(list) {
+  localStorage.setItem(TEAM_REGISTER_PENDING_KEY, JSON.stringify(list));
+}
+
+function teamMemberPublishCommand(name, email, department, role) {
+  const safeName = String(name || "").replace(/"/g, '\\"');
+  const safeEmail = String(email || "").replace(/"/g, '\\"');
+  const safeDept = String(department || "").replace(/"/g, '\\"');
+  const safeRole = String(role || "Team").replace(/"/g, '\\"');
+  return `python scripts/add_team_member.py --name "${safeName}" --email "${safeEmail}" --department "${safeDept}" --role "${safeRole}"`;
+}
+
+function toolIsInTestTrack(tool) {
+  return toolAssignmentsEnabled() && TOOL_ASSIGNABLE_STATUSES.has(tool?.status);
+}
+
+function readToolAssignmentOverrides() {
+  try {
+    const raw = localStorage.getItem(TOOL_ASSIGNMENT_KEY);
+    const data = raw ? JSON.parse(raw) : null;
+    return data && typeof data === "object" ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeToolAssignmentOverride(toolId, payload) {
+  const all = readToolAssignmentOverrides();
+  all[String(toolId)] = {
+    assignedTo: String(payload.assignedTo || "").trim(),
+    testingNotes: String(payload.testingNotes || "").trim(),
+    updatedAt: Date.now(),
+  };
+  localStorage.setItem(TOOL_ASSIGNMENT_KEY, JSON.stringify(all));
+}
+
+function applyAssignmentOverrides() {
+  const overrides = readToolAssignmentOverrides();
+  TOOLS.forEach(tool => {
+    const o = overrides[tool.id];
+    if (!o) return;
+    if (o.assignedTo != null) tool.assignedTo = o.assignedTo;
+    if (o.testingNotes != null) tool.testingNotes = o.testingNotes;
+  });
+}
+
+function effectiveAssignment(tool) {
+  if (!tool) return { assignedTo: "", testingNotes: "" };
+  return {
+    assignedTo: String(tool.assignedTo || "").trim(),
+    testingNotes: String(tool.testingNotes || "").trim(),
+  };
+}
+
+function truncateAssignmentText(text, max = 120) {
+  const value = String(text || "").trim();
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1)}…`;
+}
+
+function assignmentPublishCommand(toolId, assignedTo, testingNotes) {
+  const assignee = String(assignedTo || "").replace(/"/g, '\\"');
+  const notes = String(testingNotes || "").replace(/\s+/g, " ").replace(/"/g, '\\"').trim();
+  return `python scripts/set_tool_assignment.py --id ${toolId} --assignee "${assignee}" --notes "${notes}"`;
+}
+
+function assignmentAssigneeFieldHtml(assignedTo) {
+  const members = getActiveTeamMembers();
+  if (members.length) {
+    const options = [`<option value="">Select teammate…</option>`]
+      .concat(members.map(member => {
+        const selected = member.name === assignedTo ? " selected" : "";
+        const dept = member.department ? ` · ${member.department}` : "";
+        return `<option value="${escapeHtml(member.name)}"${selected}>${escapeHtml(member.name)}${escapeHtml(dept)}</option>`;
+      }));
+    const email = resolveAssigneeEmail(assignedTo);
+    return `
+      <div class="field">
+        <label for="toolAssignName">Assigned to</label>
+        <select id="toolAssignName" class="tool-assignment__input">${options.join("")}</select>
+      </div>
+      <div class="field">
+        <label for="toolAssignEmailPreview">Email</label>
+        <input type="email" id="toolAssignEmailPreview" class="tool-assignment__input tool-assignment__input--readonly" readonly tabindex="-1" value="${escapeHtml(email)}" placeholder="Select a teammate">
+      </div>
+    `;
+  }
+  return `
+    <div class="field">
+      <label for="toolAssignName">Assigned to</label>
+      <input type="text" id="toolAssignName" class="tool-assignment__input" maxlength="60" placeholder="Teammate name" value="${escapeHtml(assignedTo)}">
+    </div>
+  `;
+}
+
+function bindAssignmentAssigneeField() {
+  const field = document.getElementById("toolAssignName");
+  const preview = document.getElementById("toolAssignEmailPreview");
+  if (!field || !preview || field.tagName !== "SELECT") return;
+  const sync = () => {
+    const email = resolveAssigneeEmail(field.value);
+    preview.value = email;
+    preview.placeholder = field.value && !email ? "No email on file" : "Select a teammate";
+  };
+  field.onchange = sync;
+  sync();
+}
+
+function resolveAssigneeEmail(name) {
+  const key = String(name || "").trim();
+  if (!key) return "";
+  const member = findTeamMemberByName(key);
+  if (member?.email) return String(member.email).trim();
+  const notify = getToolAssignmentConfig().notify;
+  if (notify.assigneeEmails[key]) return String(notify.assigneeEmails[key]).trim();
+  const lowerKey = key.toLowerCase();
+  for (const [label, email] of Object.entries(notify.assigneeEmails)) {
+    if (label.toLowerCase() === lowerKey) return String(email).trim();
+  }
+  if (notify.emailDomain && /^[A-Za-z][A-Za-z .'\-]*$/.test(key)) {
+    const slug = key.split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (slug) return `${slug}@${notify.emailDomain}`;
+  }
+  return "";
+}
+
+async function sendAssignmentNotification(tool, assignedTo, testingNotes) {
+  const notify = getToolAssignmentConfig().notify;
+  if (!notify.enabled || !notify.webhookUrl) {
+    return { skipped: true, reason: "disabled" };
+  }
+  const assigneeEmail = resolveAssigneeEmail(assignedTo);
+  if (!assigneeEmail) {
+    return { skipped: true, reason: "no-email" };
+  }
+  const site = typeof getSiteConfig === "function" ? getSiteConfig() : {};
+  const notifyCfg = getToolAssignmentConfig().notify;
+  const payload = {
+    assigneeName: assignedTo,
+    assigneeEmail,
+    toolId: tool.id,
+    toolName: tool.name,
+    toolStatus: tool.status,
+    toolUrl: tool.url || "",
+    testingNotes,
+    siteUrl: site.liveSite || window.location.origin,
+    fromLabel: notifyCfg.fromLabel,
+  };
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (notify.webhookSecret) headers.Authorization = `Bearer ${notify.webhookSecret}`;
+    const res = await fetch(notify.webhookUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return { ok: false, reason: `http-${res.status}` };
+    return { ok: true, email: assigneeEmail };
+  } catch {
+    return { ok: false, reason: "network" };
+  }
+}
+
+function appendAssignmentNotifyStatus(result, assigneeName) {
+  const status = document.getElementById("toolAssignStatus");
+  if (!status || result.skipped && result.reason === "disabled") return;
+  if (result.ok) {
+    status.innerHTML += `<br>Notification email sent to ${escapeHtml(result.email)}.`;
+    return;
+  }
+  if (result.reason === "no-email") {
+    status.innerHTML += `<br>No email on file for ${escapeHtml(assigneeName)} — add them via Home → Team directory.`;
+    return;
+  }
+  if (!result.skipped) {
+    status.innerHTML += `<br>Could not send notification email (${escapeHtml(result.reason || "error")}).`;
+  }
+}
+
+async function notifyAfterAssignmentSave(tool, assignedTo, testingNotes, previous) {
+  if (!assignedTo) return;
+  if (previous.assignedTo === assignedTo && previous.testingNotes === testingNotes) return;
+  const result = await sendAssignmentNotification(tool, assignedTo, testingNotes);
+  appendAssignmentNotifyStatus(result, assignedTo);
+}
+
+function assignmentSummaryHtml(tool) {
+  return "";
+}
+
+function renderToolAssignmentCardContent(tool) {
+  if (!isAdminSession() || !toolIsInTestTrack(tool)) return "";
+  const { assignedTo, testingNotes } = effectiveAssignment(tool);
+  const hasAssignment = Boolean(assignedTo || testingNotes);
+
+  return `
+    <div class="tool-assignment-wrap" id="toolAssignmentWrap" data-tool-id="${escapeHtml(tool.id)}">
+      <h2 class="modal__name" id="assignmentTitle">${escapeHtml(tool.status)} assignment</h2>
+      <p class="assignment-card__tool">${escapeHtml(tool.name)}</p>
+      <div class="tool-assignment tool-assignment--edit" id="toolAssignmentEdit">
+        ${assignmentAssigneeFieldHtml(assignedTo)}
+        <div class="field">
+          <label for="toolAssignNotes">Admin notes</label>
+          <textarea id="toolAssignNotes" class="tool-assignment__textarea" rows="4" maxlength="500" placeholder="What to try, success criteria, deadline hints…">${escapeHtml(testingNotes)}</textarea>
+        </div>
+        <div class="tool-assignment__actions">
+          <button type="button" class="btn-base btn-primary" id="toolAssignSave">Save assignment</button>
+          ${hasAssignment ? `<button type="button" class="linkbtn" id="toolAssignClear">Clear assignment</button>` : ""}
+        </div>
+        <p class="field-note" id="toolAssignStatus" hidden></p>
+      </div>
+    </div>
+  `;
+}
+
+function persistToolAssignment(tool, assignedTo, testingNotes, statusMessage) {
+  tool.assignedTo = assignedTo;
+  tool.testingNotes = testingNotes;
+  writeToolAssignmentOverride(tool.id, { assignedTo, testingNotes });
+  renderCards();
+  openModal(tool);
+  refreshAssignmentModal(tool);
+  setTimeout(() => {
+    const status = document.getElementById("toolAssignStatus");
+    if (status && statusMessage) {
+      status.hidden = false;
+      status.innerHTML = statusMessage;
+    }
+  }, 0);
+}
+
+let assignmentModalToolId = null;
+
+function openAssignmentModal(tool) {
+  if (!isAdminSession() || !toolIsInTestTrack(tool)) return;
+  assignmentModalToolId = tool.id;
+  document.getElementById("assignmentBody").innerHTML = renderToolAssignmentCardContent(tool);
+  document.getElementById("assignmentOverlay").hidden = false;
+  bindToolAssignmentPanel(tool);
+  bindAssignmentAssigneeField();
+  document.getElementById("toolAssignName")?.focus();
+}
+
+function refreshAssignmentModal(tool) {
+  if (!tool || assignmentModalToolId !== tool.id) return;
+  if (document.getElementById("assignmentOverlay").hidden) return;
+  document.getElementById("assignmentBody").innerHTML = renderToolAssignmentCardContent(tool);
+  bindToolAssignmentPanel(tool);
+  bindAssignmentAssigneeField();
+}
+
+function closeAssignmentModal() {
+  document.getElementById("assignmentOverlay").hidden = true;
+  assignmentModalToolId = null;
+}
+
+function bindToolAssignmentTrigger(tool) {
+  if (!isAdminSession() || !toolIsInTestTrack(tool)) return;
+  const btn = document.getElementById("toolAssignmentOpen");
+  if (btn) btn.onclick = () => openAssignmentModal(tool);
+}
+
+function bindToolAssignmentPanel(tool) {
+  if (!isAdminSession() || !toolIsInTestTrack(tool)) return;
+  const wrap = document.getElementById("toolAssignmentWrap");
+  if (!wrap) return;
+  const saveBtn = document.getElementById("toolAssignSave");
+  const clearBtn = document.getElementById("toolAssignClear");
+  if (!saveBtn && !clearBtn) return;
+
+  if (saveBtn) {
+    saveBtn.onclick = () => {
+      const assignedTo = document.getElementById("toolAssignName")?.value?.trim() || "";
+      const testingNotes = document.getElementById("toolAssignNotes")?.value?.trim() || "";
+      if (!assignedTo) {
+        const status = document.getElementById("toolAssignStatus");
+        if (status) {
+          status.hidden = false;
+          status.textContent = "Select who should test or explore this tool.";
+        }
+        document.getElementById("toolAssignName")?.focus();
+        return;
+      }
+      if (!findTeamMemberByName(assignedTo) && !/^[A-Za-z][A-Za-z .'\-]*$/.test(assignedTo)) {
+        const status = document.getElementById("toolAssignStatus");
+        if (status) {
+          status.hidden = false;
+          status.textContent = "Use a simple name (letters, spaces, hyphens only).";
+        }
+        document.getElementById("toolAssignName")?.focus();
+        return;
+      }
+      const cmd = assignmentPublishCommand(tool.id, assignedTo, testingNotes);
+      const previous = effectiveAssignment(tool);
+      persistToolAssignment(
+        tool,
+        assignedTo,
+        testingNotes,
+        `Saved on this device. To show everyone after deploy, run: <code>${escapeHtml(cmd)}</code> then commit and push.`
+      );
+      navigator.clipboard?.writeText(cmd).catch(() => {});
+      void notifyAfterAssignmentSave(tool, assignedTo, testingNotes, previous);
+    };
+  }
+
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      const cmd = `python scripts/set_tool_assignment.py --id ${tool.id} --assignee "" --clear-notes`;
+      persistToolAssignment(
+        tool,
+        "",
+        "",
+        `Assignment cleared on this device. To update the team copy, run: <code>${escapeHtml(cmd)}</code> then commit and push.`
+      );
+      navigator.clipboard?.writeText(cmd).catch(() => {});
+    };
+  }
 }
 
 function filtersAreActive() {
   return Boolean(
     state.search.trim() ||
     state.starter ||
+    state.recent ||
     state.status ||
     state.statusBucket ||
     state.category ||
@@ -464,16 +912,17 @@ function renderCards() {
             <span class="badge badge--${group}">${escapeHtml(t.status)}</span>
           </div>
         </div>
+        ${tagListHtml(t)}
         <p class="card__desc">${escapeHtml(t.description)}</p>
         ${guide ? `<p class="card__guide">${escapeHtml(guide)}</p>` : ""}
+        ${assignmentSummaryHtml(t)}
         <div class="card__meta">
           ${t.lastReviewed ? `<span>Reviewed ${escapeHtml(t.lastReviewed)}</span>` : `<span>Not reviewed</span>`}
         </div>
-        ${tagListHtml(t, { includePlatform: true })}
         <div class="card__actions">
           <button type="button" class="card__cta" data-open-details="${escapeHtml(t.id)}">View details</button>
           ${t.url
-            ? `<a class="card__cta-secondary" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Open site</a>`
+            ? `<a class="card__cta-secondary" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Visit website</a>`
             : ""}
         </div>
       </article>
@@ -514,8 +963,9 @@ function openModal(tool) {
         <h2 class="modal__name" id="modalName">${escapeHtml(tool.name)}</h2>
         <div class="modal__meta">
           <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
-          ${ratingHtml(evalData)}
-          ${tagListHtml(tool)}
+          ${ratingHtml(evalData, tool)}
+          ${modalMetaTagsHtml(tool)}
+          ${modalMetaAssignmentHtml(tool)}
         </div>
       </div>
     </div>
@@ -530,7 +980,6 @@ function openModal(tool) {
       ${detailField("Date added", tool.dateAdded)}
       ${detailField("Last reviewed", tool.lastReviewed || "Not reviewed")}
       ${detailField("Subcategory", tool.subcategory)}
-      ${detailPills("Platforms", tool.platform)}
       ${detailPills("Use cases", tool.useCases)}
       ${detailPills("Approved models", tool.approvedModels)}
     </div>
@@ -554,10 +1003,10 @@ function openModal(tool) {
               <span class="eval-value">${escapeHtml(tool.securityTip)}</span>
             </div>` : ""}
         </div>` : ""}
-      ${hasUsefulEval(evalData) ? `
+      ${hasUsefulEval(evalData, tool) ? `
         <div class="modal__notes modal__eval">
           <strong>Evaluation</strong>
-          <div class="modal__stars-row">${ratingHtml(evalData)}</div>
+          ${toolCanHaveScore(tool) ? `<div class="modal__stars-row">${ratingHtml(evalData, tool)}</div>` : ""}
           ${evalData.criteria ? `
             <div class="eval-row">
               <span class="eval-label">Criteria</span>
@@ -574,7 +1023,7 @@ function openModal(tool) {
     </div>
     <div class="modal__actions">
       <button type="button" class="modal__cta modal__cta--secondary" id="modalCompareBtn" data-id="${escapeHtml(tool.id)}">
-        ${isCompared(tool.id) ? "Remove from side-by-side" : state.compareIds.length >= COMPARE_MAX ? "Side-by-side list is full" : "Add to side-by-side"}
+        ${isCompared(tool.id) ? "Remove from compare" : state.compareIds.length >= COMPARE_MAX ? "Compare list is full" : "Add to compare"}
       </button>
       ${tool.url ? `<a class="modal__cta" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener">Open ${escapeHtml(tool.name)}</a>` : ""}
     </div>
@@ -585,10 +1034,17 @@ function openModal(tool) {
   }
   document.getElementById("modalOverlay").hidden = false;
   document.body.style.overflow = "hidden";
+  const overlay = document.getElementById("modalOverlay");
+  const modal = document.getElementById("modal");
+  if (overlay) overlay.scrollTop = 0;
+  if (modal) modal.scrollTop = 0;
+  document.getElementById("modalBody")?.scrollTo?.(0, 0);
+  bindToolAssignmentTrigger(tool);
   setToolQueryParam(tool);
 }
 
 function closeModal() {
+  closeAssignmentModal();
   document.getElementById("modalOverlay").hidden = true;
   if (document.getElementById("compareOverlay").hidden) {
     document.body.style.overflow = "";
@@ -620,6 +1076,9 @@ function syncUrl({ tool } = {}) {
 
   if (state.starter) params.set("starter", "1");
   else params.delete("starter");
+
+  if (state.recent) params.set("recent", "1");
+  else params.delete("recent");
 
   if (state.status) params.set("status", state.status);
   else params.delete("status");
@@ -693,12 +1152,28 @@ function applyFiltersFromUrl() {
 
   if (params.get("starter") === "1") {
     state.starter = true;
+    state.recent = false;
+    state.status = null;
+    state.statusBucket = null;
+    if (!view) state.view = "directory";
+  } else if (params.get("recent") === "1") {
+    state.recent = true;
+    state.starter = false;
     state.status = null;
     state.statusBucket = null;
     if (!view) state.view = "directory";
   } else {
     state.starter = false;
-    const status = params.get("status");
+    state.recent = false;
+    const statusRaw = params.get("status");
+    const statusAliases = {
+      Adopted: "Approved",
+      Pilot: "Testing",
+      Planned: "Exploring",
+      Researching: "Exploring",
+      Deprecated: "Archived",
+    };
+    const status = statusAliases[statusRaw] || statusRaw;
     const bucket = params.get("bucket");
     if (status && STATUS_ORDER.includes(status)) {
       state.status = status;
@@ -807,7 +1282,7 @@ function openToolFromUrl() {
 }
 
 function syncChipUI() {
-  const allActive = !state.starter && !state.status && !state.statusBucket && !state.category && !state.pricing;
+  const allActive = !state.starter && !state.recent && !state.status && !state.statusBucket && !state.category && !state.pricing;
   document.querySelectorAll("#filterChips .chip").forEach(el => {
     if (el.dataset.starter === "true") {
       el.classList.toggle("active", state.starter);
@@ -846,6 +1321,7 @@ function rerender() {
 function clearFilters() {
   state.search = "";
   state.starter = false;
+  state.recent = false;
   state.status = null;
   state.statusBucket = null;
   state.category = null;
@@ -855,10 +1331,16 @@ function clearFilters() {
   rerender();
 }
 
-/** Navigate to directory (optionally Start here / compare mode). */
-function browseTools({ starter = false, compare = false } = {}) {
+/** Navigate to directory (optionally Start here / New / compare mode). */
+function browseTools({ starter = false, recent = false, compare = false } = {}) {
   if (starter) {
     state.starter = true;
+    state.recent = false;
+    state.status = null;
+    state.statusBucket = null;
+  } else if (recent) {
+    state.recent = true;
+    state.starter = false;
     state.status = null;
     state.statusBucket = null;
   }
@@ -866,8 +1348,16 @@ function browseTools({ starter = false, compare = false } = {}) {
     state.compareMode = true;
   }
   showView("directory");
+  scrollToDirectoryResults();
+}
+
+function scrollToDirectoryResults() {
+  const target = document.getElementById("toolResults")
+    || document.getElementById("toolGrid")
+    || document.getElementById("resultCount");
+  if (!target) return;
   requestAnimationFrame(() => {
-    document.getElementById("find-tools")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
 
@@ -986,6 +1476,202 @@ function miniToolCard(tool, { tip = "" } = {}) {
   `;
 }
 
+function departmentsData() {
+  return Array.isArray(typeof DEPARTMENTS !== "undefined" ? DEPARTMENTS : null)
+    ? DEPARTMENTS.filter(Boolean)
+    : ["Engineering", "Operations", "Management"];
+}
+
+function teamRolesData() {
+  return Array.isArray(typeof TEAM_ROLES !== "undefined" ? TEAM_ROLES : null)
+    ? TEAM_ROLES.filter(Boolean)
+    : ["Developer", "Manager", "Team"];
+}
+
+function populateTeamRegisterDropdowns() {
+  const deptSelect = document.getElementById("tr_department");
+  const roleSelect = document.getElementById("tr_role");
+  if (deptSelect && !deptSelect.dataset.populated) {
+    deptSelect.dataset.populated = "1";
+    const current = deptSelect.value;
+    deptSelect.innerHTML = `<option value="">Select department…</option>${departmentsData().map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("")}`;
+    if (current) deptSelect.value = current;
+  }
+  if (roleSelect && !roleSelect.dataset.populated) {
+    roleSelect.dataset.populated = "1";
+    const current = roleSelect.value;
+    roleSelect.innerHTML = `<option value="">Select role…</option>${teamRolesData().map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("")}`;
+    if (current) roleSelect.value = current;
+  }
+}
+
+function renderTeamDirectoryPanel() {
+  const panel = document.getElementById("teamDirectoryPanel");
+  if (!panel) return;
+  const cfg = typeof getTeamDirectoryConfig === "function" ? getTeamDirectoryConfig() : { enabled: false };
+  const showRegistration = cfg.enabled && cfg.allowSelfRegister;
+  panel.hidden = !showRegistration;
+  if (!showRegistration) return;
+
+  const formWrap = document.getElementById("teamRegisterForm");
+  const success = document.getElementById("teamRegisterSuccess");
+  const admin = document.getElementById("teamRegisterAdmin");
+  if (formWrap) formWrap.hidden = false;
+  if (success) success.hidden = true;
+  if (admin) admin.hidden = !isAdminSession();
+  populateTeamRegisterDropdowns();
+  if (isAdminSession()) renderTeamRegisterPendingAdmin();
+}
+
+function validateTeamRegisterForm() {
+  const name = document.getElementById("tr_name")?.value?.trim() || "";
+  const email = document.getElementById("tr_email")?.value?.trim().toLowerCase() || "";
+  const status = document.getElementById("teamRegisterStatus");
+  if (!name || name.length < 2) {
+    if (status) {
+      status.hidden = false;
+      status.textContent = "Enter your full name.";
+    }
+    document.getElementById("tr_name")?.focus();
+    return null;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (status) {
+      status.hidden = false;
+      status.textContent = "Enter a valid work email.";
+    }
+    document.getElementById("tr_email")?.focus();
+    return null;
+  }
+  const existing = getActiveTeamMembers().some(member =>
+    member.email.toLowerCase() === email && member.name.toLowerCase() === name.toLowerCase()
+  );
+  if (existing) {
+    if (status) {
+      status.hidden = false;
+      status.textContent = "You are already in the team directory.";
+    }
+    return null;
+  }
+  if (status) status.hidden = true;
+  return {
+    name,
+    email,
+    department: document.getElementById("tr_department")?.value?.trim() || "",
+    role: document.getElementById("tr_role")?.value?.trim() || "Team",
+  };
+}
+
+function buildTeamRegisterDraft(payload) {
+  const cmd = teamMemberPublishCommand(payload.name, payload.email, payload.department, payload.role);
+  return {
+    title: `Team directory: ${payload.name}`,
+    body: [
+      "## Team directory registration",
+      "",
+      `- **Name:** ${payload.name}`,
+      `- **Email:** ${payload.email}`,
+      `- **Department:** ${payload.department || "—"}`,
+      `- **Role:** ${payload.role || "Team"}`,
+      "",
+      "### Admin — add to directory",
+      "",
+      "Run locally, then commit and push:",
+      "",
+      "```bash",
+      cmd,
+      "git add data/team_members.csv docs/data.js",
+      "git commit -m \"Add team member: " + payload.name + "\"",
+      "git push",
+      "```",
+    ].join("\n"),
+    cmd,
+  };
+}
+
+function showTeamRegisterSuccess(payload) {
+  const form = document.getElementById("teamRegisterForm");
+  const success = document.getElementById("teamRegisterSuccess");
+  const draft = buildTeamRegisterDraft(payload);
+  const cfg = typeof getTeamDirectoryConfig === "function" ? getTeamDirectoryConfig() : {};
+  const issueUrl = buildIssueDraftUrl({
+    title: draft.title,
+    body: draft.body,
+    label: cfg.registerLabel || "team-register",
+  });
+  if (form) form.hidden = true;
+  if (success) success.hidden = false;
+  const link = document.getElementById("teamRegisterIssueLink");
+  if (link) link.href = issueUrl;
+  const copyBtn = document.getElementById("teamRegisterCopyDraft");
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      const text = `${draft.title}\n\n${draft.body}`;
+      await navigator.clipboard?.writeText(text).catch(() => {});
+      copyBtn.textContent = "Copied";
+      setTimeout(() => { copyBtn.textContent = "Copy draft text"; }, 2000);
+    };
+  }
+}
+
+function submitTeamRegistration() {
+  const payload = validateTeamRegisterForm();
+  if (!payload) return;
+  const pending = readTeamRegisterPending();
+  if (pending.some(item =>
+    item.email === payload.email && String(item.name || "").toLowerCase() === payload.name.toLowerCase()
+  )) {
+    const status = document.getElementById("teamRegisterStatus");
+    if (status) {
+      status.hidden = false;
+      status.textContent = "You already submitted — waiting for admin approval.";
+    }
+    return;
+  }
+  pending.push({ ...payload, submittedAt: Date.now() });
+  writeTeamRegisterPending(pending);
+  showTeamRegisterSuccess(payload);
+  if (isAdminSession()) renderTeamRegisterPendingAdmin();
+}
+
+function renderTeamRegisterPendingAdmin() {
+  const list = document.getElementById("teamRegisterPendingList");
+  if (!list || !isAdminSession()) return;
+  const pending = readTeamRegisterPending();
+  if (!pending.length) {
+    list.innerHTML = `<p class="pending-list__status">No pending registrations on this device.</p>`;
+    return;
+  }
+  list.innerHTML = pending.map(item => {
+    const cmd = teamMemberPublishCommand(item.name, item.email, item.department, item.role);
+    return `
+      <article class="pending-item">
+        <h4 class="pending-item__title">${escapeHtml(item.name)}</h4>
+        <p class="pending-item__meta">${escapeHtml(item.email)}${item.department ? ` · ${escapeHtml(item.department)}` : ""}</p>
+        <p class="pending-item__cmd"><code>${escapeHtml(cmd)}</code></p>
+        <button type="button" class="linkbtn pending-item__copy" data-copy-cmd="${escapeHtml(cmd)}">Copy command</button>
+      </article>
+    `;
+  }).join("");
+  list.querySelectorAll("[data-copy-cmd]").forEach(btn => {
+    btn.onclick = () => {
+      navigator.clipboard?.writeText(btn.dataset.copyCmd || "").catch(() => {});
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = "Copy command"; }, 1500);
+    };
+  });
+}
+
+function bindTeamRegisterForm() {
+  const form = document.getElementById("teamRegisterForm");
+  if (!form || form.dataset.bound === "1") return;
+  form.dataset.bound = "1";
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    submitTeamRegistration();
+  });
+}
+
 function renderHome() {
   const grid = document.getElementById("chooserGrid");
   const result = document.getElementById("chooserResult");
@@ -1064,6 +1750,8 @@ function renderHome() {
       </div>
     `;
   }
+
+  renderTeamDirectoryPanel();
 }
 
 function guideTone(category) {
@@ -1395,11 +2083,22 @@ function applyPlaybookSearchFromInput() {
   syncUrl();
 }
 
+function syncAdminReviewVisibility() {
+  const admin = isAdminSession();
+  const pendingPanel = document.getElementById("pendingReviewPanel");
+  const howToPanel = document.querySelector(".panel--review-howto");
+  if (pendingPanel) pendingPanel.hidden = !admin;
+  if (howToPanel) howToPanel.hidden = !admin;
+  return admin;
+}
+
 function renderContribute() {
   syncContributeTabs();
   populateWinToolDropdown();
+  if (syncAdminReviewVisibility()) {
   renderReviewHowto();
   loadPendingReviews();
+  }
 }
 
 function renderReviewHowto() {
@@ -1411,11 +2110,12 @@ function renderReviewHowto() {
 }
 
 async function loadPendingReviews() {
+  if (!isAdminSession()) return;
   const list = document.getElementById("pendingReviewList");
   if (!list || typeof getSiteConfig !== "function") return;
 
   const cfg = getSiteConfig();
-  list.innerHTML = `<p class="pending-list__status">Loading open submissions…</p>`;
+  list.innerHTML = `<p class="pending-list__status">Loading…</p>`;
 
   try {
     const api = `https://api.github.com/repos/${encodeURIComponent(cfg.githubOwner)}/${encodeURIComponent(cfg.githubRepo)}/issues?state=open&per_page=30`;
@@ -1430,6 +2130,8 @@ async function loadPendingReviews() {
         const labels = (issue.labels || []).map(l => (l.name || "").toLowerCase());
         const title = String(issue.title || "");
         const isSuggestion = labels.includes(String(cfg.suggestionLabel || "").toLowerCase())
+          || labels.includes("tool-suggestion")
+          || /^add tool:/i.test(title)
           || /^tool suggestion:/i.test(title);
         const isWin = labels.includes(String(cfg.winLabel || "").toLowerCase())
           || /^team win:/i.test(title);
@@ -1437,35 +2139,83 @@ async function loadPendingReviews() {
       });
 
     if (!items.length) {
-      list.innerHTML = `<p class="pending-list__status">No pending suggestions or wins right now.</p>`;
+      list.innerHTML = `<p class="pending-list__status">Nothing waiting for Admin</p>`;
       return;
     }
 
     list.innerHTML = items.map(issue => {
       const labels = (issue.labels || []).map(l => (l.name || "").toLowerCase());
       const title = String(issue.title || "Untitled");
-      const kind = labels.includes(String(cfg.winLabel || "").toLowerCase()) || /^team win:/i.test(title)
-        ? "Win"
-        : "Tool suggestion";
+      const isWin = labels.includes(String(cfg.winLabel || "").toLowerCase()) || /^team win:/i.test(title);
+      const kind = isWin ? "Win" : "Add tool";
       const created = issue.created_at ? new Date(issue.created_at).toLocaleDateString() : "";
+      const issueKey = issue.number || issue.id || title;
+      const assigned = assignmentFor(issueKey);
+      const admin = isAdminSession();
+      const assignBlock = !isWin ? `
+          <div class="pending-item__assign">
+            ${assigned
+              ? `<p class="pending-item__assigned">Assigned to <strong>${escapeHtml(assigned.name)}</strong> for testing</p>`
+              : `<p class="pending-item__hint">Waiting for Admin</p>`}
+            ${admin ? `
+              <div class="pending-assign" data-issue-key="${escapeHtml(String(issueKey))}">
+                <label class="pending-assign__label" for="assign-${escapeHtml(String(issueKey))}">Assign for testing</label>
+                <div class="pending-assign__row">
+                  <input
+                    type="text"
+                    id="assign-${escapeHtml(String(issueKey))}"
+                    class="pending-assign__input"
+                    maxlength="60"
+                    placeholder="Teammate name"
+                    value="${assigned ? escapeHtml(assigned.name) : ""}"
+                  >
+                  <button type="button" class="pending-assign__btn" data-assign-issue="${escapeHtml(String(issueKey))}">
+                    ${assigned ? "Update" : "Assign"}
+                  </button>
+                </div>
+              </div>
+            ` : ""}
+          </div>
+        ` : `<p class="pending-item__hint">Waiting for Admin</p>`;
       return `
         <article class="pending-item">
           <div class="pending-item__meta">
             <span class="pending-item__kind">${escapeHtml(kind)}</span>
-            <span class="pending-item__status">Pending review</span>
+            <span class="pending-item__status">Pending approval</span>
             ${created ? `<span class="pending-item__date">${escapeHtml(created)}</span>` : ""}
           </div>
           <a class="pending-item__title" href="${escapeHtml(issue.html_url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
-          <p class="pending-item__hint">Open on GitHub to approve (add to CSV + close) or reject (close with comment).</p>
+          ${assignBlock}
         </article>
       `;
     }).join("");
+
+    if (isAdminSession()) bindPendingAssignActions(list);
   } catch (err) {
     list.innerHTML = `
-      <p class="pending-list__status">Couldn’t load pending items from GitHub (repo must be public, or try Refresh later).</p>
+      <p class="pending-list__status">Couldn’t load the list. Try Refresh again.</p>
       <p class="field-note">Fallback: open <a href="https://github.com/${escapeHtml(cfg.githubOwner)}/${escapeHtml(cfg.githubRepo)}/issues" target="_blank" rel="noopener">Issues</a> directly.</p>
     `;
   }
+}
+
+function bindPendingAssignActions(list) {
+  if (!list || list.dataset.assignBound === "1") return;
+  list.dataset.assignBound = "1";
+  list.addEventListener("click", e => {
+    const btn = e.target.closest("[data-assign-issue]");
+    if (!btn || !isAdminSession()) return;
+    const key = btn.dataset.assignIssue;
+    const wrap = list.querySelector(`[data-issue-key="${key}"]`);
+    const input = wrap?.querySelector(".pending-assign__input");
+    const name = (input?.value || "").trim();
+    if (!name) {
+      input?.focus();
+      return;
+    }
+    writeAssignment(key, name);
+    loadPendingReviews();
+  });
 }
 
 function syncContributeTabs() {
@@ -1611,8 +2361,26 @@ function openToolByIdOrName(idOrName) {
   if (tool) openModal(tool);
 }
 
+function bindBackToTop() {
+  const btn = document.getElementById("backToTop");
+  if (!btn || btn.dataset.bound === "1") return;
+  btn.dataset.bound = "1";
+
+  const sync = () => {
+    const show = window.scrollY > 320 && !document.body.classList.contains("auth-locked");
+    btn.hidden = !show;
+  };
+
+  window.addEventListener("scroll", sync, { passive: true });
+  btn.addEventListener("click", () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+  });
+  sync();
+}
+
 function bindAppNavigation() {
-  document.querySelector(".app-nav")?.addEventListener("click", e => {
+  document.getElementById("dcs-site-header")?.addEventListener("click", e => {
     const btn = e.target.closest("[data-view]");
     if (!btn) return;
     showView(btn.dataset.view);
@@ -1626,6 +2394,10 @@ function bindAppNavigation() {
         browseTools({ starter: true });
         return;
       }
+      if (go.dataset.recent === "1") {
+        browseTools({ recent: true });
+        return;
+      }
       if (go.dataset.compare === "1") {
         browseTools({ compare: true });
         return;
@@ -1634,6 +2406,15 @@ function bindAppNavigation() {
         state.contribTab = "win";
       }
       showView(view);
+      return;
+    }
+
+    const scrollTo = e.target.closest("[data-scroll-to]");
+    if (scrollTo) {
+      const target = document.getElementById(scrollTo.dataset.scrollTo);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
       return;
     }
 
@@ -1864,7 +2645,7 @@ function syncCompareUI() {
 
   if (!state.compareMode) return;
 
-  if (count === 0) text.textContent = "Select 2–3 tools for side-by-side";
+  if (count === 0) text.textContent = "Select 2–3 tools to compare";
   else if (count === 1) text.textContent = "1 tool selected — pick at least one more";
   else text.textContent = `${count} of ${COMPARE_MAX} tools selected`;
 
@@ -1922,17 +2703,32 @@ function renderComparePanel() {
     { label: "Category", values: tools.map(t => t.category || "—") },
     { label: "Subcategory", values: tools.map(t => t.subcategory || "—") },
     { label: "Pricing", values: tools.map(t => t.pricing || "—") },
-    { label: "Platform", values: tools.map(t => (t.platform || []).join(", ") || "—") },
     { label: "Department", values: tools.map(t => t.department || "—") },
     { label: "Priority", values: tools.map(t => t.priority || "—") },
     { label: "Learning curve", values: tools.map(t => t.learningCurve || "—") },
     { label: "Data classification", values: tools.map(t => t.dataClassification || "—") },
     { label: "Owner", values: tools.map(t => t.owner || "Unassigned") },
     {
+      label: "Assigned to",
+      values: tools.map(t => {
+        if (!toolIsInTestTrack(t)) return "—";
+        const a = effectiveAssignment(t).assignedTo;
+        return a || "—";
+      }),
+    },
+    {
+      label: "Testing notes",
+      values: tools.map(t => {
+        if (!toolIsInTestTrack(t)) return "—";
+        const n = effectiveAssignment(t).testingNotes;
+        return n || "—";
+      }),
+    },
+    {
       label: "Rating",
       values: tools.map(t => {
         const ev = evaluationFor(t);
-        return ratingHtml(ev);
+        return ratingHtml(ev, t) || "—";
       }),
       html: true,
     },
@@ -2003,11 +2799,17 @@ function renderComparePanel() {
 function openCompare() {
   if (state.compareIds.length < 2) return;
   renderComparePanel();
-  document.getElementById("compareOverlay").hidden = false;
+  const overlay = document.getElementById("compareOverlay");
+  const modal = document.getElementById("compareModal");
+  if (overlay) {
+    overlay.hidden = false;
+    overlay.scrollTop = 0;
+  }
+  if (modal) modal.scrollTop = 0;
   document.body.style.overflow = "hidden";
 }
 
-/** Close side-by-side overlay and exit selection mode (hides bottom bar). */
+/** Close compare overlay and exit selection mode (hides bottom bar). */
 function closeCompare() {
   const overlay = document.getElementById("compareOverlay");
   const wasOpen = overlay && !overlay.hidden;
@@ -2020,17 +2822,21 @@ function closeCompare() {
   }
 }
 
-function init() {
+function init(opts = {}) {
+  applyAssignmentOverrides();
   applyFiltersFromUrl();
+  if (opts.forceHome) state.view = "home";
   populateCategoryDropdown();
   populatePricingDropdown();
   populateDepartmentDropdown();
   bindAppNavigation();
+  bindBackToTop();
+  bindTeamRegisterForm();
   showView(state.view);
-  openToolFromUrl();
+  if (!opts.forceHome) openToolFromUrl();
 
   const params = new URLSearchParams(window.location.search);
-  if (params.get("compare") === "1") {
+  if (!opts.forceHome && params.get("compare") === "1") {
     setCompareMode(true);
   }
 
@@ -2040,16 +2846,38 @@ function init() {
 
     if (stat.dataset.filter === "all") {
       state.starter = false;
+      state.recent = false;
       state.status = null;
       state.statusBucket = null;
+    } else if (stat.dataset.starter === "true") {
+      state.starter = !state.starter;
+      if (state.starter) {
+        state.recent = false;
+        state.status = null;
+        state.statusBucket = null;
+      }
+    } else if (stat.dataset.recent === "true") {
+      state.recent = !state.recent;
+      if (state.recent) {
+        state.starter = false;
+        state.status = null;
+        state.statusBucket = null;
+      }
+    } else if (stat.dataset.status) {
+      const next = stat.dataset.status;
+      state.starter = false;
+      state.recent = false;
+      state.statusBucket = null;
+      state.status = state.status === next ? null : next;
     } else if (stat.dataset.bucket) {
       const bucket = stat.dataset.bucket;
       state.starter = false;
+      state.recent = false;
       state.status = null;
       state.statusBucket = state.statusBucket === bucket ? null : bucket;
     }
     rerender();
-    document.getElementById("find-tools")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    scrollToDirectoryResults();
   });
 
   document.getElementById("searchInput").addEventListener("input", e => {
@@ -2071,49 +2899,59 @@ function init() {
     if (chip.dataset.starter === "true") {
       state.starter = !state.starter;
       if (state.starter) {
+        state.recent = false;
         state.status = null;
         state.statusBucket = null;
       }
       rerender();
+      scrollToDirectoryResults();
       return;
     }
 
     if (chip.dataset.filter === "all") {
       state.starter = false;
+      state.recent = false;
       state.status = null;
       state.statusBucket = null;
       state.category = null;
       state.pricing = null;
       rerender();
+      scrollToDirectoryResults();
       return;
     }
 
     if (chip.dataset.bucket) {
       const bucket = chip.dataset.bucket;
       state.starter = false;
+      state.recent = false;
       state.status = null;
       state.statusBucket = state.statusBucket === bucket ? null : bucket;
       rerender();
+      scrollToDirectoryResults();
       return;
     }
 
     if (chip.dataset.status) {
       state.starter = false;
+      state.recent = false;
       state.statusBucket = null;
       state.status = state.status === chip.dataset.status ? null : chip.dataset.status;
       rerender();
+      scrollToDirectoryResults();
       return;
     }
 
     if (chip.dataset.category) {
       state.category = state.category === chip.dataset.category ? null : chip.dataset.category;
       rerender();
+      scrollToDirectoryResults();
       return;
     }
 
     if (chip.dataset.pricing) {
       state.pricing = state.pricing === chip.dataset.pricing ? null : chip.dataset.pricing;
       rerender();
+      scrollToDirectoryResults();
     }
   });
 
@@ -2160,11 +2998,20 @@ function init() {
   });
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
+    if (!document.getElementById("assignmentOverlay").hidden) {
+      closeAssignmentModal();
+      return;
+    }
     if (!document.getElementById("compareOverlay").hidden) {
       closeCompare();
       return;
     }
     closeModal();
+  });
+
+  document.getElementById("assignmentClose").addEventListener("click", closeAssignmentModal);
+  document.getElementById("assignmentOverlay").addEventListener("click", e => {
+    if (e.target.id === "assignmentOverlay") closeAssignmentModal();
   });
 
   bindSuggestValidation();
@@ -2206,24 +3053,31 @@ function buildSuggestDraft() {
   const dept = suggestValue("s_dept");
   const desc = suggestValue("s_desc");
   const reason = suggestValue("s_reason");
+  const today = new Date().toISOString().slice(0, 10);
 
   const lines = [
-    `## Tool suggestion: ${name}`,
+    `## Add tool: ${name}`,
     "",
+    `- **Intended status:** Testing (team can try after approval)`,
     `- **Category:** ${category || "—"}`,
     `- **Pricing:** ${pricing || "—"}`,
-    `- **Urgency:** ${urgency || "—"}`,
+    `- **When to try:** ${urgency || "—"}`,
     `- **Website:** ${url || "—"}`,
-    `- **Suggested by:** ${submitter || "—"}`,
+    `- **Added by:** ${submitter || "—"}`,
     `- **Department:** ${dept || "—"}`,
     "",
     "### What it does",
     desc || "—",
     "",
-    "### Why evaluate",
+    "### How teammates should test it",
     reason || "—",
     "",
-    "_Submitted via AI Resource Center suggest form._",
+    "### Admin checklist",
+    `- [ ] Approve and add row to \`data/ai_tools_directory.csv\` with Status=Testing, Date Added=${today}`,
+    "- [ ] Ask teammates to test, then close this issue",
+    "- [ ] Or reject and comment why",
+    "",
+    "_Submitted via AI Resource Center — Add a tool._",
   ];
   return lines.join("\n");
 }
@@ -2236,9 +3090,9 @@ function showSuggestDraft() {
 
   const link = document.getElementById("suggestIssueLink");
   link.href = buildIssueDraftUrl({
-    title: `Tool suggestion: ${name}`,
+    title: `Add tool: ${name}`,
     body,
-    label: cfg.suggestionLabel || "tool-suggestion",
+    label: cfg.suggestionLabel || "tool-add",
   });
 
   document.getElementById("suggestCopyStatus").hidden = true;
@@ -2338,7 +3192,7 @@ function updateSensitiveWarning() {
   const hit = SENSITIVE_PATTERNS.some(re => re.test(text));
   if (hit) {
     el.hidden = false;
-    el.textContent = "Don’t paste confidential client data, secrets, or production details into suggestions. Describe the need without sensitive values — you can still submit.";
+    el.textContent = "Don’t paste confidential client data, secrets, or production details into tool submissions. Describe the need without sensitive values — you can still submit.";
   } else {
     el.hidden = true;
     el.textContent = "";
@@ -2480,7 +3334,9 @@ function validateSuggestForm() {
     if (!allowed.has(pricing)) errors.pricing = "Choose a pricing model from the list.";
   }
 
-  if (urlRaw) {
+  if (!urlRaw) {
+    errors.url = "Website is required.";
+  } else {
     const url = normalizeSuggestUrl(urlRaw);
     if (url.length > SUGGEST_LIMITS.url.max) {
       errors.url = `URL must be ${SUGGEST_LIMITS.url.max} characters or fewer.`;
@@ -2495,12 +3351,12 @@ function validateSuggestForm() {
     errors.urgency = "Choose an urgency option from the list.";
   }
 
-  if (submitter) {
-    if (submitter.length < SUGGEST_LIMITS.submitter.min || submitter.length > SUGGEST_LIMITS.submitter.max) {
+  if (!submitter) {
+    errors.submitter = "Your name is required.";
+  } else if (submitter.length < SUGGEST_LIMITS.submitter.min || submitter.length > SUGGEST_LIMITS.submitter.max) {
       errors.submitter = `Use ${SUGGEST_LIMITS.submitter.min}–${SUGGEST_LIMITS.submitter.max} characters.`;
     } else if (!PERSON_PATTERN.test(submitter)) {
       errors.submitter = "Use letters, spaces, apostrophes, or hyphens only.";
-    }
   }
 
   if (!desc) {
@@ -2610,4 +3466,427 @@ function closeSuggest() {
   // Suggest form is inline on Contribute — nothing to dismiss.
 }
 
-init();
+/* ---------- Soft auth gate (password / invite) ---------- */
+
+let appInitialized = false;
+/** Cached validated session for sync UI checks (admin assign, etc.). */
+let cachedAuthSession = null;
+
+const LOGIN_ATTEMPT_KEY = "dcs-ai-rc-login-attempts";
+
+function startAppOnce(opts = {}) {
+  if (appInitialized) {
+    if (opts.forceHome) showView("home");
+    return;
+  }
+  appInitialized = true;
+  init(opts);
+}
+
+function authConfig() {
+  return typeof getAuthConfig === "function"
+    ? getAuthConfig()
+    : {
+      enabled: false,
+      username: "admin@dailycodesolutions.com",
+      passwordHash: "",
+      employeeUsername: "team",
+      employeePasswordHash: "",
+      inviteTokenHash: "",
+      sessionDays: 7,
+      sessionSalt: "dcs-ai-rc-auth",
+      sessionKey: "dcs-ai-rc-auth",
+      maxLoginAttempts: 5,
+      lockoutSeconds: 60,
+    };
+}
+
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(String(text || ""));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function timingSafeEqualHex(a, b) {
+  const left = String(a || "").toLowerCase();
+  const right = String(b || "").toLowerCase();
+  if (left.length !== right.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < left.length; i += 1) {
+    mismatch |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+async function secretMatches(entered, expectedHash) {
+  const expected = String(expectedHash || "").trim().toLowerCase();
+  if (!expected || expected.length !== 64) return false;
+  const hex = await sha256Hex(entered);
+  return timingSafeEqualHex(hex, expected);
+}
+
+async function sessionSignature(username, at, isAdmin, salt) {
+  return sha256Hex(`${String(username || "").toLowerCase()}|${Number(at)}|${isAdmin ? 1 : 0}|${salt}`);
+}
+
+function readLoginAttempts() {
+  try {
+    const raw = sessionStorage.getItem(LOGIN_ATTEMPT_KEY);
+    const data = raw ? JSON.parse(raw) : null;
+    if (!data || typeof data !== "object") return { count: 0, lockedUntil: 0 };
+    return {
+      count: Math.max(0, Number(data.count) || 0),
+      lockedUntil: Math.max(0, Number(data.lockedUntil) || 0),
+    };
+  } catch {
+    return { count: 0, lockedUntil: 0 };
+  }
+}
+
+function writeLoginAttempts(state) {
+  try {
+    sessionStorage.setItem(LOGIN_ATTEMPT_KEY, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+function clearLoginAttempts() {
+  try { sessionStorage.removeItem(LOGIN_ATTEMPT_KEY); } catch { /* ignore */ }
+}
+
+function loginLockRemainingMs() {
+  const { lockedUntil } = readLoginAttempts();
+  return Math.max(0, lockedUntil - Date.now());
+}
+
+function registerLoginFailure(cfg) {
+  const state = readLoginAttempts();
+  const count = state.count + 1;
+  const next = { count, lockedUntil: state.lockedUntil };
+  if (count >= cfg.maxLoginAttempts) {
+    next.lockedUntil = Date.now() + cfg.lockoutSeconds * 1000;
+    next.count = 0;
+  }
+  writeLoginAttempts(next);
+  return next;
+}
+
+async function readAuthSession() {
+  const cfg = authConfig();
+  const { sessionKey, sessionDays, sessionSalt } = cfg;
+  try {
+    const raw = localStorage.getItem(sessionKey);
+    if (!raw) {
+      cachedAuthSession = null;
+      return null;
+    }
+    const data = JSON.parse(raw);
+    if (!data?.ok || !data?.at || !data?.sig) {
+      localStorage.removeItem(sessionKey);
+      cachedAuthSession = null;
+      return null;
+    }
+    const maxAge = sessionDays * 24 * 60 * 60 * 1000;
+    if (Date.now() - Number(data.at) > maxAge) {
+      localStorage.removeItem(sessionKey);
+      cachedAuthSession = null;
+      return null;
+    }
+    const expected = await sessionSignature(data.username, data.at, Boolean(data.isAdmin), sessionSalt);
+    if (!timingSafeEqualHex(data.sig, expected)) {
+      localStorage.removeItem(sessionKey);
+      cachedAuthSession = null;
+      return null;
+    }
+    cachedAuthSession = data;
+    return data;
+  } catch {
+    cachedAuthSession = null;
+    return null;
+  }
+}
+
+async function writeAuthSession({ username = "", isAdmin = false } = {}) {
+  const cfg = authConfig();
+  const at = Date.now();
+  const user = String(username || "").trim().toLowerCase();
+  const admin = Boolean(isAdmin);
+  const sig = await sessionSignature(user, at, admin, cfg.sessionSalt);
+  const payload = {
+    ok: true,
+    at,
+    username: user,
+    isAdmin: admin,
+    sig,
+  };
+  localStorage.setItem(cfg.sessionKey, JSON.stringify(payload));
+  cachedAuthSession = payload;
+}
+
+function clearAuthSession() {
+  const { sessionKey } = authConfig();
+  localStorage.removeItem(sessionKey);
+  cachedAuthSession = null;
+  try { sessionStorage.removeItem(sessionKey); } catch { /* ignore */ }
+  clearLoginAttempts();
+}
+
+async function isAuthenticated() {
+  const cfg = authConfig();
+  if (!cfg.enabled) return true;
+  return Boolean(await readAuthSession());
+}
+
+/** Sync admin check for UI (uses cache refreshed on login / bootstrap). */
+function isAdminSession() {
+  const cfg = authConfig();
+  if (!cfg.enabled) return true;
+  const session = cachedAuthSession;
+  if (!session) return false;
+  return Boolean(session.isAdmin);
+}
+
+async function resolveLogin(username, password, cfg) {
+  const value = String(username || "").trim().toLowerCase();
+  if (!value || !String(password || "").trim()) return null;
+
+  const adminUser = String(cfg.username || "").toLowerCase();
+  const employeeUser = String(cfg.employeeUsername || "").toLowerCase();
+
+  if (value === adminUser && await secretMatches(password, cfg.passwordHash)) {
+    return { username: value, isAdmin: true };
+  }
+  if (employeeUser && value === employeeUser && await secretMatches(password, cfg.employeePasswordHash)) {
+    return { username: value, isAdmin: false };
+  }
+  return null;
+}
+
+const ASSIGN_STORAGE_KEY = "dcs-ai-rc-assignments";
+
+function readAssignments() {
+  try {
+    const raw = localStorage.getItem(ASSIGN_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : {};
+    return data && typeof data === "object" ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeAssignment(issueKey, assignee) {
+  const all = readAssignments();
+  const key = String(issueKey);
+  const name = String(assignee || "").trim();
+  if (!name) {
+    delete all[key];
+  } else {
+    all[key] = { name, at: Date.now() };
+  }
+  localStorage.setItem(ASSIGN_STORAGE_KEY, JSON.stringify(all));
+}
+
+function assignmentFor(issueKey) {
+  return readAssignments()[String(issueKey)] || null;
+}
+
+function sessionRoleBadge() {
+  const cfg = authConfig();
+  if (!cfg.enabled || !cachedAuthSession) return null;
+  return cachedAuthSession.isAdmin ? "Admin" : "Team";
+}
+
+function updateHeaderSessionBadge() {
+  const badge = document.getElementById("sessionRoleBadge");
+  if (!badge) return;
+  const role = sessionRoleBadge();
+  if (!role) {
+    badge.hidden = true;
+    badge.textContent = "";
+    badge.classList.remove("dcs-header__role--admin", "dcs-header__role--team");
+    badge.removeAttribute("aria-label");
+    return;
+  }
+  badge.hidden = false;
+  badge.textContent = role;
+  badge.classList.toggle("dcs-header__role--admin", role === "Admin");
+  badge.classList.toggle("dcs-header__role--team", role === "Team");
+  badge.setAttribute("aria-label", `Signed in as ${role}`);
+}
+
+function unlockApp() {
+  document.body.classList.remove("auth-locked");
+  const gate = document.getElementById("loginGate");
+  if (gate) gate.hidden = true;
+  const signOut = document.getElementById("signOutBtn");
+  if (signOut) signOut.hidden = !authConfig().enabled;
+  updateHeaderSessionBadge();
+}
+
+function lockApp() {
+  document.body.classList.add("auth-locked");
+  const gate = document.getElementById("loginGate");
+  if (gate) gate.hidden = false;
+  const signOut = document.getElementById("signOutBtn");
+  if (signOut) signOut.hidden = true;
+  updateHeaderSessionBadge();
+  const user = document.getElementById("loginUsername");
+  const pass = document.getElementById("loginPassword");
+  if (user) user.value = "";
+  if (pass) pass.value = "";
+  clearLoginErrors();
+  requestAnimationFrame(() => user?.focus());
+}
+
+function clearLoginErrors() {
+  ["loginError", "loginUsernameError", "loginPasswordError"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = true;
+    el.textContent = "";
+  });
+  document.querySelectorAll("#loginForm [data-login-field]").forEach(el => {
+    el.classList.remove("is-invalid");
+  });
+}
+
+function setLoginFieldError(fieldKey, message) {
+  const field = document.querySelector(`#loginForm [data-login-field="${fieldKey}"]`);
+  const err = document.getElementById(
+    fieldKey === "username" ? "loginUsernameError" : "loginPasswordError"
+  );
+  if (!field || !err) return;
+  if (!message) {
+    field.classList.remove("is-invalid");
+    err.hidden = true;
+    err.textContent = "";
+    return;
+  }
+  field.classList.add("is-invalid");
+  err.hidden = false;
+  err.textContent = message;
+}
+
+function setLoginFormError(message) {
+  const err = document.getElementById("loginError");
+  if (!err) return;
+  if (!message) {
+    err.hidden = true;
+    err.textContent = "";
+    return;
+  }
+  err.hidden = false;
+  err.textContent = message;
+}
+
+async function tryInviteUnlock() {
+  const cfg = authConfig();
+  if (!cfg.enabled || !cfg.inviteTokenHash) return false;
+  const params = new URLSearchParams(window.location.search);
+  const invite = String(params.get("invite") || "").trim();
+  if (!invite) return false;
+  if (!(await secretMatches(invite, cfg.inviteTokenHash))) return false;
+
+  await writeAuthSession({ username: "invite", isAdmin: false });
+  params.delete("invite");
+  const next = params.toString();
+  const clean = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash || ""}`;
+  window.history.replaceState({}, "", clean);
+  return true;
+}
+
+function bindAuthUi() {
+  const form = document.getElementById("loginForm");
+  form?.addEventListener("submit", async e => {
+    e.preventDefault();
+    clearLoginErrors();
+    const cfg = authConfig();
+    const username = document.getElementById("loginUsername")?.value || "";
+    const password = document.getElementById("loginPassword")?.value || "";
+
+    const remaining = loginLockRemainingMs();
+    if (remaining > 0) {
+      const secs = Math.ceil(remaining / 1000);
+      setLoginFormError(`Too many attempts. Try again in ${secs}s.`);
+      return;
+    }
+
+    let hasError = false;
+    if (!username.trim()) {
+      setLoginFieldError("username", "Enter your username.");
+      hasError = true;
+    }
+    if (!password.trim()) {
+      setLoginFieldError("password", "Enter your password.");
+      hasError = true;
+    }
+    if (hasError) return;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    try {
+      const login = await resolveLogin(username, password, cfg);
+      if (!login) {
+        const next = registerLoginFailure(cfg);
+        if (next.lockedUntil > Date.now()) {
+          setLoginFormError(`Too many attempts. Try again in ${cfg.lockoutSeconds}s.`);
+        } else {
+          setLoginFormError("Incorrect username or password.");
+        }
+        document.querySelectorAll("#loginForm [data-login-field]").forEach(el => {
+          el.classList.add("is-invalid");
+        });
+        return;
+      }
+
+      clearLoginAttempts();
+      await writeAuthSession({
+        username: login.username,
+        isAdmin: login.isAdmin,
+      });
+      unlockApp();
+      // Preserve ?view, ?tool, ?compare, and prompt deep links after login.
+      startAppOnce();
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  document.getElementById("loginUsername")?.addEventListener("input", () => {
+    setLoginFieldError("username", "");
+    setLoginFormError("");
+  });
+  document.getElementById("loginPassword")?.addEventListener("input", () => {
+    setLoginFieldError("password", "");
+    setLoginFormError("");
+  });
+
+  document.getElementById("signOutBtn")?.addEventListener("click", () => {
+    clearAuthSession();
+    lockApp();
+  });
+}
+
+async function bootstrap() {
+  bindAuthUi();
+  const cfg = authConfig();
+
+  if (!cfg.enabled) {
+    unlockApp();
+    startAppOnce();
+    return;
+  }
+
+  const viaInvite = await tryInviteUnlock();
+  if (viaInvite || await isAuthenticated()) {
+    unlockApp();
+    // Invite unlock removes only the invite token; preserve any remaining deep-link parameters.
+    startAppOnce();
+    return;
+  }
+
+  lockApp();
+}
+
+bootstrap().catch(() => {
+  lockApp();
+});

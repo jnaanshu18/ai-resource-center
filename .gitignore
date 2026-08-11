@@ -1,2 +1,10 @@
 .DS_Store
 *.tmp
+__pycache__/
+*.pyc
+
+# Local host / auth settings (copy from site-config.example.js)
+docs/site-config.js
+
+# Personal notes, launch checklists, ops runbooks (local only)
+personal/

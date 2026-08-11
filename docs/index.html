@@ -13,23 +13,49 @@
 <!-- END: DCS site chrome styles -->
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-locked">
 
-<!-- BEGIN: DCS site chrome (docs/shared/) — replace this block with the company header -->
+<div id="loginGate" class="login-gate" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <div class="login-gate__card">
+    <p class="login-gate__kicker">Daily Code Solutions</p>
+    <h1 class="login-gate__title" id="loginTitle">AI Resource Center</h1>
+    <p class="login-gate__text">Employees: shared team login. Admins: your admin account.</p>
+    <form id="loginForm" class="login-gate__form" novalidate>
+      <div class="field" data-login-field="username">
+        <label for="loginUsername">Username <span class="req">*</span></label>
+        <input
+          type="text"
+          id="loginUsername"
+          name="username"
+          autocomplete="username"
+          required
+          placeholder="Username"
+        >
+        <p class="field-error" id="loginUsernameError" hidden></p>
+      </div>
+      <div class="field" data-login-field="password">
+        <label for="loginPassword">Password <span class="req">*</span></label>
+        <input
+          type="password"
+          id="loginPassword"
+          name="password"
+          autocomplete="current-password"
+          required
+          placeholder="Password"
+        >
+        <p class="field-error" id="loginPasswordError" hidden></p>
+      </div>
+      <p class="field-error field-error--form" id="loginError" hidden></p>
+      <button type="submit" class="btn-base btn-primary btn-lg login-gate__submit">Sign in</button>
+    </form>
+    <p class="login-gate__hint">You stay signed in on this device for 7 days. Use Sign out in the header anytime.</p>
+  </div>
+</div>
+
+<!-- BEGIN: DCS site chrome (docs/shared/) — logo + in-app nav -->
 <div id="dcs-site-header"></div>
 <script src="shared/header.js"></script>
 <!-- END: DCS site chrome -->
-
-<nav class="app-nav" aria-label="AI Resource Center">
-  <div class="app-nav__inner">
-    <button type="button" class="app-nav__link is-active" data-view="home">AI hub</button>
-    <button type="button" class="app-nav__link" data-view="directory">Directory</button>
-    <button type="button" class="app-nav__link" data-view="guides">Guides</button>
-    <button type="button" class="app-nav__link" data-view="prompts">Prompts</button>
-    <button type="button" class="app-nav__link" data-view="playbooks">Playbooks</button>
-    <button type="button" class="app-nav__link" data-view="contribute">Contribute</button>
-  </div>
-</nav>
 
 <main>
   <!-- HOME -->
@@ -53,7 +79,10 @@
             <h2 class="panel__title" id="chooserTitle">What do you need to do?</h2>
             <p class="panel__desc">Tap a job — recommendations appear right here.</p>
           </div>
-          <button type="button" class="linkbtn" data-go-view="directory">Browse full directory →</button>
+          <div class="panel__actions">
+            <button type="button" class="linkbtn" data-scroll-to="recentTools">Recently added ↓</button>
+            <button type="button" class="linkbtn" data-go-view="directory">Browse full directory →</button>
+          </div>
         </div>
         <div class="chooser-grid" id="chooserGrid"></div>
         <div class="chooser-result" id="chooserResult" hidden></div>
@@ -85,16 +114,68 @@
         </div>
       </details>
 
-      <section class="panel" aria-labelledby="recentTitle">
+      <section class="panel" id="recentTools" aria-labelledby="recentTitle">
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="recentTitle">Recently added</h2>
-            <p class="panel__desc">Tools approved and added to the directory in the last 45 days.</p>
+            <p class="panel__desc">Tools approved and added to the directory in the last 15 days.</p>
           </div>
-          <button type="button" class="linkbtn" data-go-view="directory">Open directory →</button>
+          <button type="button" class="linkbtn" data-go-view="directory" data-recent="1">Open New in directory →</button>
         </div>
         <div class="starter-row" id="recentToolsRow"></div>
-        <p class="empty" id="recentToolsEmpty" hidden>No tools added in the last 45 days.</p>
+        <p class="empty" id="recentToolsEmpty" hidden>No tools added in the last 15 days.</p>
+      </section>
+
+      <section class="panel panel--register" id="teamDirectoryPanel" aria-labelledby="teamDirectoryTitle" hidden>
+        <div class="panel__head">
+          <div>
+            <h2 class="panel__title" id="teamDirectoryTitle">Team directory</h2>
+            <p class="panel__desc">Add yourself so admins can assign you to tool testing — your email is used for assignment notifications.</p>
+          </div>
+        </div>
+        <div class="team-register" id="teamRegisterWrap">
+          <form id="teamRegisterForm" class="team-register__form" novalidate>
+            <div class="team-register__grid">
+              <div class="field">
+                <label for="tr_name">Full name <span class="req">*</span></label>
+                <input type="text" id="tr_name" maxlength="60" required placeholder="e.g. Priya Sharma" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="tr_email">Work email <span class="req">*</span></label>
+                <input type="email" id="tr_email" maxlength="120" required placeholder="you@work.email" autocomplete="email">
+              </div>
+              <div class="field">
+                <label for="tr_department">Department</label>
+                <select id="tr_department">
+                  <option value="">Select department…</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="tr_role">Role</label>
+                <select id="tr_role">
+                  <option value="">Select role…</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-base btn-primary team-register__submit">Join team directory</button>
+            </div>
+            <p class="field-note" id="teamRegisterStatus" hidden></p>
+          </form>
+          <div class="team-register__success" id="teamRegisterSuccess" hidden>
+            <p class="team-register__success-title">Thanks — your details were submitted.</p>
+            <p class="modal__desc">An admin will add you to the directory. Once approved, your name appears in assignment dropdowns and you’ll get email when assigned to test a tool.</p>
+            <div class="suggest-draft-actions">
+              <a class="modal__cta modal__cta--wide" id="teamRegisterIssueLink" href="#" target="_blank" rel="noopener">Open registration draft</a>
+              <button type="button" class="modal__cta modal__cta--secondary modal__cta--wide" id="teamRegisterCopyDraft">Copy draft text</button>
+            </div>
+          </div>
+        </div>
+        <div class="team-register-admin" id="teamRegisterAdmin" hidden>
+          <h3 class="team-register-admin__title">Pending registrations</h3>
+          <p class="panel__desc">After someone submits, add them with the command shown — then commit and deploy.</p>
+          <div id="teamRegisterPendingList"></div>
+        </div>
       </section>
     </div>
   </section>
@@ -104,18 +185,24 @@
     <header class="page-hero">
       <div class="page-hero__inner">
         <h1 class="page-hero__title">Tool directory</h1>
-        <p class="page-hero__desc">Every AI tool we run — search, filter, open details, or pick tools for side-by-side.</p>
+        <p class="page-hero__desc">Every AI tool we run — search, filter, open details, or compare tools.</p>
       </div>
     </header>
 
     <div class="content">
-      <div class="stats" id="stats" aria-label="Portfolio summary"></div>
+      <section class="glance" aria-labelledby="glanceTitle">
+        <div class="glance__head">
+          <h2 class="glance__title" id="glanceTitle">At a glance</h2>
+          <p class="glance__desc">Tap a tile to filter the directory.</p>
+        </div>
+        <div class="stats" id="stats" aria-label="At a glance"></div>
+      </section>
 
       <section class="controls" id="find-tools" aria-label="Filter tools">
         <div class="controls__header">
           <div>
             <h2 class="controls__title">Find the right tool</h2>
-            <p class="controls__desc">Browse the full directory, or narrow by status bucket. New joiners: try Start here. Exact statuses are under Exact status.</p>
+            <p class="controls__desc">Search and sort tools. Use At a glance for status, or open More filters.</p>
           </div>
         </div>
 
@@ -132,15 +219,15 @@
             <option value="category">Category</option>
             <option value="pricing">Pricing</option>
           </select>
-          <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Side-by-side</button>
+          <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Compare</button>
         </div>
 
         <div class="filter-groups" id="filterChips" aria-label="Filter tools"></div>
       </section>
 
-      <section aria-label="Tool results">
+      <section id="toolResults" aria-label="Tool results">
         <div class="compare-banner" id="compareBanner" hidden role="status">
-          Selecting tools for side-by-side — click a card to add (up to 3).
+          Selecting tools to compare — use Select on a card (up to 3).
         </div>
         <div class="resultbar">
           <span id="resultCount"></span>
@@ -157,7 +244,7 @@
     <header class="page-hero">
       <div class="page-hero__inner">
         <h1 class="page-hero__title">When to use</h1>
-        <p class="page-hero__desc">Use-when / skip-when guides and documented head-to-head winners. For a live pick of 2–3 tools, use Side-by-side in Directory.</p>
+        <p class="page-hero__desc">Use-when / skip-when guides and documented head-to-head winners. For a live pick of 2–3 tools, use Compare in Directory.</p>
       </div>
     </header>
     <div class="content">
@@ -175,9 +262,9 @@
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="compTitle">Documented head-to-heads</h2>
-            <p class="panel__desc">Winners the team already logged from side-by-side reviews.</p>
+            <p class="panel__desc">Winners the team already logged from tool comparisons.</p>
           </div>
-          <button type="button" class="btn-base btn-secondary" data-go-view="directory" data-compare="1">Open side-by-side →</button>
+          <button type="button" class="btn-base btn-secondary" data-go-view="directory" data-compare="1">Open Compare →</button>
         </div>
         <div id="comparisonsList"></div>
       </section>
@@ -278,21 +365,21 @@
   <section class="view" id="view-contribute" data-view-panel="contribute" hidden>
     <header class="page-hero">
       <div class="page-hero__inner">
-        <h1 class="page-hero__title">Suggest or share a win</h1>
-        <p class="page-hero__desc">Help the directory stay useful — propose a tool or tell us what saved you time.</p>
+        <h1 class="page-hero__title">Add a tool or share a win</h1>
+        <p class="page-hero__desc">People add tools for the team to test — or share what already saved time.</p>
       </div>
     </header>
     <div class="content">
       <div class="contribute-tabs" role="tablist" aria-label="Contribution type">
-        <button type="button" class="contribute-tab is-active" role="tab" aria-selected="true" data-contrib="suggest" id="tabSuggest">Suggest a tool</button>
+        <button type="button" class="contribute-tab is-active" role="tab" aria-selected="true" data-contrib="suggest" id="tabSuggest">Add a tool</button>
         <button type="button" class="contribute-tab" role="tab" aria-selected="false" data-contrib="win" id="tabWin">Share a win</button>
       </div>
 
       <div class="panel" id="contribSuggestPanel" role="tabpanel" aria-labelledby="tabSuggest">
         <div class="panel__head">
           <div>
-            <h2 class="panel__title" id="suggestTitle">Suggest a tool</h2>
-            <p class="panel__desc">Draft a suggestion for review. You’ll get a shareable draft to send — nothing is auto-added to the directory.</p>
+            <h2 class="panel__title" id="suggestTitle">Add a tool</h2>
+            <p class="panel__desc">Submit a tool for the directory.</p>
           </div>
         </div>
 
@@ -323,7 +410,7 @@
                 <p class="field-error" id="s_pricing_err" hidden></p>
               </div>
               <div class="field" data-field="urgency">
-                <label for="s_urgency">How urgent?</label>
+                <label for="s_urgency">When should the team try it?</label>
                 <select id="s_urgency" name="urgency" aria-describedby="s_urgency_err">
                   <option value="">Optional</option>
                   <option value="Exploring / learning">Exploring / learning</option>
@@ -337,15 +424,15 @@
             </div>
 
             <div class="field" data-field="url">
-              <label for="s_url">Website</label>
-              <input type="url" id="s_url" name="url" maxlength="300" placeholder="https://example.com" aria-describedby="s_url_err">
+              <label for="s_url">Website <span class="req">*</span></label>
+              <input type="url" id="s_url" name="url" maxlength="300" required placeholder="https://example.com" aria-describedby="s_url_err">
               <p class="field-error" id="s_url_err" hidden></p>
             </div>
 
             <div class="field-row">
               <div class="field" data-field="submitter">
-                <label for="s_submitter">Your name</label>
-                <input type="text" id="s_submitter" name="submitter" maxlength="60" autocomplete="name" placeholder="Optional" aria-describedby="s_submitter_err">
+                <label for="s_submitter">Your name <span class="req">*</span></label>
+                <input type="text" id="s_submitter" name="submitter" maxlength="60" autocomplete="name" required placeholder="Your name" aria-describedby="s_submitter_err">
                 <p class="field-error" id="s_submitter_err" hidden></p>
               </div>
               <div class="field" data-field="dept">
@@ -359,7 +446,7 @@
 
             <div class="field" data-field="desc">
               <label for="s_desc">What does it do? <span class="req">*</span></label>
-              <textarea id="s_desc" name="desc" rows="2" maxlength="500" placeholder="Short description of what it's for" aria-describedby="s_desc_err s_sensitive_warn"></textarea>
+              <textarea id="s_desc" name="desc" rows="4" maxlength="500" placeholder="Short description of what it's for" aria-describedby="s_desc_err s_sensitive_warn"></textarea>
               <div class="field-meta">
                 <span class="field-count" id="s_desc_count">0 / 500</span>
               </div>
@@ -367,8 +454,8 @@
             </div>
 
             <div class="field" data-field="reason">
-              <label for="s_reason">Why should we evaluate it?</label>
-              <textarea id="s_reason" name="reason" rows="2" maxlength="800" placeholder="Problem it solves, what you tried, expected impact…" aria-describedby="s_reason_err s_sensitive_warn"></textarea>
+              <label for="s_reason">How should teammates test it?</label>
+              <textarea id="s_reason" name="reason" rows="4" maxlength="800" placeholder="What to try, who should test, what “good” looks like…" aria-describedby="s_reason_err s_sensitive_warn"></textarea>
               <div class="field-meta">
                 <span class="field-count" id="s_reason_count">0 / 800</span>
               </div>
@@ -377,18 +464,20 @@
 
             <p class="field-warn" id="s_sensitive_warn" hidden></p>
             <p class="field-error field-error--form" id="suggestFormErr" hidden></p>
-            <button type="submit" class="modal__cta modal__cta--wide" id="suggestSubmit">Create suggestion draft</button>
-            <p class="field-note" style="text-align:left">Creates a review draft you can open or copy. A manager still validates before anything is added to the directory.</p>
+            <div class="form-actions">
+              <button type="submit" class="btn-base btn-primary" id="suggestSubmit">Submit tool</button>
+            </div>
+            <p class="field-note" style="text-align:left">Admin reviews it, then it shows up in the directory.</p>
           </form>
         </div>
 
         <div id="suggestSuccess" hidden>
-          <h3 class="panel__title">Draft ready</h3>
-          <p class="panel__desc" id="suggestSuccessDesc">Your suggestion draft is ready. Open it for review, or copy the text and send it another way.</p>
+          <h3 class="panel__title">Almost done</h3>
+          <p class="panel__desc" id="suggestSuccessDesc">Open the draft to finish, or copy the text.</p>
           <div class="suggest-draft-actions">
-            <a class="modal__cta modal__cta--wide" id="suggestIssueLink" href="#" target="_blank" rel="noopener">Open review draft</a>
-            <button type="button" class="modal__cta modal__cta--secondary modal__cta--wide" id="suggestCopyDraft">Copy draft text</button>
-            <button type="button" class="linkbtn" id="suggestAnother">Edit draft again</button>
+            <a class="modal__cta modal__cta--wide" id="suggestIssueLink" href="#" target="_blank" rel="noopener">Open draft</a>
+            <button type="button" class="modal__cta modal__cta--secondary modal__cta--wide" id="suggestCopyDraft">Copy text</button>
+            <button type="button" class="linkbtn" id="suggestAnother">Edit again</button>
           </div>
           <p class="field-note" id="suggestCopyStatus" hidden style="text-align:left"></p>
         </div>
@@ -435,17 +524,19 @@
           </div>
           <div class="field" data-field="w_impact">
             <label for="w_impact">Impact <span class="req">*</span></label>
-            <textarea id="w_impact" rows="2" maxlength="400" placeholder="e.g. Saved ~2 hours/week; fewer back-and-forth emails"></textarea>
+            <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours/week; fewer back-and-forth emails"></textarea>
             <div class="field-meta"><span class="field-count" id="w_impact_count">0 / 400</span></div>
             <p class="field-error" id="w_impact_err" hidden></p>
           </div>
           <div class="field" data-field="w_how">
             <label for="w_how">How you used it</label>
-            <textarea id="w_how" rows="3" maxlength="600" placeholder="Short story — what you prompted, what worked, what to watch out for"></textarea>
+            <textarea id="w_how" rows="4" maxlength="600" placeholder="Short story — what you prompted, what worked, what to watch out for"></textarea>
             <div class="field-meta"><span class="field-count" id="w_how_count">0 / 600</span></div>
           </div>
           <p class="field-error field-error--form" id="winFormErr" hidden></p>
-          <button type="submit" class="modal__cta modal__cta--wide" id="winSubmit">Create win draft</button>
+          <div class="form-actions">
+            <button type="submit" class="btn-base btn-primary" id="winSubmit">Create win draft</button>
+          </div>
           <p class="field-note">Creates a review draft you can open or copy. A manager still validates before it lands in Playbooks.</p>
         </form>
         <div id="winSuccess" hidden>
@@ -460,31 +551,30 @@
         </div>
       </div>
 
-      <section class="panel" aria-labelledby="pendingReviewTitle">
+      <section class="panel" id="pendingReviewPanel" aria-labelledby="pendingReviewTitle" hidden>
         <div class="panel__head">
           <div>
-            <h2 class="panel__title" id="pendingReviewTitle">Pending review</h2>
-            <p class="panel__desc">Open GitHub suggestions and wins waiting for a decision. Refresh after someone submits a draft.</p>
+            <h2 class="panel__title" id="pendingReviewTitle">Pending approval</h2>
           </div>
           <button type="button" class="linkbtn" id="pendingReviewRefresh">Refresh</button>
         </div>
         <div id="pendingReviewList" class="pending-list" aria-live="polite">
-          <p class="pending-list__status">Loading open submissions…</p>
+          <p class="pending-list__status">Loading…</p>
         </div>
       </section>
 
-      <section class="panel panel--review-howto" aria-labelledby="reviewHowTitle">
+      <section class="panel panel--review-howto" aria-labelledby="reviewHowTitle" hidden>
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="reviewHowTitle">How to approve or reject</h2>
-            <p class="panel__desc">Managers — review happens in GitHub Issues, then the directory CSV is updated for approvals.</p>
+            <p class="panel__desc">Admin only — review in GitHub Issues, then update the directory CSV for approvals.</p>
           </div>
         </div>
         <ol class="review-steps">
           <li><strong>Open</strong> a pending item above (or the issue link from someone’s draft).</li>
-          <li><strong>Approve:</strong> add the tool to <code>data/ai_tools_directory.csv</code>, push to <code>main</code>, then close the issue with a short “Approved &amp; added” comment.</li>
+          <li><strong>Approve:</strong> add the tool to <code>data/ai_tools_directory.csv</code> with status <strong>Testing</strong>, push to <code>main</code>, then close the issue with “Approved &amp; added — please test.”</li>
           <li><strong>Reject:</strong> close the issue and comment why (duplicate, unsafe, not a fit, etc.). Nothing is added to the directory.</li>
-          <li>After an approval push, the live site updates and the tool appears under <strong>Recently added</strong> / Directory.</li>
+          <li>After an approval push, the live site updates and the tool appears under <strong>Recently added</strong> / Directory for the team to try.</li>
         </ol>
         <p class="field-note" id="reviewIssuesLinkWrap"></p>
       </section>
@@ -494,10 +584,10 @@
 
 <div class="compare-bar" id="compareBar" hidden>
   <div class="compare-bar__inner">
-    <span class="compare-bar__text" id="compareBarText">Select 2–3 tools for side-by-side</span>
+    <span class="compare-bar__text" id="compareBarText">Select 2–3 tools to compare</span>
     <div class="compare-bar__actions">
       <button type="button" class="linkbtn" id="compareClear">Clear</button>
-      <button type="button" class="compare-bar__btn" id="compareOpen" disabled>View side-by-side</button>
+      <button type="button" class="compare-bar__btn" id="compareOpen" disabled>Compare</button>
     </div>
   </div>
 </div>
@@ -505,7 +595,7 @@
 <div class="modal-overlay" id="compareOverlay" hidden>
   <div class="modal modal--wide" id="compareModal" role="dialog" aria-modal="true" aria-labelledby="compareTitle">
     <button class="modal__close" id="compareClose" aria-label="Close">✕</button>
-    <h2 class="modal__name" id="compareTitle">Side-by-side comparison</h2>
+    <h2 class="modal__name" id="compareTitle">Compare tools</h2>
     <div id="compareBody"></div>
   </div>
 </div>
@@ -517,9 +607,18 @@
   </div>
 </div>
 
+<div class="modal-overlay modal-overlay--stack" id="assignmentOverlay" hidden>
+  <div class="modal modal--assignment" id="assignmentModal" role="dialog" aria-modal="true" aria-labelledby="assignmentTitle">
+    <button class="modal__close" id="assignmentClose" aria-label="Close">✕</button>
+    <div id="assignmentBody"></div>
+  </div>
+</div>
+
 <footer>
   <p>Daily Code Solutions · AI Resource Center</p>
 </footer>
+
+<button type="button" class="back-to-top" id="backToTop" hidden aria-label="Back to top" title="Back to top">↑</button>
 
 <script src="data.js"></script>
 <script src="site-config.js"></script>

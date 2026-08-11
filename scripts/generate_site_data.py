@@ -12,6 +12,7 @@ Sources:
   - data/team_use_cases.csv
   - data/learning_resources.csv
   - data/site_highlights.csv
+  - data/team_members.csv
 
 Run this after editing the CSVs (or re-exporting them from the Google
 Sheet), then commit + push. GitHub Pages serves docs/ directly, so the
@@ -64,6 +65,8 @@ def load_tools():
                 "priority": row.get("Priority") or "",
                 "dataClassification": row.get("Data Classification") or "",
                 "owner": row.get("Owner") or "",
+                "assignedTo": row.get("Assigned To") or "",
+                "testingNotes": row.get("Testing Notes") or "",
                 "dateAdded": row.get("Date Added") or "",
                 "lastReviewed": row.get("Last Reviewed") or "",
                 "notes": row.get("Notes") or "",
@@ -79,17 +82,29 @@ def load_tools():
 
 
 def load_categories():
-    categories = []
+    return load_reference_list("Categories")
+
+
+def load_reference_list(kind):
+    items = []
     path = DATA / "reference_lists.csv"
     if not path.exists():
-        return categories
+        return items
     with path.open(newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         next(reader, None)
         for row in reader:
-            if len(row) >= 2 and row[0] == "Categories" and row[1]:
-                categories.append(row[1])
-    return categories
+            if len(row) >= 2 and row[0] == kind and row[1]:
+                items.append(row[1])
+    return items
+
+
+def load_departments():
+    return load_reference_list("Departments")
+
+
+def load_team_roles():
+    return load_reference_list("Team Roles")
 
 
 def load_comparisons():
@@ -220,6 +235,21 @@ def load_learning():
     ]
 
 
+def load_team_members():
+    return [
+        {
+            "id": row.get("Member ID") or "",
+            "name": row.get("Name") or "",
+            "email": row.get("Email") or "",
+            "department": row.get("Department") or "",
+            "role": row.get("Role") or "Team",
+            "active": str(row.get("Active") or "yes").strip().lower() not in ("no", "false", "0"),
+        }
+        for row in load_csv_dicts(DATA / "team_members.csv")
+        if row.get("Member ID") and row.get("Name") and row.get("Email")
+    ]
+
+
 def load_site_highlights():
     """Start here shortlist + optional fixed Tool of the week from CSV."""
     start_here = []
@@ -252,6 +282,9 @@ def main():
     use_cases = load_use_cases()
     learning = load_learning()
     highlights = load_site_highlights()
+    team_members = load_team_members()
+    departments = load_departments()
+    team_roles = load_team_roles()
 
     js = (
         "// Auto-generated from data/*.csv — do not edit by hand.\n"
@@ -265,6 +298,9 @@ def main():
         f"const USE_CASES = {json.dumps(use_cases, indent=2, ensure_ascii=False)};\n"
         f"const LEARNING = {json.dumps(learning, indent=2, ensure_ascii=False)};\n"
         f"const SITE_HIGHLIGHTS = {json.dumps(highlights, indent=2, ensure_ascii=False)};\n"
+        f"const TEAM_MEMBERS = {json.dumps(team_members, indent=2, ensure_ascii=False)};\n"
+        f"const DEPARTMENTS = {json.dumps(departments, indent=2, ensure_ascii=False)};\n"
+        f"const TEAM_ROLES = {json.dumps(team_roles, indent=2, ensure_ascii=False)};\n"
     )
 
     OUT_PATH.write_text(js, encoding="utf-8")
@@ -273,6 +309,7 @@ def main():
         f"{len(comparisons)} comparisons, {len(evaluations)} evaluations, "
         f"{len(jobs)} jobs, {len(guides)} guides, {len(prompts)} prompts, "
         f"{len(use_cases)} use cases, {len(learning)} learning, "
+        f"{len(team_members)} team members, "
         f"{len(highlights['startHere'])} start-here "
         f"to {OUT_PATH.relative_to(ROOT)}"
     )

@@ -1,0 +1,9 @@
+name = "dcs-ai-assignment-notify"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+FROM_EMAIL = "noreply@dailycodesolutions.com"
+
+# Set via: npx wrangler secret put RESEND_API_KEY
+# Set via: npx wrangler secret put NOTIFY_SECRET

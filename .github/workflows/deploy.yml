@@ -29,6 +29,17 @@ jobs:
       - name: Regenerate docs/data.js from CSV
         run: python3 scripts/generate_site_data.py
 
+      - name: Provide required site configuration for Pages
+        env:
+          SITE_CONFIG_JS: ${{ secrets.SITE_CONFIG_JS }}
+        run: |
+          if [ -z "$SITE_CONFIG_JS" ]; then
+            echo "ERROR: SITE_CONFIG_JS is required. Refusing to deploy a known placeholder login configuration."
+            exit 1
+          fi
+          printf '%s\n' "$SITE_CONFIG_JS" > docs/site-config.js
+          echo "Wrote docs/site-config.js from SITE_CONFIG_JS secret"
+
       - name: Commit regenerated data (if changed)
         run: |
           git config user.name "github-actions[bot]"

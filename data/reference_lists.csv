@@ -55,13 +55,10 @@ Operating Systems,macOS
 Operating Systems,Linux
 Operating Systems,Android
 Operating Systems,iOS
-Status,Planned
-Status,Researching
-Status,Testing
-Status,Pilot
-Status,Adopted
 Status,Production
-Status,Deprecated
+Status,Approved
+Status,Testing
+Status,Exploring
 Status,Archived
 Status,Rejected
 Recommendation,★★★★★
@@ -81,6 +78,7 @@ Yes / No,Yes
 Yes / No,No
 Yes / No,Partially
 Departments,Development
+Departments,Engineering
 Departments,Automation
 Departments,Reporting
 Departments,Data Engineering
@@ -88,6 +86,15 @@ Departments,Management
 Departments,Operations
 Departments,Support
 Departments,Everyone
+Team Roles,Developer
+Team Roles,Project Manager
+Team Roles,QA Engineer
+Team Roles,Data Analyst
+Team Roles,Designer
+Team Roles,DevOps Engineer
+Team Roles,Manager
+Team Roles,Admin
+Team Roles,Other
 Priority,Critical
 Priority,High
 Priority,Medium
