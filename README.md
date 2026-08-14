@@ -168,7 +168,7 @@ node --check docs/script.js
 ### Team roster and assignments (v1)
 
 - Roster lives in `data/team_members.csv`. Add people with `python scripts/add_team_member.py`.
-- Admin assigns Testing/Exploring tools in the Directory tool modal (saved to `Assigned To` in `ai_tools_directory.csv`).
+- Admin assigns Testing/Exploring tools in the Directory tool modal (saved to `Assigned To` in `ai_tools_directory.csv`) — **off** in v1 (`toolAssignments.enabled: false`).
 - CLI alternative: `python scripts/set_tool_assignment.py --tool "Cursor" --assignee "Akshay"`.
 - Self-registration on Home is **off** in v1 (`teamDirectory.allowSelfRegister: false` in site-config).
 - Assignment email notifications are **off** in v1 (`toolAssignments.notify.enabled: false`).
@@ -207,7 +207,7 @@ python scripts/hash_auth_secret.py "your-invite-token"
 ```javascript
 environment: "production",
 teamDirectory: { enabled: true, allowSelfRegister: false },
-toolAssignments: { enabled: true, notify: { enabled: false } },
+toolAssignments: { enabled: false, notify: { enabled: false } },
 ```
 
 See **Access (v1)** above for who sees what after login.

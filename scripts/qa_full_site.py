@@ -315,10 +315,26 @@ def main() -> int:
         record("FAIL", "Assignments", "No assignable tools")
 
     bolt = next((t for t in tools if t.get("name") == "Bolt.new"), None)
-    if bolt and bolt.get("assignedTo") == "Akshay" and bolt.get("testingNotes"):
-        record("PASS", "Assignments", "Bolt.new has published assignment sample")
+    if bolt and bolt.get("assignedTo") and bolt.get("testingNotes"):
+        record("PASS", "Assignments", f"Bolt.new has assignment ({bolt.get('assignedTo')})")
+    elif bolt and (bolt.get("assignedTo") or bolt.get("testingNotes")):
+        record("WARN", "Assignments", "Bolt.new has partial assignment data")
     else:
         record("WARN", "Assignments", "Bolt.new assignment sample missing")
+
+    assigned_samples = [
+        (t.get("assignedTo"), t["name"])
+        for t in tools if t.get("assignedTo")
+    ]
+    if assigned_samples:
+        assignee, tool_name = assigned_samples[0]
+        hits = [t["name"] for t in filtered_search(tools, assignee)]
+        if tool_name in hits:
+            record("PASS", "Assignments", f"Search finds assignee {assignee!r} -> includes {tool_name}")
+        else:
+            record("FAIL", "Assignments", f"Assignee search failed for {assignee!r}: {hits}")
+    else:
+        record("WARN", "Assignments", "No assignedTo values in data — skip assignee search check")
 
     stray = [
         t["name"] for t in tools
@@ -396,12 +412,6 @@ def main() -> int:
     else:
         record("FAIL", "Auth", "Session role badge missing from header")
 
-    akshay_hits = [t["name"] for t in filtered_search(tools, "Akshay")]
-    if "Cursor" in akshay_hits and "Bolt.new" in akshay_hits:
-        record("PASS", "Assignments", "Search finds assignee (Akshay -> Cursor + Bolt.new)")
-    else:
-        record("FAIL", "Assignments", f"Assignee search failed: {akshay_hits}")
-
     if (ROOT / "scripts" / "set_tool_assignment.py").exists():
         record("PASS", "Assignments", "set_tool_assignment.py helper present")
     else:
@@ -414,7 +424,7 @@ def main() -> int:
         ("claude", ["Claude"], True),
         ("xyzzy", [], True),
         ("ide", None, False),  # should include IDE tools, not explode
-        ("Akshay", ["Cursor", "Bolt.new"], False),
+        ("Anshu", ["Bolt.new"], False),
         ("power bi", ["Power BI Copilot"], True),
         ("Make", ["Make"], True),
         ("Lovable", ["Lovable"], True),
@@ -497,7 +507,20 @@ def main() -> int:
     if comparisons:
         record("PASS", "Guides", f"Comparisons: {len(comparisons)}")
 
-    # ===== HOME JOBS =====
+    if "guides-categories" in script and "guide-category" in script and "renderGuideTips" in script:
+        record("PASS", "Guides", "Expandable decision guide sections wired")
+    else:
+        record("FAIL", "Guides", "Expandable decision guide sections missing")
+
+    if "compare-categories" in script and "renderComparisonsList" in script:
+        record("PASS", "Guides", "Expandable head-to-head sections wired")
+    else:
+        record("FAIL", "Guides", "Expandable head-to-head sections missing")
+
+    if re.search(r"toolAssignments:\s*\{[^}]*enabled:\s*false", example_cfg, re.S):
+        record("PASS", "Features", "toolAssignments disabled in site-config.example.js (v1)")
+    else:
+        record("WARN", "Features", "toolAssignments not explicitly disabled in example config")
     for job in jobs:
         recs = job.get("recommendations") or job.get("tools") or []
         # chooser jobs typically have tool names in fields

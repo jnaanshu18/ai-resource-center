@@ -42,7 +42,7 @@ const SITE_CONFIG = {
    * Set enabled: false to hide the whole feature without removing CSV data.
    */
   toolAssignments: {
-    enabled: true,
+    enabled: false,  // V1 off — set true when ready to use Assign tool in UI
     /**
      * Email the assignee when an admin saves an assignment (requires workers/assignment-notify).
      * Assignee emails come from TEAM_MEMBERS (team directory) first, then assigneeEmails below.
