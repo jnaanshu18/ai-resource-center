@@ -1172,7 +1172,7 @@ const TOOLS = [
     "priority": "Medium",
     "dataClassification": "Internal",
     "owner": "Admin",
-    "assignedTo": "Akshay",
+    "assignedTo": "Anshu Jain",
     "testingNotes": "Try a simple internal dashboard from a prompt. Compare speed and polish with Lovable.",
     "dateAdded": "2026-08-10",
     "lastReviewed": "2026-08-10",
