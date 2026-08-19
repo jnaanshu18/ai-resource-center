@@ -31,6 +31,8 @@ const COMPARE_MAX = 3;
 const TOOL_ASSIGNMENT_KEY = "dcs-ai-rc-tool-assignments";
 const TEAM_REGISTER_PENDING_KEY = "dcs-ai-rc-team-register-pending";
 const TOOL_ASSIGNABLE_STATUSES = new Set(["Testing", "Exploring"]);
+/** Set true later to restore the Directory Filters expand/collapse control. */
+const FILTERS_COLLAPSIBLE = false;
 
 /** Fallback if SITE_HIGHLIGHTS is missing from data.js. */
 const START_HERE_FALLBACK = ["Cursor", "Antigravity", "ChatGPT", "Claude", "Perplexity"];
@@ -74,10 +76,15 @@ function isRejectedStatus(status) {
   return String(status || "").trim().toLowerCase() === "rejected";
 }
 
-/** Directory listing never includes Rejected tools (those stay on Submissions). */
+function isDirectoryHiddenStatus(status) {
+  const s = String(status || "").trim().toLowerCase();
+  return s === "rejected" || s === "testing" || s === "exploring";
+}
+
+/** Directory catalog: Production, Approved, Archived. Testing/Exploring and Rejected stay out. */
 function directoryTools() {
   const all = typeof TOOLS === "undefined" ? [] : TOOLS;
-  return all.filter(t => !isRejectedStatus(t.status));
+  return all.filter(t => !isDirectoryHiddenStatus(t.status));
 }
 
 function recentlyAddedTools() {
@@ -218,12 +225,18 @@ function renderChips() {
   const categories = countBy("category");
   const pricing = countBy("pricing");
   const catalog = directoryTools();
-  const archivedCount = catalog.filter(t => t.status === "Archived").length;
-  const moreOpen = Boolean(
-    state.category
-    || state.pricing
-    || state.status === "Archived"
-  );
+  const starterCount = startHereNames().filter(n => catalog.some(t => t.name === n)).length;
+  const statusChips = STATUS_ORDER
+    .filter(s => !isRejectedStatus(s) && s !== "Testing" && s !== "Exploring")
+    .map(s => {
+      const count = catalog.filter(t => t.status === s).length;
+      return `<button class="chip" data-status="${escapeHtml(s)}" type="button">${escapeHtml(s)} (${count})</button>`;
+    })
+    .join("");
+  const moreOpen = FILTERS_COLLAPSIBLE
+    ? Boolean(state.category || state.pricing || state.status)
+    : true;
+  const moreClass = FILTERS_COLLAPSIBLE ? "" : " filter-more--always";
 
   const categoryChips = categories.values.map(c => `
     <button class="chip" data-category="${escapeHtml(c)}" type="button">${escapeHtml(c)} (${categories.counts[c]})</button>
@@ -233,12 +246,16 @@ function renderChips() {
   `).join("");
 
   document.getElementById("filterChips").innerHTML = `
-    <details class="filter-more" id="filterMore"${moreOpen ? " open" : ""}>
-      <summary class="filter-more__summary">
-        More filters
-        <span class="filter-more__hint">Category · Pricing · Status</span>
-      </summary>
+    <details class="filter-more${moreClass}" id="filterMore"${moreOpen ? " open" : ""}>
+      <summary class="filter-more__summary">Filters</summary>
       <div class="filter-more__body">
+        <div class="filter-group filter-group--title">
+          <div class="filter-group__title">Filters</div>
+          <div class="chiprow">
+            <button class="chip" data-filter="all" type="button">All (${catalog.length})</button>
+            <button class="chip chip--starter" data-starter="true" type="button">Start here (${starterCount})</button>
+          </div>
+        </div>
         <div class="filter-group">
           <div class="filter-group__label">Category</div>
           <div class="chiprow">${categoryChips}</div>
@@ -247,37 +264,12 @@ function renderChips() {
           <div class="filter-group__label">Pricing</div>
           <div class="chiprow">${pricingChips}</div>
         </div>
-    <div class="filter-group">
-      <div class="filter-group__label">Status</div>
-      <div class="chiprow">
-            <button class="chip" data-status="Archived" type="button">Archived (${archivedCount})</button>
+        <div class="filter-group">
+          <div class="filter-group__label">Status</div>
+          <div class="chiprow">
+            ${statusChips}
           </div>
-      </div>
-      <details class="status-guide">
-          <summary class="status-guide__summary">What do statuses mean?</summary>
-        <dl class="status-guide__list">
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--starter"></span>Start here</dt>
-            <dd>Shortlist for new joiners</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Production</dt>
-              <dd>Core daily tools</dd>
-          </div>
-          <div class="status-guide__row">
-              <dt><span class="status-guide__swatch status-guide__swatch--mint"></span>Approved</dt>
-            <dd>Approved for team use</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Suggestions</dt>
-            <dd>Tools the team is trying — open Suggestions in the nav</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Archived</dt>
-            <dd>No longer used — kept for history</dd>
-          </div>
-        </dl>
-      </details>
+        </div>
       </div>
     </details>
   `;
@@ -471,8 +463,13 @@ function submissionLinkHtml(item) {
 
 function cardNameHtml(tool) {
   const name = escapeHtml(tool.name);
-  if (!tool.url) return `<h3 class="card__name">${name}</h3>`;
-  return `<h3 class="card__name"><a class="card__name-link" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener" aria-label="Open ${name} website">${name}<span class="card__name-icon" aria-hidden="true">↗</span></a></h3>`;
+  return `<h3 class="card__name"><button type="button" class="card__name-btn" data-open-details="${escapeHtml(tool.id)}" aria-label="View details for ${name}">${name}</button></h3>`;
+}
+
+function cardSiteLinkHtml(tool) {
+  if (!tool.url) return "";
+  const name = escapeHtml(tool.name);
+  return `<a class="card__cta-secondary" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener" aria-label="Open ${name} website in a new tab">Open site <span aria-hidden="true">↗</span></a>`;
 }
 
 function tagListHtml(tool, { includePlatform = false } = {}) {
@@ -915,6 +912,17 @@ function bindToolAssignmentPanel(tool) {
   }
 }
 
+function chipFiltersAreActive() {
+  return Boolean(
+    state.starter ||
+    state.recent ||
+    state.status ||
+    state.statusBucket ||
+    state.category ||
+    state.pricing
+  );
+}
+
 function filtersAreActive() {
   return Boolean(
     state.search.trim() ||
@@ -976,6 +984,7 @@ function renderCards() {
         ${assignmentSummaryHtml(t)}
         <div class="card__actions">
           <button type="button" class="card__cta" data-open-details="${escapeHtml(t.id)}">View details</button>
+          ${cardSiteLinkHtml(t)}
         </div>
       </article>
     `;
@@ -1048,9 +1057,6 @@ function tutorialHtml(tool) {
             referrerpolicy="strict-origin-when-cross-origin"
           ></iframe>
         </div>
-        <p class="tool-tutorial__link">
-          <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Open on YouTube ↗</a>
-        </p>
       </div>
     `;
   }
@@ -1066,16 +1072,22 @@ function tutorialHtml(tool) {
 }
 
 function glanceFactsHtml(tool) {
+  const useCases = detailPills("Use cases", tool.useCases);
+  const models = detailPills("Approved models", tool.approvedModels);
   return `
     <div class="tool-glance__facts">
-      ${detailField("Department", tool.department || "—")}
-      ${detailField("Priority", tool.priority || "—")}
-      ${detailField("Learning curve", tool.learningCurve || "—")}
-      ${detailField("Data classification", tool.dataClassification || "—")}
-      ${detailField("Date added", tool.dateAdded || "—")}
-      ${detailField("Last reviewed", tool.lastReviewed || "Not reviewed")}
-      ${detailField("Subcategory", tool.subcategory || "—")}
-      ${detailPills("Use cases", tool.useCases)}
+      <div class="tool-tutorial__head">
+        <h3 class="tool-tutorial__title">Basic details</h3>
+      </div>
+      <div class="tool-facts">
+        ${detailField("Subcategory", tool.subcategory || "—")}
+        ${detailField("Department", tool.department || "—")}
+        ${detailField("Priority", tool.priority || "—")}
+        ${detailField("Learning curve", tool.learningCurve || "—")}
+        ${detailField("Date added", tool.dateAdded || "—")}
+        ${detailField("Last reviewed", tool.lastReviewed || "Not reviewed")}
+      </div>
+      ${useCases || models ? `<div class="tool-facts__pills">${useCases}${models}</div>` : ""}
     </div>
   `;
 }
@@ -1114,7 +1126,6 @@ function openModal(tool) {
   state.currentToolId = tool.id;
   const group = STATUS_GROUP[tool.status] || "blue";
   const evalData = evaluationFor(tool);
-  const approvedModelsBlock = detailPills("Approved models", tool.approvedModels);
   document.getElementById("modalBody").innerHTML = `
     <div class="modal__header">
       ${logoHtml(tool)}
@@ -1130,7 +1141,6 @@ function openModal(tool) {
     </div>
     <p class="modal__desc">${escapeHtml(tool.description)}</p>
     ${toolGlanceHtml(tool)}
-    ${approvedModelsBlock ? `<div class="detail-grid">${approvedModelsBlock}</div>` : ""}
 
     <div class="detail-panels">
       ${tool.whenToUse ? `<div class="modal__notes"><strong>When to use</strong>${escapeHtml(tool.whenToUse)}</div>` : ""}
@@ -1325,7 +1335,10 @@ function applyFiltersFromUrl() {
     };
     const status = statusAliases[statusRaw] || statusRaw;
     const bucket = params.get("bucket");
-    if (status && STATUS_ORDER.includes(status)) {
+    if (status === "Testing" || status === "Exploring") {
+      state.status = null;
+      state.statusBucket = null;
+    } else if (status && STATUS_ORDER.includes(status)) {
       state.status = status;
       state.statusBucket = null;
       if (!view) state.view = "directory";
@@ -1333,7 +1346,10 @@ function applyFiltersFromUrl() {
       const resolved = STATUS_BUCKETS[bucket]
         ? bucket
         : LEGACY_STATUS_BUCKETS[bucket];
-      if (resolved && STATUS_BUCKETS[resolved]) {
+      if (resolved === "trying" || resolved === "exploring") {
+        state.status = null;
+        state.statusBucket = null;
+      } else if (resolved && STATUS_BUCKETS[resolved]) {
         state.status = null;
         state.statusBucket = resolved;
         if (!view) state.view = "directory";
@@ -1438,8 +1454,17 @@ function openToolFromUrl() {
   openModal(tool);
 }
 
+function resetChipFilters() {
+  state.starter = false;
+  state.recent = false;
+  state.status = null;
+  state.statusBucket = null;
+  state.category = null;
+  state.pricing = null;
+}
+
 function syncChipUI() {
-  const allActive = !state.starter && !state.recent && !state.status && !state.statusBucket && !state.category && !state.pricing;
+  const allActive = !chipFiltersAreActive();
   document.querySelectorAll("#filterChips .chip").forEach(el => {
     if (el.dataset.starter === "true") {
       el.classList.toggle("active", state.starter);
@@ -1505,6 +1530,7 @@ function browseTools({ starter = false, recent = false, compare = false } = {}) 
     state.compareMode = true;
   }
   showView("directory");
+  syncCompareUI();
   scrollToDirectoryResults();
 }
 
@@ -1526,8 +1552,12 @@ function fixedHeaderOffset() {
 function scrollToAnchor(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  const top = el.getBoundingClientRect().top + window.scrollY - fixedHeaderOffset();
-  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  const details = el.closest("details");
+  if (details && !details.open) details.open = true;
+  requestAnimationFrame(() => {
+    const top = el.getBoundingClientRect().top + window.scrollY - fixedHeaderOffset();
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  });
 }
 
 function scrollToAnchorAfterView(id) {
@@ -1975,6 +2005,16 @@ function renderGuideTips(guide) {
   }).join("");
 }
 
+function renderMatchupLine(c) {
+  const tools = c.tools || [];
+  return tools.map((name, i) => {
+    const isWinner = c.winner && name === c.winner;
+    const tool = `<span class="compare-category__tool${isWinner ? " compare-category__tool--winner" : ""}">${escapeHtml(name)}</span>`;
+    const vs = i < tools.length - 1 ? `<span class="compare-category__vs">vs</span>` : "";
+    return `${tool}${vs}`;
+  }).join("");
+}
+
 function renderComparisonActions(c) {
   return (c.tools || []).map(name => {
     const t = findToolByName(name);
@@ -2000,7 +2040,7 @@ function renderComparisonsList() {
             <span class="compare-category__chev" aria-hidden="true"></span>
             <span class="compare-category__head">
               <span class="compare-category__title">${escapeHtml(c.feature)}</span>
-              <span class="compare-category__matchup">${escapeHtml(c.tools.join(" vs "))}</span>
+              <span class="compare-category__matchup">${renderMatchupLine(c)}</span>
             </span>
             <span class="compare-category__winner">Winner: ${escapeHtml(c.winner || "—")}</span>
           </summary>
@@ -2239,6 +2279,8 @@ function playbookMatchesSearch(item, query) {
 }
 
 function renderPlaybooks() {
+  applyContributeMode();
+  populateWinToolDropdown();
   const useGrid = document.getElementById("useCaseGrid");
   const learnGrid = document.getElementById("learnGrid");
   const countEl = document.getElementById("playbookResultCount");
@@ -2517,7 +2559,7 @@ function syncContributeTabs() {
 function populateWinToolDropdown() {
   const select = document.getElementById("w_tool");
   if (!select || select.dataset.ready === "1") return;
-  const opts = TOOLS
+  const opts = directoryTools()
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`)
@@ -2930,11 +2972,6 @@ function populateDepartmentDropdown() {
 
 function setCompareMode(on) {
   state.compareMode = on;
-  const btn = document.getElementById("compareToggle");
-  if (btn) {
-    btn.classList.toggle("is-active", on);
-    btn.setAttribute("aria-pressed", String(on));
-  }
   if (!on) {
     state.compareIds = [];
   }
@@ -2946,9 +2983,16 @@ function syncCompareUI() {
   const banner = document.getElementById("compareBanner");
   const openBtn = document.getElementById("compareOpen");
   const text = document.getElementById("compareBarText");
+  const toggle = document.getElementById("compareToggle");
   const count = state.compareIds.length;
   const onDirectory = state.view === "directory";
   const selecting = state.compareMode && onDirectory;
+
+  if (toggle) {
+    toggle.classList.toggle("is-active", state.compareMode);
+    toggle.setAttribute("aria-pressed", String(state.compareMode));
+    toggle.textContent = state.compareMode ? "Done" : "Compare";
+  }
 
   if (selecting) {
     bar.hidden = false;
@@ -2993,9 +3037,6 @@ function toggleCompareFromModal(id) {
 
   if (!state.compareMode) {
     state.compareMode = true;
-    const btn = document.getElementById("compareToggle");
-    btn.classList.add("is-active");
-    btn.setAttribute("aria-pressed", "true");
   }
 
   closeModal();
@@ -3127,21 +3168,24 @@ function openCompare() {
   document.body.style.overflow = "hidden";
 }
 
-/** Close compare overlay and exit selection mode (hides bottom bar). */
+/** Close the compare overlay. Keep selection mode on so people can pick another set. */
 function closeCompare() {
   const overlay = document.getElementById("compareOverlay");
-  const wasOpen = overlay && !overlay.hidden;
   if (overlay) overlay.hidden = true;
   document.body.style.overflow = "";
-  if (wasOpen && state.compareMode) {
-    setCompareMode(false);
-  }
 }
 
 function init(opts = {}) {
   applyAssignmentOverrides();
   applyFiltersFromUrl();
-  if (opts.forceHome) state.view = "home";
+  if (opts.forceHome) {
+    state.view = "home";
+    state.currentToolId = null;
+    state.compareMode = false;
+    state.compareIds = [];
+    resetChipFilters();
+    state.search = "";
+  }
   populateCategoryDropdown();
   populatePricingDropdown();
   populateDepartmentDropdown();
@@ -3225,12 +3269,7 @@ function init(opts = {}) {
     }
 
     if (chip.dataset.filter === "all") {
-      state.starter = false;
-      state.recent = false;
-      state.status = null;
-      state.statusBucket = null;
-      state.category = null;
-      state.pricing = null;
+      resetChipFilters();
       rerender();
       scrollToDirectoryResults();
       return;
@@ -3294,6 +3333,21 @@ function init(opts = {}) {
   });
 
   document.getElementById("toolGrid").addEventListener("click", e => {
+    if (e.target.closest("a[href]")) return;
+
+    if (state.compareMode && state.view === "directory") {
+      if (e.target.closest(".card__compare") || e.target.closest("input[data-compare-id]")) return;
+      const detailsBtn = e.target.closest(".card__cta[data-open-details]");
+      if (detailsBtn) {
+        const tool = TOOLS.find(t => t.id === detailsBtn.dataset.openDetails);
+        if (tool) openModal(tool);
+        return;
+      }
+      const card = e.target.closest(".directory-item[data-id]");
+      if (card) toggleCompareId(card.dataset.id);
+      return;
+    }
+
     const detailsBtn = e.target.closest("[data-open-details]");
     if (detailsBtn) {
       const tool = TOOLS.find(t => t.id === detailsBtn.dataset.openDetails);
@@ -3370,7 +3424,7 @@ function buildSuggestDraft() {
   const lines = [
     `## Add tool: ${name}`,
     "",
-    `- **Intended status:** Testing (team can try after approval)`,
+    `- **Intended status:** Approved (joins the Directory after review)`,
     `- **Category:** ${category || "—"}`,
     `- **Pricing:** ${pricing || "—"}`,
     `- **When to try:** ${urgency || "—"}`,
@@ -3385,7 +3439,7 @@ function buildSuggestDraft() {
     reason || "—",
     "",
     "### Admin checklist",
-    `- [ ] Approve and add row to \`data/ai_tools_directory.csv\` with Status=Testing, Date Added=${today}`,
+    `- [ ] Approve and add row to \`data/ai_tools_directory.csv\` with Status=Approved, Date Added=${today}`,
     "- [ ] Ask teammates to test, then close this issue",
     "- [ ] Or reject and comment why",
     "",
@@ -3856,7 +3910,6 @@ async function renderSubmissions() {
   const list = document.getElementById("submissionsList");
   if (list) list.innerHTML = `<p class="pending-list__status">Loading queue…</p>`;
   applyContributeMode();
-  populateWinToolDropdown();
   const items = visibleSubmissionItems(await loadSubmissionItems());
   if (state.submissionStatus === "Approved") state.submissionStatus = "All";
   state.submissionsCache = items;
@@ -5014,8 +5067,16 @@ function syncLoginSessionHint() {
   el.textContent = `${days}-day session on this device.`;
 }
 
+function syncLoginAccountHint() {
+  const input = document.getElementById("loginUsername");
+  if (!input || input.value) return;
+  const teamUser = authConfig().employeeUsername || "team";
+  input.placeholder = teamUser;
+}
+
 function bindAuthUi() {
   syncLoginSessionHint();
+  syncLoginAccountHint();
   const form = document.getElementById("loginForm");
   form?.addEventListener("submit", async e => {
     e.preventDefault();
@@ -5065,8 +5126,7 @@ function bindAuthUi() {
         isAdmin: login.isAdmin,
       });
       unlockApp();
-      // Preserve ?view, ?tool, ?compare, and prompt deep links after login.
-      startAppOnce();
+      startAppOnce({ forceHome: true });
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -5098,9 +5158,13 @@ async function bootstrap() {
   }
 
   const viaInvite = await tryInviteUnlock();
-  if (viaInvite || await isAuthenticated()) {
+  if (viaInvite) {
     unlockApp();
-    // Invite unlock removes only the invite token; preserve any remaining deep-link parameters.
+    startAppOnce({ forceHome: true });
+    return;
+  }
+  if (await isAuthenticated()) {
+    unlockApp();
     startAppOnce();
     return;
   }

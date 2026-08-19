@@ -22,9 +22,9 @@
         <a class="login-gate__logo" href="https://dailycodesolutions.com/" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions — website">
           <img src="shared/assets/logo.svg" width="160" height="34" alt="Daily Code Solutions">
         </a>
-        <p class="login-gate__welcome">Welcome back</p>
+        <p class="login-gate__welcome">Internal access</p>
         <h1 class="login-gate__brand-title">Explore our AI toolkit</h1>
-        <p class="login-gate__lead">Approved tools, prompts, and playbooks for the team.</p>
+        <p class="login-gate__lead">Approved tools, prompts, and playbooks for Daily Code Solutions.</p>
         <nav class="login-gate__social" aria-label="Daily Code Solutions on the web">
           <a class="login-gate__social-btn login-gate__social-btn--site" href="https://dailycodesolutions.com/" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions website">
             <img src="shared/assets/favicon.jpg" width="22" height="22" alt="">
@@ -36,7 +36,7 @@
       </div>
       <div class="login-gate__panel">
         <h2 class="login-gate__title" id="loginTitle">Sign in</h2>
-        <p class="login-gate__panel-lead">Enter your credentials to continue.</p>
+        <p class="login-gate__panel-lead">Sign in with a team or admin account.</p>
         <form id="loginForm" class="login-gate__form" novalidate>
           <div class="field" data-login-field="username">
             <label for="loginUsername">Username <span class="req">*</span></label>
@@ -46,7 +46,7 @@
               name="username"
               autocomplete="username"
               required
-              placeholder="Username"
+              placeholder="team"
             >
             <p class="field-error" id="loginUsernameError" hidden></p>
           </div>
@@ -99,6 +99,7 @@
             <p class="panel__desc">Tap a job — recommendations appear right here.</p>
           </div>
           <div class="panel__actions">
+            <button type="button" class="linkbtn" data-scroll-to="startHere">Start here ↓</button>
             <button type="button" class="linkbtn" data-scroll-to="recentTools">Recently added ↓</button>
             <button type="button" class="linkbtn" data-go-view="directory">Browse full directory →</button>
           </div>
@@ -110,7 +111,7 @@
       <details class="home-more" id="homeMore">
         <summary class="home-more__summary">Start here shortlist &amp; tool of the week</summary>
         <div class="home-split">
-          <section class="panel" aria-labelledby="startHereTitle">
+          <section class="panel" id="startHere" aria-labelledby="startHereTitle">
             <div class="panel__head">
               <div>
                 <h2 class="panel__title" id="startHereTitle">Start here</h2>
@@ -139,7 +140,6 @@
             <h2 class="panel__title" id="recentTitle">Recently added</h2>
             <p class="panel__desc">Tools approved and added to the directory in the last 15 days.</p>
           </div>
-          <button type="button" class="linkbtn" data-go-view="directory" data-recent="1">Open New in directory →</button>
         </div>
         <div class="starter-row" id="recentToolsRow"></div>
         <p class="empty" id="recentToolsEmpty" hidden>No tools added in the last 15 days.</p>
@@ -213,7 +213,7 @@
     </section>
 
     <div class="content">
-      <section class="glance" aria-labelledby="glanceTitle">
+      <section class="glance" aria-labelledby="glanceTitle" hidden>
         <div class="glance__head">
           <h2 class="glance__title" id="glanceTitle">At a glance</h2>
           <p class="glance__desc">Quick filters for approved tools.</p>
@@ -222,17 +222,10 @@
       </section>
 
       <section class="controls" id="find-tools" aria-label="Filter tools">
-        <div class="controls__header">
-          <div>
-            <h2 class="controls__title">Find the right tool</h2>
-            <p class="controls__desc">Search by name or category. Use At a glance for everyday picks.</p>
-          </div>
-        </div>
-
         <div class="controls__row">
           <div class="search">
             <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            <input type="text" id="searchInput" placeholder="Search tools, categories, notes…" autocomplete="off">
+            <input type="text" id="searchInput" placeholder="Search tools…" autocomplete="off">
           </div>
           <select id="sortSelect" aria-label="Sort by">
             <option value="name">Name (A–Z)</option>
@@ -244,13 +237,12 @@
           </select>
           <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Compare</button>
         </div>
-
-        <div class="filter-groups" id="filterChips" aria-label="Filter tools"></div>
+        <div class="filter-groups" id="filterChips" aria-label="More filters"></div>
       </section>
 
       <section id="toolResults" aria-label="Tool results">
         <div class="compare-banner" id="compareBanner" hidden role="status">
-          Selecting tools to compare — use Select on a card (up to 3).
+          Selecting tools — tap a card to add it (up to 3), then Compare in the bar below.
         </div>
         <div class="resultbar">
           <span id="resultCount"></span>
@@ -338,15 +330,23 @@
       </div>
 
       <div class="prompt-filters" aria-label="Prompt filters">
-        <div class="prompt-quick" role="group" aria-label="Prompt filters">
-          <button type="button" class="chip" data-prompt-usecase="All">All</button>
-          <button type="button" class="chip chip--starter" data-prompt-usecase="Pre-prod checklist">Before production</button>
-          <button type="button" class="chip" data-prompt-role="All">All roles</button>
-          <button type="button" class="chip" data-prompt-role="Engineering">Engineering</button>
-          <button type="button" class="chip" data-prompt-role="Everyone">Everyone</button>
-          <button type="button" class="chip" data-prompt-role="Data">Data</button>
-          <button type="button" class="chip" data-prompt-role="Operations">Operations</button>
-          <button type="button" class="chip" data-prompt-role="Management">Management</button>
+        <div class="prompt-filter-group">
+          <span class="prompt-filter-group__label">Use</span>
+          <div class="prompt-quick" role="group" aria-label="Filter by use">
+            <button type="button" class="chip" data-prompt-usecase="All">All uses</button>
+            <button type="button" class="chip chip--starter" data-prompt-usecase="Pre-prod checklist">Before production</button>
+          </div>
+        </div>
+        <div class="prompt-filter-group">
+          <span class="prompt-filter-group__label">Role</span>
+          <div class="prompt-quick" role="group" aria-label="Filter by role">
+            <button type="button" class="chip" data-prompt-role="All">All roles</button>
+            <button type="button" class="chip" data-prompt-role="Engineering">Engineering</button>
+            <button type="button" class="chip" data-prompt-role="Everyone">Everyone</button>
+            <button type="button" class="chip" data-prompt-role="Data">Data</button>
+            <button type="button" class="chip" data-prompt-role="Operations">Operations</button>
+            <button type="button" class="chip" data-prompt-role="Management">Management</button>
+          </div>
         </div>
         <button type="button" id="promptClearFilters" class="linkbtn" hidden>Clear</button>
       </div>
@@ -365,43 +365,111 @@
       <div class="hero__container">
         <h1 class="hero-heading">Playbooks</h1>
         <p class="hero-text">
-          Real team use cases and learning paths by role.
+          Real team use cases, learning paths by role, and a place to share a win.
         </p>
       </div>
     </section>
-    <div class="content">
-      <div class="prompt-search-row">
-        <div class="search prompt-search">
-          <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <input type="search" id="playbookSearchInput" placeholder="Search use cases & learning — e.g. report, Power BI, Cursor…" autocomplete="off" aria-label="Search playbooks">
-        </div>
-      </div>
-      <div class="role-chips" id="playbookRoleChips" aria-label="Filter playbooks by role"></div>
-      <div class="resultbar">
-        <span id="playbookResultCount"></span>
-        <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
-      </div>
-
-      <section class="panel" aria-labelledby="useCasesTitle">
-        <div class="panel__head">
-          <div>
-            <h2 class="panel__title" id="useCasesTitle">Team use cases</h2>
-            <p class="panel__desc">Proof from peers — what we actually run and the impact.</p>
-          </div>
-          <button type="button" class="linkbtn" data-go-view="submissions" data-scroll-to="shareWinSection">Share a win →</button>
-        </div>
-        <div class="usecase-grid" id="useCaseGrid"></div>
-      </section>
-
-      <section class="panel" aria-labelledby="learnTitle">
-        <div class="panel__head">
-          <div>
-            <h2 class="panel__title" id="learnTitle">Learning by role</h2>
-            <p class="panel__desc">Courses and docs to level up without reinventing the wheel.</p>
+    <div class="content playbooks-split">
+      <div class="playbooks-split__main">
+        <div class="prompt-search-row">
+          <div class="search prompt-search">
+            <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input type="search" id="playbookSearchInput" placeholder="Search use cases & learning — e.g. report, Power BI, Cursor…" autocomplete="off" aria-label="Search playbooks">
           </div>
         </div>
-        <div class="learn-grid" id="learnGrid"></div>
-      </section>
+        <div class="role-chips" id="playbookRoleChips" aria-label="Filter playbooks by role"></div>
+        <div class="resultbar">
+          <span id="playbookResultCount"></span>
+          <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
+        </div>
+
+        <section class="panel" aria-labelledby="useCasesTitle">
+          <div class="panel__head">
+            <div>
+              <h2 class="panel__title" id="useCasesTitle">Team use cases</h2>
+              <p class="panel__desc">Proof from peers — what we actually run and the impact.</p>
+            </div>
+          </div>
+          <div class="usecase-grid" id="useCaseGrid"></div>
+        </section>
+
+        <section class="panel" aria-labelledby="learnTitle">
+          <div class="panel__head">
+            <div>
+              <h2 class="panel__title" id="learnTitle">Learning by role</h2>
+              <p class="panel__desc">Courses and docs to level up without reinventing the wheel.</p>
+            </div>
+          </div>
+          <div class="learn-grid" id="learnGrid"></div>
+        </section>
+      </div>
+
+      <aside class="playbooks-split__aside">
+        <section class="panel playbooks-split__win" id="shareWinSection" aria-labelledby="shareWinTitle">
+          <div class="panel__head">
+            <div>
+              <h2 class="panel__title" id="shareWinTitle">Share a win</h2>
+              <p class="panel__desc">Which tool helped, and what changed?</p>
+            </div>
+          </div>
+          <form id="winForm" novalidate>
+            <div class="field-row">
+              <div class="field" data-field="w_title">
+                <label for="w_title">What did you achieve? <span class="req">*</span></label>
+                <input type="text" id="w_title" maxlength="100" placeholder="e.g. Cut weekly reporting time in half">
+                <p class="field-error" id="w_title_err" hidden></p>
+              </div>
+              <div class="field" data-field="w_tool">
+                <label for="w_tool">Tool used <span class="req">*</span></label>
+                <select id="w_tool">
+                  <option value="">Choose a tool</option>
+                </select>
+                <p class="field-error" id="w_tool_err" hidden></p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field" data-field="w_name">
+                <label for="w_name">Your name</label>
+                <input type="text" id="w_name" maxlength="60" autocomplete="name" placeholder="Optional">
+              </div>
+              <div class="field" data-field="w_role">
+                <label for="w_role">Role</label>
+                <select id="w_role">
+                  <option value="">Optional</option>
+                  <option>Everyone</option>
+                  <option>Engineering</option>
+                  <option>Data</option>
+                  <option>Operations</option>
+                  <option>Management</option>
+                </select>
+              </div>
+            </div>
+            <div class="field" data-field="w_impact">
+              <label for="w_impact">Impact <span class="req">*</span></label>
+              <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours per week; fewer follow-up emails"></textarea>
+              <div class="field-meta"><span class="field-count" id="w_impact_count">0 / 400</span></div>
+              <p class="field-error" id="w_impact_err" hidden></p>
+            </div>
+            <div class="field" data-field="w_how">
+              <label for="w_how">How you used it</label>
+              <textarea id="w_how" rows="4" maxlength="600" placeholder="Optional — prompts, workflow, or tips for the team"></textarea>
+              <div class="field-meta"><span class="field-count" id="w_how_count">0 / 600</span></div>
+            </div>
+            <p class="field-error field-error--form" id="winFormErr" hidden></p>
+            <div class="form-actions">
+              <button type="submit" class="btn-base btn-primary" id="winSubmit">Share win</button>
+            </div>
+            <p class="field-note">Reviewed by the team before it appears in Team use cases.</p>
+          </form>
+          <div id="winSuccess" hidden>
+            <h3 class="panel__title">Win submitted</h3>
+            <p class="panel__desc" id="winSuccessDesc">Thanks — we'll review it before it appears in Team use cases.</p>
+            <div class="suggest-draft-actions">
+              <button type="button" class="linkbtn" id="winAnother">Share another</button>
+            </div>
+          </div>
+        </section>
+      </aside>
     </div>
   </section>
 
@@ -411,7 +479,7 @@
       <div class="hero__container">
         <h1 class="hero-heading">Team <span class="text-gradient">suggestions</span></h1>
         <p class="hero-text">
-          Suggest a tool, see what’s in review, and share a win.
+          Suggest a tool and see what’s in review.
         </p>
       </div>
     </section>
@@ -480,71 +548,6 @@
             <p class="panel__desc">Thanks — the team can pick it up from the list on the left.</p>
             <div class="suggest-draft-actions">
               <button type="button" class="linkbtn" id="simpleSubmitAnother">Suggest another</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel submissions-split__win" id="shareWinSection" aria-labelledby="shareWinTitle">
-          <div class="panel__head">
-            <div>
-              <h2 class="panel__title" id="shareWinTitle">Share a win</h2>
-              <p class="panel__desc">Which tool helped, and what changed?</p>
-            </div>
-          </div>
-          <form id="winForm" novalidate>
-            <div class="field-row">
-              <div class="field" data-field="w_title">
-                <label for="w_title">What did you achieve? <span class="req">*</span></label>
-                <input type="text" id="w_title" maxlength="100" placeholder="e.g. Cut weekly reporting time in half">
-                <p class="field-error" id="w_title_err" hidden></p>
-              </div>
-              <div class="field" data-field="w_tool">
-                <label for="w_tool">Tool used <span class="req">*</span></label>
-                <select id="w_tool">
-                  <option value="">Choose a tool</option>
-                </select>
-                <p class="field-error" id="w_tool_err" hidden></p>
-              </div>
-            </div>
-            <div class="field-row">
-              <div class="field" data-field="w_name">
-                <label for="w_name">Your name</label>
-                <input type="text" id="w_name" maxlength="60" autocomplete="name" placeholder="Optional">
-              </div>
-              <div class="field" data-field="w_role">
-                <label for="w_role">Role</label>
-                <select id="w_role">
-                  <option value="">Optional</option>
-                  <option>Everyone</option>
-                  <option>Engineering</option>
-                  <option>Data</option>
-                  <option>Operations</option>
-                  <option>Management</option>
-                </select>
-              </div>
-            </div>
-            <div class="field" data-field="w_impact">
-              <label for="w_impact">Impact <span class="req">*</span></label>
-              <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours per week; fewer follow-up emails"></textarea>
-              <div class="field-meta"><span class="field-count" id="w_impact_count">0 / 400</span></div>
-              <p class="field-error" id="w_impact_err" hidden></p>
-            </div>
-            <div class="field" data-field="w_how">
-              <label for="w_how">How you used it</label>
-              <textarea id="w_how" rows="4" maxlength="600" placeholder="Optional — prompts, workflow, or tips for the team"></textarea>
-              <div class="field-meta"><span class="field-count" id="w_how_count">0 / 600</span></div>
-            </div>
-            <p class="field-error field-error--form" id="winFormErr" hidden></p>
-            <div class="form-actions">
-              <button type="submit" class="btn-base btn-primary" id="winSubmit">Share win</button>
-            </div>
-            <p class="field-note">Reviewed by the team before publishing to Playbooks.</p>
-          </form>
-          <div id="winSuccess" hidden>
-            <h3 class="panel__title">Win submitted</h3>
-            <p class="panel__desc" id="winSuccessDesc">Thanks — we'll review it before adding it to Playbooks.</p>
-            <div class="suggest-draft-actions">
-              <button type="button" class="linkbtn" id="winAnother">Share another</button>
             </div>
           </div>
         </section>
@@ -689,7 +692,7 @@
         </div>
         <ol class="review-steps">
           <li><strong>Open</strong> a pending item above (or the issue link from someone’s draft).</li>
-          <li><strong>Approve:</strong> add the tool to <code>data/ai_tools_directory.csv</code> with status <strong>Testing</strong>, push to <code>main</code>, then close the issue with “Approved &amp; added — please test.”</li>
+          <li><strong>Approve:</strong> add the tool to <code>data/ai_tools_directory.csv</code> with status <strong>Approved</strong>, push to <code>main</code>, then close the issue.</li>
           <li><strong>Reject:</strong> close the issue and comment why (duplicate, unsafe, not a fit, etc.). Nothing is added to the directory.</li>
           <li>After an approval push, the live site updates and the tool appears under <strong>Recently added</strong> / Directory for the team to try.</li>
         </ol>
@@ -755,8 +758,7 @@
             <select id="da_status" required>
               <option value="Approved">Approved</option>
               <option value="Production">Production</option>
-              <option value="Testing">Testing</option>
-              <option value="Exploring">Exploring</option>
+              <option value="Archived">Archived</option>
             </select>
           </div>
         </div>

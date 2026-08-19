@@ -1,19 +1,20 @@
 /**
- * Google Apps Script for AI Resource Center simple tool submissions.
+ * Google Apps Script for AI Resource Center: tool submissions, approve queue, and share-a-win.
  *
  * Setup (once):
- * 1. Create a Google Sheet with header row:
- *    Submitted | Tool name | Link | Submitted by | Note | Status | Assigned to | Assigned date | Rejected date
- * 2. Extensions → Apps Script → paste this file.
- * 3. Set Script property ASSIGN_SECRET (required for assign / approve / reject from site):
+ * 1. Create a blank Google Sheet. Name it "DCS AI Resource Center".
+ * 2. Extensions → Apps Script → paste this file → Save.
+ * 3. Select setupDcsWorkbook in the function dropdown → Run. Authorize when asked.
+ *    Creates tabs with all columns: Submissions | Directory queue | Team wins
+ * 4. Set Script property ASSIGN_SECRET (needed for assign / approve / reject from the site):
  *    Project settings → Script properties → ASSIGN_SECRET = same value as site-config assignSecret
- * 4. Deploy → New deployment → Web app (Execute as: Me, Anyone)
- * 5. Copy web app URL → docs/site-config.js → contribute.simpleSubmit.submitUrl
- * 6. Optional: Publish sheet to web → CSV → csvUrl
+ * 5. Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone)
+ * 6. Copy the web app URL into docs/site-config.js:
+ *      contribute.simpleSubmit.submitUrl  AND  contribute.winSubmit.submitUrl  (same URL)
+ * 7. Optional: File → Share → Publish to web → CSV of the Submissions tab → csvUrl
  *
- * Status values: New | In review | Approved | Rejected
- * Admin actions from site (assignSecret): assign, approve, reject
- * Optional assignee on submit when POST includes assignee + valid token (admin suggest).
+ * Status values (Submissions): New | In review | Approved | Rejected
+ * Status values (Team wins): New | Approved | Rejected
  * Approve also appends a row to the "Directory queue" tab for maintainer sync.
  */
 
@@ -27,6 +28,21 @@ const SUBMISSION_HEADERS = [
   "Assigned to",
   "Assigned date",
   "Rejected date",
+];
+
+const TAB_SUBMISSIONS = "Submissions";
+const TAB_DIRECTORY_QUEUE = "Directory queue";
+const TAB_WINS = "Team wins";
+
+const WIN_HEADERS = [
+  "Submitted",
+  "Title",
+  "Tool used",
+  "Submitted by",
+  "Role",
+  "Impact",
+  "How",
+  "Status",
 ];
 
 const DIRECTORY_QUEUE_HEADERS = [
@@ -64,14 +80,27 @@ const DIRECTORY_QUEUE_HEADERS = [
 const ASSIGN_SECRET_FALLBACK = "";
 
 function submissionSheet() {
-  return SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  return ss.getSheetByName(TAB_SUBMISSIONS) || ss.getSheets()[0];
+}
+
+function winSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(TAB_WINS);
+  if (!sheet) {
+    sheet = ss.insertSheet(TAB_WINS);
+    writeHeaders_(sheet, WIN_HEADERS);
+    styleTab_(sheet, WIN_HEADERS.length);
+    statusDropdown_(sheet, 8, ["New", "Approved", "Rejected"]);
+  }
+  return sheet;
 }
 
 function directoryQueueSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName("Directory queue");
+  let sheet = ss.getSheetByName(TAB_DIRECTORY_QUEUE);
   if (!sheet) {
-    sheet = ss.insertSheet("Directory queue");
+    sheet = ss.insertSheet(TAB_DIRECTORY_QUEUE);
     sheet.getRange(1, 1, 1, DIRECTORY_QUEUE_HEADERS.length).setValues([DIRECTORY_QUEUE_HEADERS]);
   } else {
     const first = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
@@ -371,6 +400,110 @@ function handleSubmit(data) {
   return jsonOut({ ok: true });
 }
 
+function isWinPayload_(data) {
+  const hasWin = String(data.title || "").trim() && String(data.impact || "").trim();
+  const hasToolSubmit = String(data.toolName || data.link || "").trim();
+  return hasWin && !hasToolSubmit;
+}
+
+function handleWin(data) {
+  const title = String(data.title || "").trim();
+  if (title.length < 4 || title.length > 100) {
+    return jsonOut({ ok: false, error: "Title is required (4–100 characters)." });
+  }
+  const tool = String(data.tool || data.toolUsed || "").trim();
+  if (!tool || tool.length > 80) {
+    return jsonOut({ ok: false, error: "Tool used is required." });
+  }
+  const impact = String(data.impact || "").trim();
+  if (impact.length < 12 || impact.length > 400) {
+    return jsonOut({ ok: false, error: "Impact is required (12–400 characters)." });
+  }
+  const sheet = winSheet();
+  const info = headerIndexMapFor_(sheet, WIN_HEADERS);
+  const row = [];
+  for (var i = 0; i < info.lastCol; i++) row.push("");
+  function set(names, value) {
+    const idx = colIndex(info.map, names);
+    if (idx >= 0) row[idx] = value;
+  }
+  set(["Submitted", "Date", "Timestamp"], new Date().toISOString().slice(0, 10));
+  set(["Title"], title);
+  set(["Tool used", "Tool"], tool);
+  set(["Submitted by", "Submitter", "Name"], String(data.submittedBy || data.name || "").trim().slice(0, 60));
+  set(["Role"], String(data.role || "").trim().slice(0, 60));
+  set(["Impact"], impact);
+  set(["How"], String(data.how || "").trim().slice(0, 600));
+  set(["Status"], "New");
+  sheet.appendRow(row);
+  return jsonOut({ ok: true });
+}
+
+function headerIndexMapFor_(sheet, expectedHeaders) {
+  const lastCol = Math.max(sheet.getLastColumn(), expectedHeaders.length);
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function (h) {
+    return String(h || "").trim();
+  });
+  const map = {};
+  headers.forEach(function (h, i) {
+    if (h) map[h.toLowerCase()] = i;
+  });
+  return { headers: headers, map: map, lastCol: lastCol };
+}
+
+function writeHeaders_(sheet, headers) {
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+}
+
+function getOrCreateTab_(ss, name) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
+  return sheet;
+}
+
+function styleTab_(sheet, headerCount) {
+  sheet.setFrozenRows(1);
+  const range = sheet.getRange(1, 1, 1, headerCount);
+  range.setFontWeight("bold");
+  range.setBackground("#eef2ff");
+  range.setWrap(true);
+  sheet.setRowHeight(1, 32);
+}
+
+function statusDropdown_(sheet, column, values) {
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(values, true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(2, column, 2000, 1).setDataValidation(rule);
+}
+
+/**
+ * Run once from the Apps Script editor after pasting this file.
+ * Creates Submissions, Directory queue, and Team wins tabs with required columns.
+ */
+function setupDcsWorkbook() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  const first = ss.getSheets()[0];
+  if (!ss.getSheetByName(TAB_SUBMISSIONS)) {
+    first.setName(TAB_SUBMISSIONS);
+  }
+  const sub = ss.getSheetByName(TAB_SUBMISSIONS) || first;
+  writeHeaders_(sub, SUBMISSION_HEADERS);
+  styleTab_(sub, SUBMISSION_HEADERS.length);
+  statusDropdown_(sub, 6, ["New", "In review", "Approved", "Rejected"]);
+
+  const queue = getOrCreateTab_(ss, TAB_DIRECTORY_QUEUE);
+  writeHeaders_(queue, DIRECTORY_QUEUE_HEADERS);
+  styleTab_(queue, DIRECTORY_QUEUE_HEADERS.length);
+
+  const wins = getOrCreateTab_(ss, TAB_WINS);
+  writeHeaders_(wins, WIN_HEADERS);
+  styleTab_(wins, WIN_HEADERS.length);
+  statusDropdown_(wins, 8, ["New", "Approved", "Rejected"]);
+}
+
 function doPost(e) {
   try {
     const data = parseBody(e);
@@ -378,6 +511,7 @@ function doPost(e) {
     if (action === "assign") return handleAssign(data);
     if (action === "reject") return handleReject(data);
     if (action === "approve") return handleApprove(data);
+    if (action === "win" || isWinPayload_(data)) return handleWin(data);
     return handleSubmit(data);
   } catch (err) {
     return jsonOut({ ok: false, error: String(err) });

@@ -382,20 +382,20 @@ def main() -> int:
     else:
         record("FAIL", "Contribute", "Submission card styling or anchor scroll missing")
 
-    if "shareWinSection" in html and 'id="winForm"' in html:
-        record("PASS", "Contribute", "Share a win form on Suggestions page")
+    if "shareWinSection" in html and 'id="winForm"' in html and "playbooks-split" in html:
+        record("PASS", "Contribute", "Share a win form on Playbooks page")
     else:
-        record("FAIL", "Contribute", "Share a win form missing from Suggestions")
+        record("FAIL", "Contribute", "Share a win form missing from Playbooks")
 
     if "effectiveSubmissionStatus" in script:
         record("PASS", "Contribute", "Unassigned submissions cannot show In review")
     else:
         record("FAIL", "Contribute", "Missing effectiveSubmissionStatus helper")
 
-    if "directoryTools" in script and "isRejectedStatus" in script:
-        record("PASS", "Directory", "Rejected tools are filtered out of Directory")
+    if "directoryTools" in script and "isDirectoryHiddenStatus" in script:
+        record("PASS", "Directory", "Directory excludes Rejected, Testing, and Exploring")
     else:
-        record("FAIL", "Directory", "Directory missing rejected-tool filter")
+        record("FAIL", "Directory", "Directory missing catalog status filter")
 
     rejected_in_dir = [t["name"] for t in tools if str(t.get("status") or "").lower() == "rejected"]
     if not rejected_in_dir:
@@ -407,6 +407,11 @@ def main() -> int:
         record("PASS", "Directory", "Directory cards use playbook-style tones")
     else:
         record("FAIL", "Directory", "Directory playbook-style card styling missing")
+
+    if "card__name-btn" in script and "Open site" in script and "card__name-link" not in script:
+        record("PASS", "Directory", "Tool name opens details; vendor site is a labeled Open site action")
+    else:
+        record("FAIL", "Directory", "Directory name still acts as an unlabeled vendor link")
 
     moved_names = {
         "Windsurf", "Make", "Lovable", "Exa", "Raycast AI", "Fireflies.ai", "Bolt.new",
@@ -652,6 +657,10 @@ def main() -> int:
         record("PASS", "Filter", f"Production filter set size {len(prod)}")
 
     # ===== PROMPTS / PLAYBOOKS =====
+    if 'data-prompt-usecase="All"' in html and 'data-prompt-role="All"' in html and "prompt-filter-group" in html:
+        record("PASS", "Prompts", "Use and Role filter groups are labeled separately")
+    else:
+        record("FAIL", "Prompts", "Prompt filters still use a single unlabeled All chip row")
     prompt_roles = {p.get("role") for p in prompts if p.get("role")}
     if prompt_roles:
         record("PASS", "Prompts", f"Prompt roles: {sorted(prompt_roles)}")
@@ -813,7 +822,7 @@ def main() -> int:
 
     if (
         "tool-glance" in script
-        and "Open on YouTube" in script
+        and "tool-tutorial__frame" in script
         and glance_fn
         and 'detailField("Department"' in glance_fn.group(0)
         and 'detailField("Learning curve"' in glance_fn.group(0)
@@ -823,12 +832,11 @@ def main() -> int:
     else:
         record("FAIL", "Tool page", "Missing video + facts first-look layout")
 
-    # A first-time login/invite must restore the original deep-link state.
-    # forceHome intentionally suppresses URL parsing and breaks ?tool, ?view, and ?compare.
+    # After sign-in, land on AI hub. Refresh with an existing session still honors deep links.
     if "startAppOnce({ forceHome: true })" in script:
-        record("FAIL", "Deep links", "First-time auth forces Home and discards deep-link state")
+        record("PASS", "Auth", "Sign-in opens AI hub")
     else:
-        record("PASS", "Deep links", "First-time auth preserves deep-link state")
+        record("FAIL", "Auth", "Sign-in does not force the AI hub")
 
     # Pending review content belongs to the admin workflow, not the general employee portal.
     if 'id="pendingReviewPanel"' not in html or 'id="pendingReviewPanel"' not in html.split('<section', 1)[-1]:
@@ -862,8 +870,8 @@ def main() -> int:
     else:
         record("FAIL", "Auth", "Login page logo missing")
 
-    if 'class="login-gate__welcome"' in html and "Welcome back" in html and "Explore our AI toolkit" in html:
-        record("PASS", "Auth", "Login welcome and sign-in headline present")
+    if 'class="login-gate__welcome"' in html and "Internal access" in html and "team or admin" in html:
+        record("PASS", "Auth", "Login shows Internal access and team or admin")
     else:
         record("FAIL", "Auth", "Login welcome copy missing")
 

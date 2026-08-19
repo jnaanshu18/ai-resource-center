@@ -74,7 +74,7 @@ const SITE_CONFIG = {
    * Contribute / submissions.
    * fullForm: legacy GitHub-issue “Add a tool” (kept, off by default).
    * simpleSubmit: tool name + link POST to Apps Script.
-   * winSubmit: share-a-win POST to Apps Script (separate Sheet).
+   * winSubmit: share-a-win POST (same Apps Script URL is fine if Team wins tab exists).
    * Submissions page always shows data/tool_submissions.csv (baked into data.js);
    * optional csvUrl rows merge on top.
    * See scripts/tool_submissions_apps_script.js and scripts/team_wins_apps_script.js.

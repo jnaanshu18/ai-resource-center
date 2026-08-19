@@ -27,7 +27,8 @@ const WIN_HEADERS = [
 ];
 
 function winSheet() {
-  return SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  return ss.getSheetByName("Team wins") || ss.getSheets()[0];
 }
 
 function ensureWinHeaders(sheet) {
