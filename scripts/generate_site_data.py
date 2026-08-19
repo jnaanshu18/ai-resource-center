@@ -13,6 +13,7 @@ Sources:
   - data/learning_resources.csv
   - data/site_highlights.csv
   - data/team_members.csv
+  - data/tool_submissions.csv
 
 Run this after editing the CSVs (or re-exporting them from the Google
 Sheet), then commit + push. GitHub Pages serves docs/ directly, so the
@@ -57,6 +58,7 @@ def load_tools():
                 "pricing": row.get("Pricing Model") or "",
                 "status": row.get("Status") or "",
                 "url": row.get("URL") or "",
+                "videoUrl": row.get("Tutorial Video") or "",
                 "description": row.get("Description") or "",
                 "platform": split_list(row.get("Platform")),
                 "department": row.get("Department") or "",
@@ -250,6 +252,36 @@ def load_team_members():
     ]
 
 
+def load_submissions():
+    rows = []
+    for row in load_csv_dicts(DATA / "tool_submissions.csv"):
+        link = (row.get("Link") or row.get("URL") or "").strip()
+        name = (row.get("Tool name") or row.get("Tool Name") or "").strip()
+        if not link:
+            continue
+        assigned = (row.get("Assigned to") or row.get("Assignee") or "").strip()
+        status = (row.get("Status") or "New").strip() or "New"
+        status_lower = status.lower()
+        if status_lower == "investigating":
+            status = "In review"
+        if not assigned and status_lower in ("investigating", "in review"):
+            status = "New"
+        rows.append(
+            {
+                "Submitted": (row.get("Submitted") or row.get("Date") or "").strip(),
+                "Tool name": name,
+                "Link": link,
+                "Submitted by": (row.get("Submitted by") or row.get("Submitter") or "").strip(),
+                "Note": (row.get("Note") or row.get("Notes") or "").strip(),
+                "Status": status,
+                "Assigned to": assigned,
+                "Assigned date": (row.get("Assigned date") or row.get("Assigned Date") or "").strip(),
+                "Rejected date": (row.get("Rejected date") or row.get("Rejected Date") or "").strip(),
+            }
+        )
+    return rows
+
+
 def load_site_highlights():
     """Start here shortlist + optional fixed Tool of the week from CSV."""
     start_here = []
@@ -285,6 +317,7 @@ def main():
     team_members = load_team_members()
     departments = load_departments()
     team_roles = load_team_roles()
+    submissions = load_submissions()
 
     js = (
         "// Auto-generated from data/*.csv — do not edit by hand.\n"
@@ -301,6 +334,7 @@ def main():
         f"const TEAM_MEMBERS = {json.dumps(team_members, indent=2, ensure_ascii=False)};\n"
         f"const DEPARTMENTS = {json.dumps(departments, indent=2, ensure_ascii=False)};\n"
         f"const TEAM_ROLES = {json.dumps(team_roles, indent=2, ensure_ascii=False)};\n"
+        f"const SUBMISSIONS = {json.dumps(submissions, indent=2, ensure_ascii=False)};\n"
     )
 
     OUT_PATH.write_text(js, encoding="utf-8")
@@ -310,6 +344,7 @@ def main():
         f"{len(jobs)} jobs, {len(guides)} guides, {len(prompts)} prompts, "
         f"{len(use_cases)} use cases, {len(learning)} learning, "
         f"{len(team_members)} team members, "
+        f"{len(submissions)} submissions, "
         f"{len(highlights['startHere'])} start-here "
         f"to {OUT_PATH.relative_to(ROOT)}"
     )

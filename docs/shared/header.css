@@ -8,12 +8,14 @@
   left: 0;
   right: 0;
   z-index: 100;
+  overflow: visible;
 }
 
 .dcs-header {
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+  overflow: visible;
 }
 
 .dcs-header__inner {
@@ -42,7 +44,7 @@
 }
 
 .dcs-header .app-nav {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   position: static;
   background: transparent;
@@ -67,7 +69,14 @@
   display: none;
 }
 
+.dcs-header__nav > li {
+  flex: 0 0 auto;
+  min-width: auto;
+}
+
 .dcs-header__nav .app-nav__link {
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
   border: none;
   background: transparent;
@@ -78,6 +87,9 @@
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
   transition: background .15s ease, color .15s ease;
 }
 
@@ -173,6 +185,9 @@
 @media (max-width: 900px) {
   .dcs-header__inner {
     flex-wrap: wrap;
+    align-items: center;
+    padding: 10px 12px;
+    overflow: visible;
   }
 
   .dcs-header__toggle {
@@ -180,9 +195,14 @@
     margin-left: auto;
   }
 
+  /* Take a full row under the logo — do not sit in leftover side space */
   .dcs-header .app-nav {
     display: none;
+    flex: 0 0 100%;
+    flex-basis: 100%;
     width: 100%;
+    min-width: 100%;
+    max-width: 100%;
     order: 3;
   }
 
@@ -198,12 +218,19 @@
     align-items: stretch;
     gap: 4px;
     overflow: visible;
+    flex-wrap: nowrap;
+  }
+
+  .dcs-header.is-open .dcs-header__nav > li {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
   }
 
   .dcs-header.is-open .dcs-header__role-item {
     width: 100%;
     justify-content: flex-start;
-    padding: 0.35rem 0;
+    padding: 0.35rem 0.85rem;
   }
 
   .dcs-header.is-open .dcs-header__signout-item {
@@ -214,7 +241,13 @@
   }
 
   .dcs-header.is-open .dcs-header__nav .app-nav__link {
+    display: flex;
     width: 100%;
+    justify-content: flex-start;
     text-align: left;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.35;
+    padding: 0.7rem 0.85rem;
   }
 }

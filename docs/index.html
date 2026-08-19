@@ -16,39 +16,58 @@
 <body class="auth-locked">
 
 <div id="loginGate" class="login-gate" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-  <div class="login-gate__card">
-    <p class="login-gate__kicker">Daily Code Solutions</p>
-    <h1 class="login-gate__title" id="loginTitle">AI Resource Center</h1>
-    <p class="login-gate__text">Employees: shared team login. Admins: your admin account.</p>
-    <form id="loginForm" class="login-gate__form" novalidate>
-      <div class="field" data-login-field="username">
-        <label for="loginUsername">Username <span class="req">*</span></label>
-        <input
-          type="text"
-          id="loginUsername"
-          name="username"
-          autocomplete="username"
-          required
-          placeholder="Username"
-        >
-        <p class="field-error" id="loginUsernameError" hidden></p>
+  <div class="login-gate__shell">
+    <div class="login-gate__layout">
+      <div class="login-gate__brand">
+        <a class="login-gate__logo" href="https://dailycodesolutions.com/" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions — website">
+          <img src="shared/assets/logo.svg" width="160" height="34" alt="Daily Code Solutions">
+        </a>
+        <p class="login-gate__welcome">Welcome back</p>
+        <h1 class="login-gate__brand-title">Explore our AI toolkit</h1>
+        <p class="login-gate__lead">Approved tools, prompts, and playbooks for the team.</p>
+        <nav class="login-gate__social" aria-label="Daily Code Solutions on the web">
+          <a class="login-gate__social-btn login-gate__social-btn--site" href="https://dailycodesolutions.com/" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions website">
+            <img src="shared/assets/favicon.jpg" width="22" height="22" alt="">
+          </a>
+          <a class="login-gate__social-btn login-gate__social-btn--linkedin" href="https://www.linkedin.com/company/daily-code-solutions/posts/?feedView=all" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions on LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 114.127 0 2.063 2.063 0 01-2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </nav>
       </div>
-      <div class="field" data-login-field="password">
-        <label for="loginPassword">Password <span class="req">*</span></label>
-        <input
-          type="password"
-          id="loginPassword"
-          name="password"
-          autocomplete="current-password"
-          required
-          placeholder="Password"
-        >
-        <p class="field-error" id="loginPasswordError" hidden></p>
+      <div class="login-gate__panel">
+        <h2 class="login-gate__title" id="loginTitle">Sign in</h2>
+        <p class="login-gate__panel-lead">Enter your credentials to continue.</p>
+        <form id="loginForm" class="login-gate__form" novalidate>
+          <div class="field" data-login-field="username">
+            <label for="loginUsername">Username <span class="req">*</span></label>
+            <input
+              type="text"
+              id="loginUsername"
+              name="username"
+              autocomplete="username"
+              required
+              placeholder="Username"
+            >
+            <p class="field-error" id="loginUsernameError" hidden></p>
+          </div>
+          <div class="field" data-login-field="password">
+            <label for="loginPassword">Password <span class="req">*</span></label>
+            <input
+              type="password"
+              id="loginPassword"
+              name="password"
+              autocomplete="current-password"
+              required
+              placeholder="Password"
+            >
+            <p class="field-error" id="loginPasswordError" hidden></p>
+          </div>
+          <p class="field-error field-error--form" id="loginError" hidden></p>
+          <button type="submit" class="btn-base btn-primary btn-lg login-gate__submit">Sign in</button>
+        </form>
+        <p class="login-gate__hint" id="loginSessionHint">15-day session on this device.</p>
       </div>
-      <p class="field-error field-error--form" id="loginError" hidden></p>
-      <button type="submit" class="btn-base btn-primary btn-lg login-gate__submit">Sign in</button>
-    </form>
-    <p class="login-gate__hint">You stay signed in on this device for 7 days. Use Sign out in the header anytime.</p>
+    </div>
   </div>
 </div>
 
@@ -182,18 +201,22 @@
 
   <!-- DIRECTORY -->
   <section class="view" id="view-directory" data-view-panel="directory" hidden>
-    <header class="page-hero">
-      <div class="page-hero__inner">
-        <h1 class="page-hero__title">Tool directory</h1>
-        <p class="page-hero__desc">Every AI tool we run — search, filter, open details, or compare tools.</p>
+    <section class="hero">
+      <div class="hero__container">
+        <h1 class="hero-heading">
+          Tool <span class="text-gradient">directory</span>
+        </h1>
+        <p class="hero-text">
+          Every AI tool we run — search, filter, open details, or compare tools.
+        </p>
       </div>
-    </header>
+    </section>
 
     <div class="content">
       <section class="glance" aria-labelledby="glanceTitle">
         <div class="glance__head">
           <h2 class="glance__title" id="glanceTitle">At a glance</h2>
-          <p class="glance__desc">Tap a tile to filter the directory.</p>
+          <p class="glance__desc">Quick filters for approved tools.</p>
         </div>
         <div class="stats" id="stats" aria-label="At a glance"></div>
       </section>
@@ -202,7 +225,7 @@
         <div class="controls__header">
           <div>
             <h2 class="controls__title">Find the right tool</h2>
-            <p class="controls__desc">Search and sort tools. Use At a glance for status, or open More filters.</p>
+            <p class="controls__desc">Search by name or category. Use At a glance for everyday picks.</p>
           </div>
         </div>
 
@@ -239,16 +262,39 @@
     </div>
   </section>
 
+  <!-- TOOL DETAIL PAGE -->
+  <section class="view" id="view-tool" data-view-panel="tool" hidden>
+    <section class="hero hero--tool">
+      <div class="hero__container">
+        <button type="button" class="linkbtn tool-page__back" id="modalClose">← Back to directory</button>
+        <h1 class="hero-heading">
+          Tool <span class="text-gradient">details</span>
+        </h1>
+      </div>
+    </section>
+    <div class="content content--tool">
+      <div id="modalOverlay" class="tool-page">
+        <article class="tool-page__card" id="modal">
+          <div id="modalBody"></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <!-- GUIDES -->
   <section class="view" id="view-guides" data-view-panel="guides" hidden>
-    <header class="page-hero">
-      <div class="page-hero__inner">
-        <h1 class="page-hero__title">When to use</h1>
-        <p class="page-hero__desc">Use-when / skip-when guides and documented head-to-head winners. For a live pick of 2–3 tools, use Compare in Directory.</p>
+    <section class="hero">
+      <div class="hero__container">
+        <h1 class="hero-heading">
+          When to <span class="text-gradient">use</span>
+        </h1>
+        <p class="hero-text">
+          When to pick a tool, when to skip it, and which one won last time.
+        </p>
       </div>
-    </header>
-    <div class="content">
-      <section class="panel" aria-labelledby="guidesTitle">
+    </section>
+    <div class="content guides-split">
+      <section class="panel guides-split__col" aria-labelledby="guidesTitle">
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="guidesTitle">Decision guides</h2>
@@ -258,7 +304,7 @@
         <div id="guidesList"></div>
       </section>
 
-      <section class="panel" aria-labelledby="compTitle">
+      <section class="panel guides-split__col" aria-labelledby="compTitle">
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="compTitle">Documented head-to-heads</h2>
@@ -273,12 +319,16 @@
 
   <!-- PROMPTS -->
   <section class="view" id="view-prompts" data-view-panel="prompts" hidden>
-    <header class="page-hero">
-      <div class="page-hero__inner">
-        <h1 class="page-hero__title">Prompt library</h1>
-        <p class="page-hero__desc">Copy a team prompt, paste into your approved tool, and ship faster.</p>
+    <section class="hero">
+      <div class="hero__container">
+        <h1 class="hero-heading">
+          Prompt <span class="text-gradient">library</span>
+        </h1>
+        <p class="hero-text">
+          Copy a team prompt, paste into your approved tool, and ship faster.
+        </p>
       </div>
-    </header>
+    </section>
     <div class="content">
       <div class="prompt-search-row">
         <div class="search prompt-search">
@@ -288,23 +338,15 @@
       </div>
 
       <div class="prompt-filters" aria-label="Prompt filters">
-        <div class="filter-block">
-          <div class="filter-block__label">Checklist</div>
-          <div class="prompt-quick" role="group" aria-label="Checklist filters">
-            <button type="button" class="chip" data-prompt-usecase="All">All</button>
-            <button type="button" class="chip chip--starter" data-prompt-usecase="Pre-prod checklist">Before production</button>
-          </div>
-        </div>
-        <div class="filter-block">
-          <div class="filter-block__label">Role</div>
-          <div class="prompt-quick" role="group" aria-label="Role filters">
-            <button type="button" class="chip" data-prompt-role="All">All roles</button>
-            <button type="button" class="chip" data-prompt-role="Engineering">Engineering</button>
-            <button type="button" class="chip" data-prompt-role="Everyone">Everyone</button>
-            <button type="button" class="chip" data-prompt-role="Data">Data</button>
-            <button type="button" class="chip" data-prompt-role="Operations">Operations</button>
-            <button type="button" class="chip" data-prompt-role="Management">Management</button>
-          </div>
+        <div class="prompt-quick" role="group" aria-label="Prompt filters">
+          <button type="button" class="chip" data-prompt-usecase="All">All</button>
+          <button type="button" class="chip chip--starter" data-prompt-usecase="Pre-prod checklist">Before production</button>
+          <button type="button" class="chip" data-prompt-role="All">All roles</button>
+          <button type="button" class="chip" data-prompt-role="Engineering">Engineering</button>
+          <button type="button" class="chip" data-prompt-role="Everyone">Everyone</button>
+          <button type="button" class="chip" data-prompt-role="Data">Data</button>
+          <button type="button" class="chip" data-prompt-role="Operations">Operations</button>
+          <button type="button" class="chip" data-prompt-role="Management">Management</button>
         </div>
         <button type="button" id="promptClearFilters" class="linkbtn" hidden>Clear</button>
       </div>
@@ -319,12 +361,14 @@
 
   <!-- PLAYBOOKS -->
   <section class="view" id="view-playbooks" data-view-panel="playbooks" hidden>
-    <header class="page-hero">
-      <div class="page-hero__inner">
-        <h1 class="page-hero__title">Playbooks</h1>
-        <p class="page-hero__desc">Real team use cases and learning paths by role.</p>
+    <section class="hero">
+      <div class="hero__container">
+        <h1 class="hero-heading">Playbooks</h1>
+        <p class="hero-text">
+          Real team use cases and learning paths by role.
+        </p>
       </div>
-    </header>
+    </section>
     <div class="content">
       <div class="prompt-search-row">
         <div class="search prompt-search">
@@ -344,7 +388,7 @@
             <h2 class="panel__title" id="useCasesTitle">Team use cases</h2>
             <p class="panel__desc">Proof from peers — what we actually run and the impact.</p>
           </div>
-          <button type="button" class="linkbtn" data-go-view="contribute" data-tab="win">Share a win →</button>
+          <button type="button" class="linkbtn" data-go-view="submissions" data-scroll-to="shareWinSection">Share a win →</button>
         </div>
         <div class="usecase-grid" id="useCaseGrid"></div>
       </section>
@@ -361,29 +405,170 @@
     </div>
   </section>
 
-  <!-- CONTRIBUTE -->
-  <section class="view" id="view-contribute" data-view-panel="contribute" hidden>
-    <header class="page-hero">
-      <div class="page-hero__inner">
-        <h1 class="page-hero__title">Add a tool or share a win</h1>
-        <p class="page-hero__desc">People add tools for the team to test — or share what already saved time.</p>
+  <!-- SUBMISSIONS + ADD TOOL (everyone) -->
+  <section class="view" id="view-submissions" data-view-panel="submissions" hidden>
+    <section class="hero">
+      <div class="hero__container">
+        <h1 class="hero-heading">Team <span class="text-gradient">suggestions</span></h1>
+        <p class="hero-text">
+          Suggest a tool, see what’s in review, and share a win.
+        </p>
       </div>
-    </header>
-    <div class="content">
-      <div class="contribute-tabs" role="tablist" aria-label="Contribution type">
-        <button type="button" class="contribute-tab is-active" role="tab" aria-selected="true" data-contrib="suggest" id="tabSuggest">Add a tool</button>
-        <button type="button" class="contribute-tab" role="tab" aria-selected="false" data-contrib="win" id="tabWin">Share a win</button>
-      </div>
-
-      <div class="panel" id="contribSuggestPanel" role="tabpanel" aria-labelledby="tabSuggest">
+    </section>
+    <div class="content submissions-split">
+      <section class="panel submissions-split__list" aria-labelledby="submissionsTitle">
         <div class="panel__head">
           <div>
-            <h2 class="panel__title" id="suggestTitle">Add a tool</h2>
-            <p class="panel__desc">Submit a tool for the directory.</p>
+            <h2 class="panel__title" id="submissionsTitle">Tool queue</h2>
           </div>
         </div>
+        <div class="submissions-search-row">
+          <div class="search submissions-search">
+            <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input type="search" id="submissionSearchInput" placeholder="Search by tool name…" autocomplete="off" aria-label="Search tools by name">
+          </div>
+        </div>
+        <div class="filter-chips submissions-filters" id="submissionsFilters" role="group" aria-label="Filter the queue by status"></div>
+        <div id="submissionsList" class="submissions-list" aria-live="polite">
+          <p class="pending-list__status">Loading queue…</p>
+        </div>
+      </section>
 
-        <div id="suggestFormWrap">
+      <div class="submissions-split__aside">
+        <section class="panel submissions-split__form" aria-labelledby="suggestTitle">
+          <div class="panel__head">
+            <div>
+              <h2 class="panel__title" id="suggestTitle">Suggest a tool</h2>
+            </div>
+          </div>
+
+          <div id="simpleSubmitWrap">
+            <form id="simpleSubmitForm" novalidate>
+              <div class="field" data-simple-field="tool">
+                <label for="simple_tool">Tool name <span class="req">*</span></label>
+                <input type="text" id="simple_tool" name="toolName" maxlength="80" required placeholder="e.g. Cursor" autocomplete="off" aria-describedby="simple_tool_err">
+                <p class="field-error" id="simple_tool_err" hidden></p>
+              </div>
+              <div class="field" data-simple-field="link">
+                <label for="simple_link">Link <span class="req">*</span></label>
+                <input type="url" id="simple_link" name="link" maxlength="300" required placeholder="https://… website, repo, or demo" aria-describedby="simple_link_err">
+                <p class="field-error" id="simple_link_err" hidden></p>
+              </div>
+              <div class="field" data-simple-field="note">
+                <label for="simple_note">Why suggest this?</label>
+                <input type="text" id="simple_note" name="note" maxlength="200" placeholder="Optional — what problem it might solve">
+                <p class="field-error" id="simple_note_err" hidden></p>
+              </div>
+              <div class="field" id="simpleAssignField" data-simple-field="assign" hidden>
+                <label for="simple_assign">Assign to</label>
+                <select id="simple_assign" name="assignTo" aria-describedby="simple_assign_hint">
+                  <option value="">Optional — leave unassigned</option>
+                </select>
+                <p class="field-note" id="simple_assign_hint">Assign a reviewer when you suggest the tool.</p>
+                <p class="field-error" id="simple_assign_err" hidden></p>
+              </div>
+              <p class="field-error field-error--form" id="simpleSubmitErr" hidden></p>
+              <div class="form-actions">
+                <button type="submit" class="btn-base btn-primary" id="simpleSubmitBtn">Suggest tool</button>
+              </div>
+              <p class="field-note" style="text-align:left">New suggestions appear in the queue first. They join the Directory only after review and approval.</p>
+            </form>
+          </div>
+
+          <div id="simpleSubmitSuccess" hidden>
+            <h3 class="panel__title">Added to the queue</h3>
+            <p class="panel__desc">Thanks — the team can pick it up from the list on the left.</p>
+            <div class="suggest-draft-actions">
+              <button type="button" class="linkbtn" id="simpleSubmitAnother">Suggest another</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel submissions-split__win" id="shareWinSection" aria-labelledby="shareWinTitle">
+          <div class="panel__head">
+            <div>
+              <h2 class="panel__title" id="shareWinTitle">Share a win</h2>
+              <p class="panel__desc">Which tool helped, and what changed?</p>
+            </div>
+          </div>
+          <form id="winForm" novalidate>
+            <div class="field-row">
+              <div class="field" data-field="w_title">
+                <label for="w_title">What did you achieve? <span class="req">*</span></label>
+                <input type="text" id="w_title" maxlength="100" placeholder="e.g. Cut weekly reporting time in half">
+                <p class="field-error" id="w_title_err" hidden></p>
+              </div>
+              <div class="field" data-field="w_tool">
+                <label for="w_tool">Tool used <span class="req">*</span></label>
+                <select id="w_tool">
+                  <option value="">Choose a tool</option>
+                </select>
+                <p class="field-error" id="w_tool_err" hidden></p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field" data-field="w_name">
+                <label for="w_name">Your name</label>
+                <input type="text" id="w_name" maxlength="60" autocomplete="name" placeholder="Optional">
+              </div>
+              <div class="field" data-field="w_role">
+                <label for="w_role">Role</label>
+                <select id="w_role">
+                  <option value="">Optional</option>
+                  <option>Everyone</option>
+                  <option>Engineering</option>
+                  <option>Data</option>
+                  <option>Operations</option>
+                  <option>Management</option>
+                </select>
+              </div>
+            </div>
+            <div class="field" data-field="w_impact">
+              <label for="w_impact">Impact <span class="req">*</span></label>
+              <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours per week; fewer follow-up emails"></textarea>
+              <div class="field-meta"><span class="field-count" id="w_impact_count">0 / 400</span></div>
+              <p class="field-error" id="w_impact_err" hidden></p>
+            </div>
+            <div class="field" data-field="w_how">
+              <label for="w_how">How you used it</label>
+              <textarea id="w_how" rows="4" maxlength="600" placeholder="Optional — prompts, workflow, or tips for the team"></textarea>
+              <div class="field-meta"><span class="field-count" id="w_how_count">0 / 600</span></div>
+            </div>
+            <p class="field-error field-error--form" id="winFormErr" hidden></p>
+            <div class="form-actions">
+              <button type="submit" class="btn-base btn-primary" id="winSubmit">Share win</button>
+            </div>
+            <p class="field-note">Reviewed by the team before publishing to Playbooks.</p>
+          </form>
+          <div id="winSuccess" hidden>
+            <h3 class="panel__title">Win submitted</h3>
+            <p class="panel__desc" id="winSuccessDesc">Thanks — we'll review it before adding it to Playbooks.</p>
+            <div class="suggest-draft-actions">
+              <button type="button" class="linkbtn" id="winAnother">Share another</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTRIBUTE (share a win; admin review) -->
+  <section class="view" id="view-contribute" data-view-panel="contribute" hidden>
+    <section class="hero">
+      <div class="hero__container">
+        <h1 class="hero-heading">
+          Share a <span class="text-gradient">win</span>
+        </h1>
+        <p class="hero-text">
+          Tell the team what tool helped and what impact it had. Submissions are reviewed before they land in Playbooks.
+        </p>
+      </div>
+    </section>
+    <div class="content">
+      <div class="panel" id="contribWinPanel" hidden aria-hidden="true"></div>
+
+      <div class="panel" id="contribSuggestPanel" hidden>
+        <div id="suggestFormWrap" hidden>
           <form id="suggestForm" novalidate>
             <div class="field-row">
               <div class="field" data-field="name">
@@ -483,74 +668,6 @@
         </div>
       </div>
 
-      <div class="panel" id="contribWinPanel" role="tabpanel" aria-labelledby="tabWin" hidden>
-        <div class="panel__head">
-          <div>
-            <h2 class="panel__title">Share a win</h2>
-            <p class="panel__desc">Tell the team what tool helped and what impact it had. We’ll prepare a draft for review before it lands in Playbooks.</p>
-          </div>
-        </div>
-        <form id="winForm" novalidate>
-          <div class="field-row">
-            <div class="field" data-field="w_title">
-              <label for="w_title">What did you accomplish? <span class="req">*</span></label>
-              <input type="text" id="w_title" maxlength="100" placeholder="e.g. Faster weekly ops report">
-              <p class="field-error" id="w_title_err" hidden></p>
-            </div>
-            <div class="field" data-field="w_tool">
-              <label for="w_tool">Tool used <span class="req">*</span></label>
-              <select id="w_tool">
-                <option value="">Select a tool</option>
-              </select>
-              <p class="field-error" id="w_tool_err" hidden></p>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field" data-field="w_name">
-              <label for="w_name">Your name</label>
-              <input type="text" id="w_name" maxlength="60" autocomplete="name" placeholder="Optional">
-            </div>
-            <div class="field" data-field="w_role">
-              <label for="w_role">Role / department</label>
-              <select id="w_role">
-                <option value="">Optional</option>
-                <option>Everyone</option>
-                <option>Engineering</option>
-                <option>Data</option>
-                <option>Operations</option>
-                <option>Management</option>
-              </select>
-            </div>
-          </div>
-          <div class="field" data-field="w_impact">
-            <label for="w_impact">Impact <span class="req">*</span></label>
-            <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours/week; fewer back-and-forth emails"></textarea>
-            <div class="field-meta"><span class="field-count" id="w_impact_count">0 / 400</span></div>
-            <p class="field-error" id="w_impact_err" hidden></p>
-          </div>
-          <div class="field" data-field="w_how">
-            <label for="w_how">How you used it</label>
-            <textarea id="w_how" rows="4" maxlength="600" placeholder="Short story — what you prompted, what worked, what to watch out for"></textarea>
-            <div class="field-meta"><span class="field-count" id="w_how_count">0 / 600</span></div>
-          </div>
-          <p class="field-error field-error--form" id="winFormErr" hidden></p>
-          <div class="form-actions">
-            <button type="submit" class="btn-base btn-primary" id="winSubmit">Create win draft</button>
-          </div>
-          <p class="field-note">Creates a review draft you can open or copy. A manager still validates before it lands in Playbooks.</p>
-        </form>
-        <div id="winSuccess" hidden>
-          <h3 class="panel__title">Draft ready</h3>
-          <p class="panel__desc" id="winSuccessDesc">Your win draft is ready.</p>
-          <div class="suggest-draft-actions">
-            <a class="modal__cta modal__cta--wide" id="winIssueLink" href="#" target="_blank" rel="noopener">Open review draft</a>
-            <button type="button" class="modal__cta modal__cta--secondary modal__cta--wide" id="winCopyDraft">Copy draft text</button>
-            <button type="button" class="linkbtn" id="winAnother">Edit draft again</button>
-          </div>
-          <p class="field-note" id="winCopyStatus" hidden></p>
-        </div>
-      </div>
-
       <section class="panel" id="pendingReviewPanel" aria-labelledby="pendingReviewTitle" hidden>
         <div class="panel__head">
           <div>
@@ -600,17 +717,136 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="modalOverlay" hidden>
-  <div class="modal modal--wide" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
-    <button class="modal__close" id="modalClose" aria-label="Close">✕</button>
-    <div id="modalBody"></div>
-  </div>
-</div>
-
 <div class="modal-overlay modal-overlay--stack" id="assignmentOverlay" hidden>
   <div class="modal modal--assignment" id="assignmentModal" role="dialog" aria-modal="true" aria-labelledby="assignmentTitle">
     <button class="modal__close" id="assignmentClose" aria-label="Close">✕</button>
     <div id="assignmentBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay modal-overlay--stack" id="directoryApproveOverlay" hidden>
+  <div class="modal modal--wide modal--directory-approve" id="directoryApproveModal" role="dialog" aria-modal="true" aria-labelledby="directoryApproveTitle">
+    <button class="modal__close" id="directoryApproveClose" aria-label="Close">✕</button>
+    <div id="directoryApproveFormWrap">
+      <h2 class="modal__name" id="directoryApproveTitle">Add to Directory</h2>
+      <p class="modal__desc" id="directoryApproveDesc">Complete the catalog fields for this tool. After submit, run the publish command to update the team site.</p>
+      <form id="directoryApproveForm" novalidate>
+        <input type="hidden" id="da_link">
+        <input type="hidden" id="da_toolName">
+        <div class="field-row">
+          <div class="field" data-da-field="category">
+            <label for="da_category">Category <span class="req">*</span></label>
+            <select id="da_category" required></select>
+            <p class="field-error" id="da_category_err" hidden></p>
+          </div>
+          <div class="field" data-da-field="subcategory">
+            <label for="da_subcategory">Subcategory</label>
+            <input type="text" id="da_subcategory" maxlength="60" placeholder="e.g. Chatbot, IDE">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" data-da-field="pricing">
+            <label for="da_pricing">Pricing <span class="req">*</span></label>
+            <select id="da_pricing" required></select>
+            <p class="field-error" id="da_pricing_err" hidden></p>
+          </div>
+          <div class="field" data-da-field="status">
+            <label for="da_status">Directory status <span class="req">*</span></label>
+            <select id="da_status" required>
+              <option value="Approved">Approved</option>
+              <option value="Production">Production</option>
+              <option value="Testing">Testing</option>
+              <option value="Exploring">Exploring</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" data-da-field="description">
+          <label for="da_description">Description <span class="req">*</span></label>
+          <textarea id="da_description" rows="3" maxlength="500" required placeholder="What the tool does for the team"></textarea>
+          <p class="field-error" id="da_description_err" hidden></p>
+        </div>
+        <div class="field" data-da-field="videoUrl">
+          <label for="da_videoUrl">Tutorial video URL <span class="req">*</span></label>
+          <input type="url" id="da_videoUrl" maxlength="300" required placeholder="https://www.youtube.com/watch?v=…">
+          <p class="field-error" id="da_videoUrl_err" hidden></p>
+        </div>
+        <div class="field-row">
+          <div class="field" data-da-field="department">
+            <label for="da_department">Department</label>
+            <select id="da_department"></select>
+          </div>
+          <div class="field" data-da-field="learningCurve">
+            <label for="da_learningCurve">Learning curve</label>
+            <select id="da_learningCurve">
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+              <option>Very High</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" data-da-field="priority">
+            <label for="da_priority">Priority</label>
+            <select id="da_priority">
+              <option>Critical</option>
+              <option>High</option>
+              <option selected>Medium</option>
+              <option>Low</option>
+              <option>Backlog</option>
+            </select>
+          </div>
+          <div class="field" data-da-field="dataClassification">
+            <label for="da_dataClassification">Data classification</label>
+            <select id="da_dataClassification">
+              <option selected>Internal</option>
+              <option>Confidential</option>
+              <option>Public</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" data-da-field="platform">
+          <label for="da_platform">Platform</label>
+          <input type="text" id="da_platform" maxlength="120" placeholder="Web; Desktop; API">
+        </div>
+        <div class="field" data-da-field="useCases">
+          <label for="da_useCases">Use cases</label>
+          <input type="text" id="da_useCases" maxlength="200" placeholder="Research; Coding; Documentation">
+        </div>
+        <div class="field" data-da-field="notes">
+          <label for="da_notes">Team notes</label>
+          <textarea id="da_notes" rows="2" maxlength="400" placeholder="When to use, caveats, team context"></textarea>
+        </div>
+        <div class="field" data-da-field="limitations">
+          <label for="da_limitations">Limitations</label>
+          <textarea id="da_limitations" rows="2" maxlength="400" placeholder="What to watch out for"></textarea>
+        </div>
+        <div class="field" data-da-field="whenToUse">
+          <label for="da_whenToUse">When to use</label>
+          <input type="text" id="da_whenToUse" maxlength="300">
+        </div>
+        <div class="field" data-da-field="securityTip">
+          <label for="da_securityTip">Security tip</label>
+          <input type="text" id="da_securityTip" maxlength="300" placeholder="Internal data only unless approved">
+        </div>
+        <p class="field-error field-error--form" id="directoryApproveErr" hidden></p>
+        <div class="form-actions">
+          <button type="button" class="btn-base btn-secondary" id="directoryApproveCancel">Cancel</button>
+          <button type="submit" class="btn-base btn-primary" id="directoryApproveSubmit">Approve &amp; queue publish</button>
+        </div>
+      </form>
+    </div>
+    <div id="directoryApproveSuccess" hidden>
+      <h2 class="modal__name">Ready to publish</h2>
+      <p class="modal__desc">Submission marked <strong>Approved</strong> in the sheet. Run this on your machine to add the tool to the Directory CSV and deploy:</p>
+      <p class="directory-approve-cmd"><code id="directoryApproveCmd"></code></p>
+      <div class="suggest-draft-actions">
+        <button type="button" class="btn-base btn-secondary" id="directoryApproveCopyCmd">Copy command</button>
+        <button type="button" class="btn-base btn-primary" id="directoryApproveDownloadJson">Download JSON</button>
+        <button type="button" class="linkbtn" id="directoryApproveDone">Done</button>
+      </div>
+      <p class="field-note">Then commit <code>data/ai_tools_directory.csv</code> and push to <code>main</code>.</p>
+    </div>
   </div>
 </div>
 

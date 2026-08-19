@@ -30,7 +30,7 @@ const SITE_CONFIG = {
     employeePasswordHash: "e2186dbdb1bb4193608605e84f33208765b5693b55edd4f730a719a100eeea6f",
     /** Optional invite link (?invite=…) — same access as employee login */
     inviteTokenHash: "e2186dbdb1bb4193608605e84f33208765b5693b55edd4f730a719a100eeea6f",
-    sessionDays: 7,
+    sessionDays: 15,
     sessionSalt: "change-me-session-salt",
     sessionKey: "dcs-ai-rc-auth",
     maxLoginAttempts: 5,
@@ -68,6 +68,35 @@ const SITE_CONFIG = {
     allowSelfRegister: false,
     registerLabel: "team-register",
     emailDomain: "dailycodesolutions.com",
+  },
+
+  /**
+   * Contribute / submissions.
+   * fullForm: legacy GitHub-issue “Add a tool” (kept, off by default).
+   * simpleSubmit: tool name + link POST to Apps Script.
+   * winSubmit: share-a-win POST to Apps Script (separate Sheet).
+   * Submissions page always shows data/tool_submissions.csv (baked into data.js);
+   * optional csvUrl rows merge on top.
+   * See scripts/tool_submissions_apps_script.js and scripts/team_wins_apps_script.js.
+   */
+  contribute: {
+    fullForm: { enabled: false },
+    simpleSubmit: {
+      enabled: true,
+      /** Paste the Apps Script web app URL here (Deploy → New deployment → Web app, Anyone). Do not invent a URL. */
+      submitUrl: "",
+      /** File → Share → Publish to web → CSV URL for the Submissions page. */
+      csvUrl: "",
+      /** Same value as Apps Script Script property ASSIGN_SECRET (enables admin assign on site). */
+      assignSecret: "",
+    },
+    winSubmit: {
+      enabled: true,
+      /** Apps Script web app URL for team wins (separate Sheet deployment). */
+      submitUrl: "",
+      /** Optional published CSV URL for admin review / future merge. */
+      csvUrl: "",
+    },
   },
 
   preview: {
@@ -144,5 +173,22 @@ function getTeamDirectoryConfig() {
     allowSelfRegister,
     registerLabel: String(cfg.registerLabel || "team-register").trim(),
     emailDomain: String(cfg.emailDomain || "dailycodesolutions.com").trim(),
+  };
+}
+
+function getContributeConfig() {
+  const cfg = SITE_CONFIG.contribute || {};
+  const full = cfg.fullForm || {};
+  const simple = cfg.simpleSubmit || {};
+  const win = cfg.winSubmit || {};
+  return {
+    fullFormEnabled: full.enabled === true,
+    simpleSubmitEnabled: simple.enabled !== false,
+    submitUrl: String(simple.submitUrl || "").trim(),
+    csvUrl: String(simple.csvUrl || "").trim(),
+    assignSecret: String(simple.assignSecret || "").trim(),
+    winSubmitEnabled: win.enabled !== false,
+    winSubmitUrl: String(win.submitUrl || "").trim(),
+    winCsvUrl: String(win.csvUrl || "").trim(),
   };
 }

@@ -8,6 +8,7 @@ const TOOLS = [
     "pricing": "Freemium",
     "status": "Approved",
     "url": "https://chatgpt.com",
+    "videoUrl": "https://www.youtube.com/watch?v=jUv6Uq36O3c",
     "description": "General-purpose conversational AI for writing, research, coding, brainstorming, and analysis.",
     "platform": [
       "Web",
@@ -48,6 +49,7 @@ const TOOLS = [
     "pricing": "Freemium",
     "status": "Approved",
     "url": "https://claude.ai",
+    "videoUrl": "https://www.youtube.com/watch?v=0vZ_UVLhSQQ",
     "description": "Strong reasoning and long-context assistant for documents, analysis, coding, and careful writing.",
     "platform": [
       "Web",
@@ -88,6 +90,7 @@ const TOOLS = [
     "pricing": "Freemium",
     "status": "Approved",
     "url": "https://gemini.google.com",
+    "videoUrl": "https://www.youtube.com/watch?v=PDMcpthR88U",
     "description": "Google multimodal assistant integrated with Workspace and search workflows for chat, docs, and media understanding.",
     "platform": [
       "Web",
@@ -127,6 +130,7 @@ const TOOLS = [
     "pricing": "Paid",
     "status": "Approved",
     "url": "https://github.com/features/copilot",
+    "videoUrl": "https://www.youtube.com/watch?v=n0NlxUyA7FI",
     "description": "AI pair programmer for in-editor code completion, explanation, tests, and refactoring inside GitHub and IDEs.",
     "platform": [
       "Desktop",
@@ -165,6 +169,7 @@ const TOOLS = [
     "pricing": "Paid",
     "status": "Production",
     "url": "https://cursor.com",
+    "videoUrl": "https://www.youtube.com/watch?v=4IskO3BKwNY",
     "description": "AI-native IDE for code generation, multi-file editing, and project-aware assistance across large codebases.",
     "platform": [
       "Desktop"
@@ -204,6 +209,7 @@ const TOOLS = [
     "pricing": "Freemium",
     "status": "Approved",
     "url": "https://www.perplexity.ai",
+    "videoUrl": "https://www.youtube.com/watch?v=-jgxCRCfyJg",
     "description": "Research assistant with cited answers and fast web-grounded responses for discovery and fact checking.",
     "platform": [
       "Web",
@@ -244,6 +250,7 @@ const TOOLS = [
     "pricing": "Paid",
     "status": "Approved",
     "url": "https://www.notion.so/product/ai",
+    "videoUrl": "https://www.youtube.com/watch?v=a-lJXdZicfA",
     "description": "Writing, summarization, and knowledge-base assistance inside Notion workspaces.",
     "platform": [
       "Web",
@@ -284,6 +291,7 @@ const TOOLS = [
     "pricing": "Open Source",
     "status": "Production",
     "url": "https://openclaw.ai",
+    "videoUrl": "https://www.youtube.com/watch?v=n1sfrc-RjyM",
     "description": "Self-hosted personal AI agent with messaging gateway, browser tools, persistent memory, and proactive automation.",
     "platform": [
       "Desktop",
@@ -326,6 +334,7 @@ const TOOLS = [
     "pricing": "Open Source",
     "status": "Production",
     "url": "https://hermes-agent.org",
+    "videoUrl": "https://www.youtube.com/watch?v=mTYxpIRK7xA",
     "description": "Open-source autonomous agent with persistent memory, self-improving skills, cron jobs, and multi-platform messaging gateway.",
     "platform": [
       "Desktop",
@@ -360,118 +369,6 @@ const TOOLS = [
     ]
   },
   {
-    "id": "AIT-011",
-    "name": "NotebookLM",
-    "category": "LLM / Assistants",
-    "subcategory": "Knowledge Base",
-    "pricing": "Free",
-    "status": "Testing",
-    "url": "https://notebooklm.google.com",
-    "description": "Google research assistant grounded in uploaded documents, notes, and sources with cited answers and audio overviews.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Everyone",
-    "useCases": [
-      "Knowledge Management",
-      "Research",
-      "Documentation",
-      "Learning"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Piloting for document Q&A, briefing packs, and knowledge synthesis. Do not upload client-confidential files without approval.",
-    "limitations": "Do not upload client-confidential files without approval. Grounding quality depends on source quality.",
-    "whenToUse": "Q&A and briefings grounded in uploaded docs, notes, and source packs.",
-    "alternatives": "Perplexity for open web research; Dify for custom RAG apps.",
-    "costNote": "Free tier via Google; watch Workspace policy for higher volume.",
-    "securityTip": "Do not upload client-confidential files without approval.",
-    "approvedModels": [
-      "Gemini"
-    ]
-  },
-  {
-    "id": "AIT-014",
-    "name": "CodeRabbit",
-    "category": "AI Coding",
-    "subcategory": "Code Review",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://coderabbit.ai",
-    "description": "AI code review assistant for pull requests with line-level feedback, security checks, and summarised review comments.",
-    "platform": [
-      "Web",
-      "API"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Code Review",
-      "Debugging",
-      "Security"
-    ],
-    "learningCurve": "Low",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "High-value PR review automation. Testing for line-level feedback, security checks, and review quality in Git workflows.",
-    "limitations": "AI review can miss context or raise noise. Humans still own merge decisions and security sign-off.",
-    "whenToUse": "Automated PR review assistance and first-pass code quality checks.",
-    "alternatives": "Human review remains required; Cursor/Copilot for authoring code.",
-    "costNote": "Freemium/paid seats depending on repo volume.",
-    "securityTip": "Ensure PR content and secrets scanning policies are acceptable for your repos.",
-    "approvedModels": [
-      "GPT",
-      "Claude"
-    ]
-  },
-  {
-    "id": "AIT-015",
-    "name": "Julius AI",
-    "category": "Data & BI",
-    "subcategory": "Data Visualization",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://julius.ai",
-    "description": "Conversational data analyst that uploads datasets, runs analysis, and generates charts and insights in plain language.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Data Engineering",
-    "useCases": [
-      "Data Analysis",
-      "Visualization",
-      "Report Writing",
-      "SQL"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Piloting for ad hoc CSV/spreadsheet analysis and quick visuals. Use sample or internal data only.",
-    "limitations": "Use sample or Internal data only. Not a replacement for governed analytics pipelines.",
-    "whenToUse": "Ad hoc CSV/spreadsheet exploration and quick charts in plain language.",
-    "alternatives": "Power BI Copilot for governed BI; Python notebooks for repeatable analysis.",
-    "costNote": "Freemium; paid plans for larger datasets and collaboration.",
-    "securityTip": "Use sample or Internal data only—no production client extracts.",
-    "approvedModels": [
-      "GPT"
-    ]
-  },
-  {
     "id": "AIT-017",
     "name": "n8n",
     "category": "Agents & automation",
@@ -479,6 +376,7 @@ const TOOLS = [
     "pricing": "Open Source",
     "status": "Archived",
     "url": "https://n8n.io",
+    "videoUrl": "https://www.youtube.com/watch?v=GuaKeDS6UKU",
     "description": "Open-source workflow automation platform for connecting APIs, triggers, and data pipelines with a visual node editor.",
     "platform": [
       "Web",
@@ -509,121 +407,6 @@ const TOOLS = [
     "approvedModels": []
   },
   {
-    "id": "AIT-018",
-    "name": "Gamma",
-    "category": "Creative & productivity",
-    "subcategory": "Presentation Generator",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://gamma.app",
-    "description": "AI presentation builder that generates slide decks, documents, and webpages from prompts with editable layouts and themes.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Management",
-    "useCases": [
-      "Presentation",
-      "Report Writing",
-      "Documentation"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Piloting for fast decks and client storytelling. Review branding before external use.",
-    "limitations": "Review branding and accuracy before external decks. Generated layouts often need manual polish.",
-    "whenToUse": "Fast internal decks and first-draft storytelling slides.",
-    "alternatives": "PowerPoint/Google Slides for brand-locked client deliveries.",
-    "costNote": "Freemium; paid for higher export limits and branding controls.",
-    "securityTip": "Strip confidential metrics before uploading source material.",
-    "approvedModels": [
-      "GPT"
-    ]
-  },
-  {
-    "id": "AIT-020",
-    "name": "OpenHands",
-    "category": "AI Coding",
-    "subcategory": "CLI Tool",
-    "pricing": "Open Source",
-    "status": "Exploring",
-    "url": "https://www.openhands.dev",
-    "description": "Open-source autonomous software engineering agent that writes code, runs commands, and browses the web in a sandboxed environment.",
-    "platform": [
-      "Desktop",
-      "CLI",
-      "API"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Coding",
-      "Debugging",
-      "API Integration"
-    ],
-    "learningCurve": "High",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "Queued autonomous coding agent. Revisit after Cursor and Antigravity capacity is stable.",
-    "limitations": "Autonomous coding agents can change repos aggressively—use sandboxes and review every diff.",
-    "whenToUse": "Sandboxed end-to-end coding agent experiments.",
-    "alternatives": "Cursor/Antigravity for daily coding.",
-    "costNote": "Open source; model API and sandbox compute costs apply.",
-    "securityTip": "Run only in isolated environments. Review every diff before merge.",
-    "approvedModels": [
-      "Claude",
-      "GPT",
-      "DeepSeek"
-    ]
-  },
-  {
-    "id": "AIT-021",
-    "name": "Browser Use",
-    "category": "Scraping & browser",
-    "subcategory": "Browser Agent",
-    "pricing": "Open Source",
-    "status": "Testing",
-    "url": "https://browser-use.com",
-    "description": "Open-source Python framework that lets LLM agents control browsers via natural language using Playwright under the hood.",
-    "platform": [
-      "CLI",
-      "API"
-    ],
-    "department": "Automation",
-    "useCases": [
-      "Web Scraping",
-      "API Integration",
-      "Coding"
-    ],
-    "learningCurve": "High",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-07-07",
-    "lastReviewed": "2026-08-03",
-    "notes": "High fit for Python browser automation and agent-driven scraping. Active test candidate with Playwright under the hood.",
-    "limitations": "Scripted browsers can break on site changes and may violate site ToS—use responsibly on approved targets.",
-    "whenToUse": "Python agent-driven browser automation and scraping prototypes.",
-    "alternatives": "Firecrawl/Crawl4AI for content extraction; Apify for managed actors.",
-    "costNote": "Open source; you pay for browsers, proxies, and model calls.",
-    "securityTip": "Only automate approved targets. Respect ToS, rate limits, and credentials hygiene.",
-    "approvedModels": [
-      "GPT",
-      "Claude",
-      "Gemini"
-    ]
-  },
-  {
     "id": "AIT-022",
     "name": "Antigravity",
     "category": "AI Coding",
@@ -631,6 +414,7 @@ const TOOLS = [
     "pricing": "Free",
     "status": "Production",
     "url": "https://antigravity.google/",
+    "videoUrl": "https://www.youtube.com/watch?v=-0Irz8G0PEE",
     "description": "Agentic development platform designed to help developers build, automate, and manage software projects using autonomous AI agents.",
     "platform": [
       "Web",
@@ -660,531 +444,6 @@ const TOOLS = [
       "Gemini",
       "Claude",
       "GPT"
-    ]
-  },
-  {
-    "id": "AIT-023",
-    "name": "Firecrawl",
-    "category": "Scraping & browser",
-    "subcategory": "API Platform",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://www.firecrawl.dev",
-    "description": "API that turns websites into clean markdown or structured JSON for RAG, agents, and LLM pipelines.",
-    "platform": [
-      "Web",
-      "API",
-      "CLI"
-    ],
-    "department": "Automation",
-    "useCases": [
-      "Web Scraping",
-      "API Integration",
-      "Knowledge Management",
-      "Research"
-    ],
-    "learningCurve": "Medium",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Strong scraping-to-RAG fit. Testing as a cleaner path than brittle custom parsers for LLM-ready web content.",
-    "limitations": "Scraping targets must be legally/contractually allowed. Output still needs cleaning before RAG use.",
-    "whenToUse": "Turning allowed websites into clean markdown/JSON for RAG and agents.",
-    "alternatives": "Crawl4AI for in-house Python crawls; Apify for managed scrapers.",
-    "costNote": "Freemium API credits; paid plans for production volume.",
-    "securityTip": "Scrape only permitted sources. Do not store sensitive crawled PII without a plan.",
-    "approvedModels": []
-  },
-  {
-    "id": "AIT-024",
-    "name": "Apify",
-    "category": "Scraping & browser",
-    "subcategory": "Cloud",
-    "pricing": "Freemium",
-    "status": "Exploring",
-    "url": "https://apify.com",
-    "description": "Cloud platform for web scraping and automation actors, useful for ecommerce monitoring, lead lists, and scheduled crawls.",
-    "platform": [
-      "Web",
-      "API"
-    ],
-    "department": "Automation",
-    "useCases": [
-      "Web Scraping",
-      "API Integration",
-      "Data Analysis"
-    ],
-    "learningCurve": "Medium",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Evaluating managed scraping actors for ecommerce monitoring and client crawl projects.",
-    "limitations": "Actor costs and site ToS apply. Validate scraped data quality before client delivery.",
-    "whenToUse": "Managed scraping actors for ecommerce monitoring and scheduled crawls.",
-    "alternatives": "Firecrawl/Crawl4AI when you want tighter in-house control.",
-    "costNote": "Freemium then usage-based actor/compute pricing.",
-    "securityTip": "Store API tokens in secrets managers. Validate actor permissions and output retention.",
-    "approvedModels": []
-  },
-  {
-    "id": "AIT-025",
-    "name": "Crawl4AI",
-    "category": "Scraping & browser",
-    "subcategory": "CLI Tool",
-    "pricing": "Open Source",
-    "status": "Testing",
-    "url": "https://docs.crawl4ai.com",
-    "description": "Open-source Python crawler built for LLMs—extracts clean, structured content from the web for RAG and agent pipelines.",
-    "platform": [
-      "CLI",
-      "API"
-    ],
-    "department": "Automation",
-    "useCases": [
-      "Web Scraping",
-      "Coding",
-      "API Integration",
-      "Knowledge Management"
-    ],
-    "learningCurve": "Medium",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Python-native LLM crawler. Testing as an in-house companion to Browser Use for RAG-ready extraction.",
-    "limitations": "Self-managed crawlers need rate limits and target approval. Not a turnkey compliance solution.",
-    "whenToUse": "Python-native LLM-ready crawling inside your own pipelines.",
-    "alternatives": "Firecrawl for hosted extraction; Browser Use when interaction is required.",
-    "costNote": "Open source; hosting/proxy/model costs are yours.",
-    "securityTip": "Enforce allowlists, rate limits, and robots/ToS policy in code reviews.",
-    "approvedModels": []
-  },
-  {
-    "id": "AIT-026",
-    "name": "Ollama",
-    "category": "LLM / Assistants",
-    "subcategory": "Self Hosted",
-    "pricing": "Open Source",
-    "status": "Testing",
-    "url": "https://ollama.com",
-    "description": "Run open-source LLMs locally for private chat, coding help, and offline experiments without sending data to the cloud.",
-    "platform": [
-      "Desktop",
-      "CLI",
-      "API"
-    ],
-    "department": "Development",
-    "useCases": [
-      "General Chat",
-      "Coding",
-      "Research",
-      "Learning"
-    ],
-    "learningCurve": "Medium",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Testing local/private models when data should stay on-device. Not a quality replacement for Claude/ChatGPT.",
-    "limitations": "Local model quality lags top cloud assistants. Still protect devices that hold sensitive prompts/files.",
-    "whenToUse": "Local/private model experiments when data should stay on-device.",
-    "alternatives": "Cloud ChatGPT/Claude for higher quality; approved private endpoints if available.",
-    "costNote": "Free software; you provide GPU/CPU hardware.",
-    "securityTip": "Secure the workstation. Local does not mean risk-free if disks or shares are exposed.",
-    "approvedModels": [
-      "Llama",
-      "Mistral",
-      "Qwen",
-      "DeepSeek"
-    ]
-  },
-  {
-    "id": "AIT-027",
-    "name": "Power BI Copilot",
-    "category": "Data & BI",
-    "subcategory": "Data Visualization",
-    "pricing": "Paid",
-    "status": "Testing",
-    "url": "https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-introduction",
-    "description": "Microsoft Copilot inside Power BI for natural-language report building, DAX help, and narrative summaries of visuals.",
-    "platform": [
-      "Desktop",
-      "Web"
-    ],
-    "department": "Data Engineering",
-    "useCases": [
-      "Data Analysis",
-      "Visualization",
-      "Report Writing",
-      "SQL"
-    ],
-    "learningCurve": "Medium",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "High relevance for DCS Power BI delivery. Confirm Fabric/Copilot licensing before promising on client projects.",
-    "limitations": "Needs correct Fabric/Copilot licensing. Always validate DAX and numbers before publishing.",
-    "whenToUse": "Natural-language report help, DAX assistance, and narrative summaries in Power BI.",
-    "alternatives": "Julius for ad hoc files; standard Power BI authoring for governed releases.",
-    "costNote": "Requires qualifying Fabric/Power BI Copilot capacity—confirm before promising clients.",
-    "securityTip": "Respect dataset RLS and tenant settings. Validate every generated measure.",
-    "approvedModels": [
-      "GPT"
-    ]
-  },
-  {
-    "id": "AIT-028",
-    "name": "Dify",
-    "category": "Agents & automation",
-    "subcategory": "Self Hosted",
-    "pricing": "Open Source",
-    "status": "Exploring",
-    "url": "https://dify.ai",
-    "description": "Open-source platform to build and host RAG apps, chatbots, and agent workflows with a visual studio and APIs.",
-    "platform": [
-      "Web",
-      "API",
-      "Desktop"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Knowledge Management",
-      "API Integration",
-      "Documentation",
-      "Coding"
-    ],
-    "learningCurve": "High",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Queued for client RAG demos and internal knowledge bots. Prefer after Firecrawl/Ollama path is clearer; self-host when needed.",
-    "limitations": "Self-hosted RAG needs security hardening. Poor chunking/sources produce confident wrong answers.",
-    "whenToUse": "Building self-hosted RAG chatbots and agent demos for clients or internal knowledge.",
-    "alternatives": "NotebookLM for quick doc Q&A; custom app stacks when you need full control.",
-    "costNote": "Open source core; cloud Dify and model APIs are paid.",
-    "securityTip": "Harden the host, auth, and document store before any non-Internal data.",
-    "approvedModels": [
-      "GPT",
-      "Claude",
-      "Gemini",
-      "Llama",
-      "Mistral"
-    ]
-  },
-  {
-    "id": "AIT-030",
-    "name": "v0",
-    "category": "AI Coding",
-    "subcategory": "Cloud",
-    "pricing": "Freemium",
-    "status": "Exploring",
-    "url": "https://v0.dev",
-    "description": "Vercel AI tool that generates production-ready UI components and full screens from prompts, with export to React/Next.js.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Coding",
-      "Image Generation",
-      "Documentation"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-03",
-    "lastReviewed": "2026-08-03",
-    "notes": "Queued for fast React/Next UI prototypes and client handoff. Keep exports for React/Next prototypes.",
-    "limitations": "Generated UI is a starting point, not production-ready by default. Check accessibility and brand fit.",
-    "whenToUse": "Fast React/Next UI prototypes and client mock handoffs.",
-    "alternatives": "hand-coded components for production polish.",
-    "costNote": "Freemium Vercel credits; paid for higher generation volume.",
-    "securityTip": "Do not paste proprietary design systems or customer PII into prompts.",
-    "approvedModels": [
-      "GPT"
-    ]
-  },
-  {
-    "id": "AIT-031",
-    "name": "Windsurf",
-    "category": "AI Coding",
-    "subcategory": "IDE",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://windsurf.com",
-    "description": "AI-native IDE (also evolving as Devin Desktop) for agentic coding, multi-file edits, and in-editor agent workflows.",
-    "platform": [
-      "Desktop"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Coding",
-      "Debugging",
-      "Code Review",
-      "API Integration"
-    ],
-    "learningCurve": "Medium",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-06",
-    "lastReviewed": "2026-08-06",
-    "notes": "Testing as an alternative AI IDE to Cursor for some workflows. Product branding is shifting toward Devin Desktop — keep URL/account notes current.",
-    "limitations": "Not a team default yet. Review licensing and what code/context is sent to cloud models. Human review still required for agent edits.",
-    "whenToUse": "Trial alternative to Cursor for agentic IDE coding when evaluating options beyond our Production defaults.",
-    "alternatives": "Cursor for day-to-day delivery; Antigravity for agent-first spikes already in production use.",
-    "costNote": "Freemium individual tiers; paid plans for higher limits — confirm before team rollout.",
-    "securityTip": "Follow team rules for which models may see client code. No secrets in prompts.",
-    "approvedModels": [
-      "Claude",
-      "GPT",
-      "Gemini"
-    ]
-  },
-  {
-    "id": "AIT-032",
-    "name": "Make",
-    "category": "Agents & automation",
-    "subcategory": "Workflow Builder",
-    "pricing": "Freemium",
-    "status": "Exploring",
-    "url": "https://www.make.com",
-    "description": "Visual automation platform to connect apps, APIs, and AI steps with scenario-based workflows.",
-    "platform": [
-      "Web",
-      "API"
-    ],
-    "department": "Automation",
-    "useCases": [
-      "API Integration",
-      "Web Scraping",
-      "Data Analysis"
-    ],
-    "learningCurve": "Medium",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-06",
-    "lastReviewed": "2026-08-06",
-    "notes": "Exploring as a lighter automation option where n8n is archived and full agents may be overkill.",
-    "limitations": "Scenario complexity and ops cost can grow quickly. Prefer agents for open-ended tasks.",
-    "whenToUse": "Structured multi-app automations and scheduled integrations without custom glue code.",
-    "alternatives": "OpenClaw/Hermes for agent-style work; Zapier for simpler SaaS zaps.",
-    "costNote": "Freemium then usage-based operations pricing.",
-    "securityTip": "Store credentials in Make connections carefully; rotate tokens and limit scenario scopes.",
-    "approvedModels": []
-  },
-  {
-    "id": "AIT-033",
-    "name": "Lovable",
-    "category": "AI Coding",
-    "subcategory": "Cloud",
-    "pricing": "Freemium",
-    "status": "Exploring",
-    "url": "https://lovable.dev",
-    "description": "AI app builder that turns prompts into working full-stack web apps with editable code you can export and refine.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Coding",
-      "Documentation",
-      "Image Generation"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-06",
-    "lastReviewed": "2026-08-06",
-    "notes": "Queued for fast demos and internal prototypes before investing in hand-built UI.",
-    "limitations": "Generated apps need review for security, a11y, and production readiness.",
-    "whenToUse": "Fast client demos, MVPs, and UI spikes from natural-language prompts.",
-    "alternatives": "v0 for React/Next UI pieces; Cursor for production code ownership.",
-    "costNote": "Freemium credits; paid plans for higher generation volume.",
-    "securityTip": "Do not paste client secrets or production credentials into prompts.",
-    "approvedModels": [
-      "GPT",
-      "Claude"
-    ]
-  },
-  {
-    "id": "AIT-034",
-    "name": "Exa",
-    "category": "LLM / Assistants",
-    "subcategory": "Research Assistant",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://exa.ai",
-    "description": "Neural web search API built for AI agents and RAG pipelines that returns relevant, clean results for LLM workflows.",
-    "platform": [
-      "Web",
-      "API"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Research",
-      "API Integration",
-      "Knowledge Management",
-      "Deep Research"
-    ],
-    "learningCurve": "Medium",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-06",
-    "lastReviewed": "2026-08-06",
-    "notes": "Testing for agent research and discovery alongside Perplexity and Firecrawl.",
-    "limitations": "API cost and result quality vary by query. Still verify sources for client claims.",
-    "whenToUse": "Agent/RAG web research when you need API-first search rather than a chat UI.",
-    "alternatives": "Perplexity for interactive cited research; Firecrawl when you already know the URLs.",
-    "costNote": "Freemium API credits; paid for production volume.",
-    "securityTip": "Do not send confidential briefs into search queries without an approved path.",
-    "approvedModels": []
-  },
-  {
-    "id": "AIT-035",
-    "name": "Raycast AI",
-    "category": "Creative & productivity",
-    "subcategory": "Knowledge Base",
-    "pricing": "Freemium",
-    "status": "Exploring",
-    "url": "https://www.raycast.com/core-features/ai",
-    "description": "Desktop launcher with AI commands for fast writing, summaries, translations, and coding snippets without leaving the keyboard.",
-    "platform": [
-      "Desktop"
-    ],
-    "department": "Everyone",
-    "useCases": [
-      "Email Writing",
-      "Documentation",
-      "General Chat",
-      "Learning"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-06",
-    "lastReviewed": "2026-08-06",
-    "notes": "Exploring to cut context-switching time for engineers who already live in a launcher workflow.",
-    "limitations": "macOS-first historically; confirm Windows support for the team. Not a full IDE or research tool.",
-    "whenToUse": "Quick drafts, rewrites, and snippets when switching apps would slow you down.",
-    "alternatives": "ChatGPT/Claude for longer work; Notion AI inside Notion docs.",
-    "costNote": "Freemium; Pro unlocks more AI models and higher limits.",
-    "securityTip": "Avoid pasting client-confidential text into cloud AI commands.",
-    "approvedModels": [
-      "GPT",
-      "Claude"
-    ]
-  },
-  {
-    "id": "AIT-036",
-    "name": "Fireflies.ai",
-    "category": "Creative & productivity",
-    "subcategory": "Meeting Notes",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://fireflies.ai",
-    "description": "AI meeting assistant that records, transcribes, and summarizes calls so follow-ups and action items take minutes instead of hours.",
-    "platform": [
-      "Web",
-      "Desktop"
-    ],
-    "department": "Everyone",
-    "useCases": [
-      "Meeting Notes",
-      "Email Writing",
-      "Documentation",
-      "Knowledge Management"
-    ],
-    "learningCurve": "Low",
-    "priority": "High",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "",
-    "testingNotes": "",
-    "dateAdded": "2026-08-06",
-    "lastReviewed": "2026-08-06",
-    "notes": "Testing to reduce time spent on meeting notes, CRM updates, and client call summaries.",
-    "limitations": "Recording/consent rules apply. Transcripts can mishear names and numbers — always spot-check.",
-    "whenToUse": "Client calls, standups, and discovery workshops where notes are the bottleneck.",
-    "alternatives": "Manual notes; Notion AI for summarizing pasted transcripts; Otter.ai as an alternate.",
-    "costNote": "Freemium; paid plans for longer storage and more transcription hours.",
-    "securityTip": "Do not join bots to confidential calls without client approval. Review retention settings.",
-    "approvedModels": []
-  },
-  {
-    "id": "AIT-037",
-    "name": "Bolt.new",
-    "category": "AI Coding",
-    "subcategory": "Cloud",
-    "pricing": "Freemium",
-    "status": "Testing",
-    "url": "https://bolt.new",
-    "description": "Browser-based AI app builder that generates full-stack web apps from prompts—useful for quick UI and MVP spikes before production work in Cursor.",
-    "platform": [
-      "Web"
-    ],
-    "department": "Development",
-    "useCases": [
-      "Coding",
-      "Documentation",
-      "Image Generation"
-    ],
-    "learningCurve": "Low",
-    "priority": "Medium",
-    "dataClassification": "Internal",
-    "owner": "Admin",
-    "assignedTo": "Anshu Jain",
-    "testingNotes": "Try a simple internal dashboard from a prompt. Compare speed and polish with Lovable.",
-    "dateAdded": "2026-08-10",
-    "lastReviewed": "2026-08-10",
-    "notes": "Submitted for team testing—compare with Lovable and v0 for speed vs polish on internal demos and UI spikes.",
-    "limitations": "Generated apps need review for security, accessibility, and production readiness before client use.",
-    "whenToUse": "Fast internal dashboards, landing pages, and MVP demos from natural-language prompts.",
-    "alternatives": "Lovable for full-stack app demos; v0 for React/Next UI pieces; Cursor for production code ownership.",
-    "costNote": "Freemium credits; paid plans for higher generation volume.",
-    "securityTip": "Use sample data only—do not paste client secrets or production credentials into prompts.",
-    "approvedModels": [
-      "GPT",
-      "Claude"
     ]
   }
 ];
@@ -2171,4 +1430,314 @@ const TEAM_ROLES = [
   "Manager",
   "Admin",
   "Other"
+];
+const SUBMISSIONS = [
+  {
+    "Submitted": "2026-08-18",
+    "Tool name": "Midjourney",
+    "Link": "https://www.midjourney.com/",
+    "Submitted by": "Akshay",
+    "Note": "Suggested for AI image generation on client moodboards and creative concepts. Useful when decks need custom visuals beyond stock art.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-17",
+    "Tool name": "ElevenLabs",
+    "Link": "https://elevenlabs.io/",
+    "Submitted by": "Anshu Jain",
+    "Note": "Suggested for natural voiceovers in product demos and explainer videos. Check data handling before using any client audio.",
+    "Status": "In review",
+    "Assigned to": "Akshay",
+    "Assigned date": "2026-08-17",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-16",
+    "Tool name": "Groq",
+    "Link": "https://groq.com/",
+    "Submitted by": "Akshay",
+    "Note": "Suggested for very fast LLM inference on prototypes and latency-sensitive demos. Compare response times with our hosted models.",
+    "Status": "In review",
+    "Assigned to": "Anshu Jain",
+    "Assigned date": "2026-08-16",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-15",
+    "Tool name": "Runway",
+    "Link": "https://runwayml.com/",
+    "Submitted by": "Anshu Jain",
+    "Note": "Suggested for AI video editing and short promo clips. Helpful for marketing samples without a full production setup.",
+    "Status": "Approved",
+    "Assigned to": "Anshu Jain",
+    "Assigned date": "2026-08-15",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-14",
+    "Tool name": "Descript",
+    "Link": "https://www.descript.com/",
+    "Submitted by": "Akshay",
+    "Note": "Suggested for editing podcasts and screen recordings by editing the transcript. Cuts post-production time on talking-head content.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-13",
+    "Tool name": "Hugging Face",
+    "Link": "https://huggingface.co/",
+    "Submitted by": "Anshu Jain",
+    "Note": "Suggested as a hub for open models datasets and demo Spaces. Useful for trying models before we commit to a stack.",
+    "Status": "In review",
+    "Assigned to": "Akshay",
+    "Assigned date": "2026-08-13",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-12",
+    "Tool name": "HeyGen",
+    "Link": "https://www.heygen.com/",
+    "Submitted by": "Akshay",
+    "Note": "Suggested for AI presenter and avatar videos. Rejected because outputs feel too branded for client-facing DCS work.",
+    "Status": "Rejected",
+    "Assigned to": "Anshu Jain",
+    "Assigned date": "",
+    "Rejected date": "2026-08-12"
+  },
+  {
+    "Submitted": "2026-08-11",
+    "Tool name": "Replit Agent",
+    "Link": "https://replit.com/",
+    "Submitted by": "",
+    "Note": "Suggested for browser-based coding with an AI agent on quick spikes. Compare with Cursor when production ownership matters.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-10",
+    "Tool name": "Bolt.new",
+    "Link": "https://bolt.new",
+    "Submitted by": "",
+    "Note": "Suggested for rapid full-stack prototypes from a prompt. Compare with Lovable and v0 on speed vs polish for internal demos.",
+    "Status": "In review",
+    "Assigned to": "Anshu Jain",
+    "Assigned date": "2026-08-10",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-06",
+    "Tool name": "Windsurf",
+    "Link": "https://windsurf.com",
+    "Submitted by": "",
+    "Note": "Suggested as an AI-native IDE alternative to Cursor for teams who want a different agentic coding workflow.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-06",
+    "Tool name": "Fireflies.ai",
+    "Link": "https://fireflies.ai",
+    "Submitted by": "",
+    "Note": "Suggested to auto-capture meeting notes, action items, and call summaries. Could reduce manual follow-up after client calls.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-06",
+    "Tool name": "Exa",
+    "Link": "https://exa.ai",
+    "Submitted by": "",
+    "Note": "Suggested for AI-native web search and research APIs. Fits agent workflows that need fresher sources than generic search.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-06",
+    "Tool name": "Make",
+    "Link": "https://www.make.com",
+    "Submitted by": "",
+    "Note": "Suggested for no-code automation between SaaS tools. Lighter option when full agent platforms are more than we need.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-06",
+    "Tool name": "Lovable",
+    "Link": "https://lovable.dev",
+    "Submitted by": "",
+    "Note": "Suggested for generating web app prototypes from prompts. Good for validating ideas before custom UI investment.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-06",
+    "Tool name": "Raycast AI",
+    "Link": "https://www.raycast.com/core-features/ai",
+    "Submitted by": "",
+    "Note": "Suggested for engineers in a launcher workflow—quick AI answers and snippets without leaving the keyboard.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "Firecrawl",
+    "Link": "https://www.firecrawl.dev",
+    "Submitted by": "Admin",
+    "Note": "Suggested for turning websites into clean LLM-ready markdown for RAG. Cleaner than maintaining brittle custom scrapers.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "Apify",
+    "Link": "https://apify.com",
+    "Submitted by": "Admin",
+    "Note": "Suggested for managed web scraping on e-commerce monitoring and client crawl projects. Offloads ops on scheduled extracts.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "Crawl4AI",
+    "Link": "https://docs.crawl4ai.com",
+    "Submitted by": "Admin",
+    "Note": "Suggested as a Python-first crawler built for LLM ingestion. Pairs well with our RAG stack and browser automation work.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "Ollama",
+    "Link": "https://ollama.com",
+    "Submitted by": "Admin",
+    "Note": "Suggested for running models locally when data must stay on-device. Complements cloud tools—not a full Claude or ChatGPT replacement.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "Power BI Copilot",
+    "Link": "https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-introduction",
+    "Submitted by": "Admin",
+    "Note": "Suggested for DCS Power BI delivery—natural language DAX report building and summaries. Confirm Microsoft licensing on client work.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "Dify",
+    "Link": "https://dify.ai",
+    "Submitted by": "Admin",
+    "Note": "Suggested for client RAG apps and internal knowledge bots with a visual builder. Self-host when data residency matters.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-08-03",
+    "Tool name": "v0",
+    "Link": "https://v0.dev",
+    "Submitted by": "Admin",
+    "Note": "Suggested for fast React and Next UI generation from prompts. Useful for client mockups and exportable front-end starts.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-07-07",
+    "Tool name": "NotebookLM",
+    "Link": "https://notebooklm.google.com",
+    "Submitted by": "Admin",
+    "Note": "Suggested for document Q&A, briefing packs, and research synthesis. Use internal docs only—avoid confidential client files unless approved.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-07-07",
+    "Tool name": "CodeRabbit",
+    "Link": "https://coderabbit.ai",
+    "Submitted by": "Admin",
+    "Note": "Suggested for automated PR reviews with line-level feedback and security checks. Fits teams on GitHub or GitLab workflows.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-07-07",
+    "Tool name": "Julius AI",
+    "Link": "https://julius.ai",
+    "Submitted by": "Admin",
+    "Note": "Suggested for quick CSV analysis charts and spreadsheet questions in plain English. Best on sample or internal data.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-07-07",
+    "Tool name": "Gamma",
+    "Link": "https://gamma.app",
+    "Submitted by": "Admin",
+    "Note": "Suggested for polished slide decks and one-pagers from an outline. Speeds up client storytelling and internal updates.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-07-07",
+    "Tool name": "OpenHands",
+    "Link": "https://www.openhands.dev",
+    "Submitted by": "Admin",
+    "Note": "Suggested as an autonomous coding agent for multi-step dev tasks. Revisit once our primary IDE workflow is settled.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  },
+  {
+    "Submitted": "2026-07-07",
+    "Tool name": "Browser Use",
+    "Link": "https://browser-use.com",
+    "Submitted by": "Admin",
+    "Note": "Suggested for Python browser automation driven by LLM agents. Strong fit for scripted scraping and QA on Playwright.",
+    "Status": "New",
+    "Assigned to": "",
+    "Assigned date": "",
+    "Rejected date": ""
+  }
 ];

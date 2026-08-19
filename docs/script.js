@@ -70,13 +70,23 @@ function isRecentlyAdded(tool, withinDays = RECENT_DAYS) {
   return added.getTime() >= cutoff;
 }
 
+function isRejectedStatus(status) {
+  return String(status || "").trim().toLowerCase() === "rejected";
+}
+
+/** Directory listing never includes Rejected tools (those stay on Submissions). */
+function directoryTools() {
+  const all = typeof TOOLS === "undefined" ? [] : TOOLS;
+  return all.filter(t => !isRejectedStatus(t.status));
+}
+
 function recentlyAddedTools() {
-  return TOOLS
+  return directoryTools()
     .filter(t => isRecentlyAdded(t))
     .sort((a, b) => String(b.dateAdded || "").localeCompare(String(a.dateAdded || "")) || a.name.localeCompare(b.name));
 }
 
-const VIEWS = ["home", "directory", "guides", "prompts", "playbooks", "contribute"];
+const VIEWS = ["home", "directory", "guides", "prompts", "playbooks", "submissions", "contribute", "tool"];
 
 const state = {
   view: "home",
@@ -98,6 +108,13 @@ const state = {
   promptId: null,
   contribTab: "suggest",
   chooserJobId: null,
+  currentToolId: null,
+  toolReturnView: "directory",
+  submissionStatus: "All",
+  submissionSearch: "",
+  submissionsCache: [],
+  directoryApproveItem: null,
+  directoryApprovePayload: null,
 };
 
 const jobsData = () => (typeof CHOOSER_JOBS !== "undefined" ? CHOOSER_JOBS : []);
@@ -106,6 +123,24 @@ const promptsData = () => (typeof PROMPTS !== "undefined" ? PROMPTS : []);
 const useCasesData = () => (typeof USE_CASES !== "undefined" ? USE_CASES : []);
 const learningData = () => (typeof LEARNING !== "undefined" ? LEARNING : []);
 const comparisonsData = () => (typeof COMPARISONS !== "undefined" ? COMPARISONS : []);
+
+function contributeConfig() {
+  if (typeof getContributeConfig === "function") return getContributeConfig();
+  const cfg = (typeof SITE_CONFIG !== "undefined" && SITE_CONFIG.contribute) || {};
+  const full = cfg.fullForm || {};
+  const simple = cfg.simpleSubmit || {};
+  const win = cfg.winSubmit || {};
+  return {
+    fullFormEnabled: full.enabled === true,
+    simpleSubmitEnabled: simple.enabled !== false,
+    submitUrl: String(simple.submitUrl || "").trim(),
+    csvUrl: String(simple.csvUrl || "").trim(),
+    assignSecret: String(simple.assignSecret || "").trim(),
+    winSubmitEnabled: win.enabled !== false,
+    winSubmitUrl: String(win.submitUrl || "").trim(),
+    winCsvUrl: String(win.csvUrl || "").trim(),
+  };
+}
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -124,16 +159,15 @@ function toolCanHaveScore(tool) {
 }
 
 function renderStats() {
-  const total = TOOLS.length;
-  const byStatus = Object.fromEntries(STATUS_ORDER.map(s => [s, TOOLS.filter(t => t.status === s).length]));
+  const catalog = directoryTools();
+  const total = catalog.length;
+  const byStatus = Object.fromEntries(STATUS_ORDER.map(s => [s, catalog.filter(t => t.status === s).length]));
 
-  const starterCount = startHereNames().filter(n => TOOLS.some(t => t.name === n)).length;
-  const recentCount = recentlyAddedTools().length;
+  const starterCount = startHereNames().filter(n => catalog.some(t => t.name === n)).length;
 
   const stats = [
     { label: "Tools tracked", value: total, cls: "", filter: "all" },
     { label: "Start here", value: starterCount, cls: "stat--starter", starter: true },
-    { label: "New", value: recentCount, cls: "stat--new", recent: true },
     { label: "Production", value: byStatus.Production, cls: "stat--mint", status: "Production" },
     { label: "Approved", value: byStatus.Approved, cls: "stat--mint", status: "Approved" },
   ];
@@ -174,22 +208,21 @@ function syncStatsUI() {
 }
 
 function countBy(key) {
-  const values = [...new Set(TOOLS.map(t => t[key]).filter(Boolean))].sort();
-  const counts = Object.fromEntries(values.map(v => [v, TOOLS.filter(t => t[key] === v).length]));
+  const catalog = directoryTools();
+  const values = [...new Set(catalog.map(t => t[key]).filter(Boolean))].sort();
+  const counts = Object.fromEntries(values.map(v => [v, catalog.filter(t => t[key] === v).length]));
   return { values, counts };
 }
 
 function renderChips() {
   const categories = countBy("category");
   const pricing = countBy("pricing");
-  const archivedCount = TOOLS.filter(t => t.status === "Archived").length;
-  const rejectedCount = TOOLS.filter(t => t.status === "Rejected").length;
-  const testingCount = TOOLS.filter(t => t.status === "Testing").length;
-  const exploringCount = TOOLS.filter(t => t.status === "Exploring").length;
+  const catalog = directoryTools();
+  const archivedCount = catalog.filter(t => t.status === "Archived").length;
   const moreOpen = Boolean(
     state.category
     || state.pricing
-    || ["Testing", "Exploring", "Archived", "Rejected"].includes(state.status)
+    || state.status === "Archived"
   );
 
   const categoryChips = categories.values.map(c => `
@@ -217,10 +250,7 @@ function renderChips() {
     <div class="filter-group">
       <div class="filter-group__label">Status</div>
       <div class="chiprow">
-            <button class="chip" data-status="Testing" type="button">Testing (${testingCount})</button>
-            <button class="chip" data-status="Exploring" type="button">Exploring (${exploringCount})</button>
             <button class="chip" data-status="Archived" type="button">Archived (${archivedCount})</button>
-            <button class="chip" data-status="Rejected" type="button">Rejected (${rejectedCount})</button>
           </div>
       </div>
       <details class="status-guide">
@@ -239,20 +269,12 @@ function renderChips() {
             <dd>Approved for team use</dd>
           </div>
           <div class="status-guide__row">
-              <dt><span class="status-guide__swatch status-guide__swatch--amber"></span>Testing</dt>
-            <dd>Being evaluated now</dd>
-          </div>
-          <div class="status-guide__row">
-              <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Exploring</dt>
-              <dd>On the radar — not day-to-day yet</dd>
+            <dt><span class="status-guide__swatch status-guide__swatch--blue"></span>Suggestions</dt>
+            <dd>Tools the team is trying — open Suggestions in the nav</dd>
           </div>
           <div class="status-guide__row">
             <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Archived</dt>
             <dd>No longer used — kept for history</dd>
-          </div>
-          <div class="status-guide__row">
-            <dt><span class="status-guide__swatch status-guide__swatch--coral"></span>Rejected</dt>
-            <dd>Evaluated and declined</dd>
           </div>
         </dl>
       </details>
@@ -338,7 +360,7 @@ function searchRank(tool, query) {
 function getFiltered() {
   const q = state.search.trim();
   const tokens = searchTokens(q);
-  let list = TOOLS.filter(t => {
+  let list = directoryTools().filter(t => {
     if (state.starter) {
       if (!startHereNames().includes(t.name)) return false;
     } else if (state.recent) {
@@ -414,6 +436,43 @@ function logoHtml(tool) {
     } catch (_) { /* fall through */ }
   }
   return `<div class="card__logo is-fallback" data-letter="${letter}"></div>`;
+}
+
+function normalizeToolUrl(url) {
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.hostname}${u.pathname}`.replace(/\/+$/, "").toLowerCase();
+  } catch (_) {
+    return String(url || "").trim().replace(/\/+$/, "").toLowerCase();
+  }
+}
+
+function submissionCatalogTool(item) {
+  const linkKey = normalizeToolUrl(item.link);
+  const nameKey = (item.toolName || "").trim().toLowerCase();
+  if (!linkKey && !nameKey) return null;
+  return TOOLS.find(t => linkKey && t.url && normalizeToolUrl(t.url) === linkKey)
+    || TOOLS.find(t => nameKey && t.name.toLowerCase() === nameKey)
+    || null;
+}
+
+function submissionLogoHtml(item) {
+  const name = (item.toolName || "").trim() || hostnameFromLink(item.link);
+  const catalog = submissionCatalogTool(item);
+  return logoHtml({ name, url: item.link, logo: catalog?.logo });
+}
+
+function submissionLinkHtml(item) {
+  const href = escapeHtml(item.link);
+  const hasName = Boolean((item.toolName || "").trim());
+  const label = hasName ? item.toolName.trim() : hostnameFromLink(item.link);
+  return `<a class="submission-item__link" href="${href}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(label)} website">${escapeHtml(label)}<span class="submission-item__link-icon" aria-hidden="true">↗</span></a>`;
+}
+
+function cardNameHtml(tool) {
+  const name = escapeHtml(tool.name);
+  if (!tool.url) return `<h3 class="card__name">${name}</h3>`;
+  return `<h3 class="card__name"><a class="card__name-link" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener" aria-label="Open ${name} website">${name}<span class="card__name-icon" aria-hidden="true">↗</span></a></h3>`;
 }
 
 function tagListHtml(tool, { includePlatform = false } = {}) {
@@ -879,7 +938,8 @@ function renderCards() {
   const count = document.getElementById("resultCount");
   const clearBtn = document.getElementById("clearFilters");
 
-  count.textContent = `${list.length} of ${TOOLS.length} tool${TOOLS.length === 1 ? "" : "s"}`;
+  const catalogCount = directoryTools().length;
+  count.textContent = `${list.length} of ${catalogCount} tool${catalogCount === 1 ? "" : "s"}`;
   clearBtn.hidden = !filtersAreActive();
 
   if (list.length === 0) {
@@ -892,38 +952,30 @@ function renderCards() {
   grid.innerHTML = list.map((t, i) => {
     const group = STATUS_GROUP[t.status] || "blue";
     const selected = isCompared(t.id);
-    const guide = t.whenToUse || "";
+    const tone = directoryCardTone(t, i);
     return `
-      <article class="card${selected ? " card--selected" : ""}" data-id="${escapeHtml(t.id)}" style="animation-delay:${Math.min(i * 30, 300)}ms">
+      <article class="directory-item playbook-card playbook-card--directory playbook-tone--${tone}${selected ? " directory-item--selected" : ""}" data-id="${escapeHtml(t.id)}" style="animation-delay:${Math.min(i * 30, 300)}ms">
         ${state.compareMode ? `
           <label class="card__compare">
             <input type="checkbox" data-compare-id="${escapeHtml(t.id)}" ${selected ? "checked" : ""} ${!selected && state.compareIds.length >= COMPARE_MAX ? "disabled" : ""}>
             <span>Select</span>
           </label>
         ` : ""}
-        <div class="card__top">
-          <div class="card__identity">
+        <div class="directory-item__top">
+          <div class="directory-item__identity">
             ${logoHtml(t)}
-            <h3 class="card__name">${escapeHtml(t.name)}</h3>
+            ${cardNameHtml(t)}
           </div>
           <div class="card__badges">
             ${isRecentlyAdded(t) ? `<span class="card__new">New</span>` : ""}
-            ${t.status === "Production" ? `<span class="card__default">Team default</span>` : ""}
             <span class="badge badge--${group}">${escapeHtml(t.status)}</span>
           </div>
         </div>
         ${tagListHtml(t)}
         <p class="card__desc">${escapeHtml(t.description)}</p>
-        ${guide ? `<p class="card__guide">${escapeHtml(guide)}</p>` : ""}
         ${assignmentSummaryHtml(t)}
-        <div class="card__meta">
-          ${t.lastReviewed ? `<span>Reviewed ${escapeHtml(t.lastReviewed)}</span>` : `<span>Not reviewed</span>`}
-        </div>
         <div class="card__actions">
           <button type="button" class="card__cta" data-open-details="${escapeHtml(t.id)}">View details</button>
-          ${t.url
-            ? `<a class="card__cta-secondary" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Visit website</a>`
-            : ""}
         </div>
       </article>
     `;
@@ -953,9 +1005,116 @@ function detailPills(label, values) {
   `;
 }
 
+function youtubeEmbedId(url) {
+  if (!url) return "";
+  try {
+    const parsed = new URL(String(url).trim());
+    const host = (parsed.hostname || "").replace(/^www\./, "").toLowerCase();
+    if (host === "youtu.be") {
+      return parsed.pathname.replace(/^\//, "").split("/")[0] || "";
+    }
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+      const v = parsed.searchParams.get("v");
+      if (v) return v;
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      if (parts[0] && ["embed", "shorts", "live"].includes(parts[0]) && parts[1]) {
+        return parts[1];
+      }
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function tutorialHtml(tool) {
+  const url = (tool.videoUrl || "").trim();
+  if (!url) return "";
+  const yt = youtubeEmbedId(url);
+  if (yt) {
+    return `
+      <div class="tool-tutorial">
+        <div class="tool-tutorial__head">
+          <h3 class="tool-tutorial__title" id="tutorialTitle">Tutorial</h3>
+          <p class="tool-tutorial__desc">Watch a getting-started walkthrough, then open the tool.</p>
+        </div>
+        <div class="tool-tutorial__frame">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/${escapeHtml(yt)}"
+            title="${escapeHtml(tool.name)} tutorial"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+        </div>
+        <p class="tool-tutorial__link">
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Open on YouTube ↗</a>
+        </p>
+      </div>
+    `;
+  }
+  return `
+    <div class="tool-tutorial">
+      <div class="tool-tutorial__head">
+        <h3 class="tool-tutorial__title" id="tutorialTitle">Tutorial</h3>
+        <p class="tool-tutorial__desc">Open the getting-started walkthrough in a new tab.</p>
+      </div>
+      <a class="modal__cta" href="${escapeHtml(url)}" target="_blank" rel="noopener">Watch tutorial ↗</a>
+    </div>
+  `;
+}
+
+function glanceFactsHtml(tool) {
+  return `
+    <div class="tool-glance__facts">
+      ${detailField("Department", tool.department || "—")}
+      ${detailField("Priority", tool.priority || "—")}
+      ${detailField("Learning curve", tool.learningCurve || "—")}
+      ${detailField("Data classification", tool.dataClassification || "—")}
+      ${detailField("Date added", tool.dateAdded || "—")}
+      ${detailField("Last reviewed", tool.lastReviewed || "Not reviewed")}
+      ${detailField("Subcategory", tool.subcategory || "—")}
+      ${detailPills("Use cases", tool.useCases)}
+    </div>
+  `;
+}
+
+function toolGlanceHtml(tool) {
+  const tutorial = tutorialHtml(tool);
+  return `
+    <section class="tool-glance${tutorial ? "" : " tool-glance--facts-only"}" aria-label="Tutorial and key facts">
+      ${tutorial ? `<div class="tool-glance__media">${tutorial}</div>` : ""}
+      ${glanceFactsHtml(tool)}
+    </section>
+  `;
+}
+
+function syncToolBackLabel() {
+  const btn = document.getElementById("modalClose");
+  if (!btn) return;
+  const back = state.toolReturnView && state.toolReturnView !== "tool" ? state.toolReturnView : "directory";
+  const labels = {
+    home: "← Back to AI hub",
+    directory: "← Back to directory",
+    guides: "← Back to guides",
+    prompts: "← Back to prompts",
+    playbooks: "← Back to playbooks",
+    submissions: "← Back to submissions",
+    contribute: "← Back to contribute",
+  };
+  btn.textContent = labels[back] || "← Back to directory";
+}
+
 function openModal(tool) {
+  if (!tool || isRejectedStatus(tool.status)) return;
+  if (state.view !== "tool") {
+    state.toolReturnView = VIEWS.includes(state.view) && state.view !== "tool" ? state.view : "directory";
+  }
+  state.currentToolId = tool.id;
   const group = STATUS_GROUP[tool.status] || "blue";
   const evalData = evaluationFor(tool);
+  const approvedModelsBlock = detailPills("Approved models", tool.approvedModels);
   document.getElementById("modalBody").innerHTML = `
     <div class="modal__header">
       ${logoHtml(tool)}
@@ -970,19 +1129,8 @@ function openModal(tool) {
       </div>
     </div>
     <p class="modal__desc">${escapeHtml(tool.description)}</p>
-
-    <div class="detail-grid">
-      ${detailField("Owner", tool.owner || "Unassigned")}
-      ${detailField("Department", tool.department)}
-      ${detailField("Priority", tool.priority)}
-      ${detailField("Learning curve", tool.learningCurve)}
-      ${detailField("Data classification", tool.dataClassification)}
-      ${detailField("Date added", tool.dateAdded)}
-      ${detailField("Last reviewed", tool.lastReviewed || "Not reviewed")}
-      ${detailField("Subcategory", tool.subcategory)}
-      ${detailPills("Use cases", tool.useCases)}
-      ${detailPills("Approved models", tool.approvedModels)}
-    </div>
+    ${toolGlanceHtml(tool)}
+    ${approvedModelsBlock ? `<div class="detail-grid">${approvedModelsBlock}</div>` : ""}
 
     <div class="detail-panels">
       ${tool.whenToUse ? `<div class="modal__notes"><strong>When to use</strong>${escapeHtml(tool.whenToUse)}</div>` : ""}
@@ -1032,24 +1180,17 @@ function openModal(tool) {
   if (compareBtn && !isCompared(tool.id) && state.compareIds.length >= COMPARE_MAX) {
     compareBtn.disabled = true;
   }
-  document.getElementById("modalOverlay").hidden = false;
-  document.body.style.overflow = "hidden";
-  const overlay = document.getElementById("modalOverlay");
-  const modal = document.getElementById("modal");
-  if (overlay) overlay.scrollTop = 0;
-  if (modal) modal.scrollTop = 0;
-  document.getElementById("modalBody")?.scrollTo?.(0, 0);
   bindToolAssignmentTrigger(tool);
-  setToolQueryParam(tool);
+  syncToolBackLabel();
+  showView("tool");
 }
 
 function closeModal() {
   closeAssignmentModal();
-  document.getElementById("modalOverlay").hidden = true;
-  if (document.getElementById("compareOverlay").hidden) {
-    document.body.style.overflow = "";
-  }
-  setToolQueryParam(null);
+  const back = state.toolReturnView && state.toolReturnView !== "tool" ? state.toolReturnView : "directory";
+  state.currentToolId = null;
+  document.body.style.overflow = "";
+  showView(back);
 }
 
 function findToolByQuery(raw) {
@@ -1137,8 +1278,17 @@ function syncUrl({ tool } = {}) {
   if (state.view === "home" && state.chooserJobId) params.set("job", state.chooserJobId);
   else params.delete("job");
 
-  if (tool === null) params.delete("tool");
-  else if (tool && tool.name) params.set("tool", tool.name);
+  if (state.view === "tool") {
+    const current = TOOLS.find(t => t.id === state.currentToolId);
+    if (current) params.set("tool", current.name);
+    else params.delete("tool");
+  } else if (tool === null) {
+    params.delete("tool");
+  } else if (tool && tool.name) {
+    params.set("tool", tool.name);
+  } else {
+    params.delete("tool");
+  }
 
   history.replaceState(null, "", url);
 }
@@ -1262,11 +1412,18 @@ function applyFiltersFromUrl() {
 
   if (params.get("tab") === "win") {
     state.contribTab = "win";
-    if (!view) state.view = "contribute";
+    if (!view) state.view = "submissions";
   }
 
-  if (params.get("compare") === "1" || params.get("tool")) {
+  if (params.get("compare") === "1" && !params.get("tool")) {
     if (!view) state.view = "directory";
+  }
+
+  const deepTool = findToolByQuery(params.get("tool"));
+  if (deepTool) {
+    state.currentToolId = deepTool.id;
+    state.toolReturnView = view && view !== "tool" ? view : "directory";
+    state.view = "tool";
   }
 }
 
@@ -1361,16 +1518,37 @@ function scrollToDirectoryResults() {
   });
 }
 
+function fixedHeaderOffset() {
+  const header = document.getElementById("dcsHeader") || document.querySelector(".dcs-header");
+  return (header ? header.getBoundingClientRect().height : 53) + 16;
+}
+
+function scrollToAnchor(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - fixedHeaderOffset();
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+
+function scrollToAnchorAfterView(id) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => scrollToAnchor(id));
+  });
+}
+
 function showView(view) {
   if (!VIEWS.includes(view)) view = "home";
+  if (view === "tool" && !state.currentToolId) view = "directory";
+  if (view !== "tool") state.currentToolId = null;
   state.view = view;
 
   document.querySelectorAll("[data-view-panel]").forEach(panel => {
     panel.hidden = panel.dataset.viewPanel !== view;
   });
 
+  const navView = view === "tool" ? "directory" : view;
   document.querySelectorAll(".app-nav__link").forEach(btn => {
-    const active = btn.dataset.view === view;
+    const active = btn.dataset.view === navView;
     btn.classList.toggle("is-active", active);
     btn.setAttribute("aria-current", active ? "page" : "false");
   });
@@ -1395,11 +1573,14 @@ function renderCurrentView() {
   else if (state.view === "prompts") renderPrompts();
   else if (state.view === "playbooks") renderPlaybooks();
   else if (state.view === "contribute") renderContribute();
+  else if (state.view === "submissions") renderSubmissions();
   else if (state.view === "directory") {
     renderStats();
     renderChips();
     renderCards();
     syncCompareUI();
+  } else if (state.view === "tool") {
+    syncToolBackLabel();
   }
 }
 
@@ -1425,7 +1606,7 @@ function toolOfTheWeek() {
   const preferred = startHereNames().map(n => findToolByName(n)).filter(Boolean);
   const pool = preferred.length
     ? preferred
-    : TOOLS.filter(t => STATUS_BUCKETS.trusted.includes(t.status));
+    : directoryTools().filter(t => STATUS_BUCKETS.trusted.includes(t.status));
   if (!pool.length) return null;
   return pool[isoWeekNumber() % pool.length];
 }
@@ -2013,6 +2194,8 @@ function applyPromptSearchFromInput() {
   syncUrl();
 }
 
+const PLAYBOOK_CARD_TONES = ["data", "engineering", "operations", "everyone", "management", "default"];
+
 function playbookTone(role) {
   const key = String(role || "Everyone").toLowerCase();
   if (key.includes("engineer") || key.includes("develop")) return "engineering";
@@ -2021,6 +2204,18 @@ function playbookTone(role) {
   if (key.includes("manage")) return "management";
   if (key.includes("every")) return "everyone";
   return "default";
+}
+
+function directoryCardTone(tool, index) {
+  const cat = String(tool.category || "").toLowerCase();
+  if (cat.includes("coding") || cat.includes("code")) return "engineering";
+  if (cat.includes("llm") || cat.includes("assistant")) return "data";
+  if (cat.includes("agent") || cat.includes("automation")) return "operations";
+  if (cat.includes("research")) return "everyone";
+  const status = String(tool.status || "").toLowerCase();
+  if (status === "archived") return "management";
+  if (status === "production") return "engineering";
+  return PLAYBOOK_CARD_TONES[index % PLAYBOOK_CARD_TONES.length];
 }
 
 function playbookMatchesSearch(item, query) {
@@ -2136,19 +2331,64 @@ function applyPlaybookSearchFromInput() {
 
 function syncAdminReviewVisibility() {
   const admin = isAdminSession();
+  const showGithubReview = admin && contributeConfig().fullFormEnabled;
   const pendingPanel = document.getElementById("pendingReviewPanel");
   const howToPanel = document.querySelector(".panel--review-howto");
-  if (pendingPanel) pendingPanel.hidden = !admin;
-  if (howToPanel) howToPanel.hidden = !admin;
-  return admin;
+  if (pendingPanel) pendingPanel.hidden = !showGithubReview;
+  if (howToPanel) howToPanel.hidden = !showGithubReview;
+  return showGithubReview;
+}
+
+function syncSimpleSubmitAdminFields() {
+  const field = document.getElementById("simpleAssignField");
+  const select = document.getElementById("simple_assign");
+  if (!field || !select) return;
+  const show = isAdminSession();
+  field.hidden = !show;
+  if (!show) {
+    select.value = "";
+    setSimpleFieldError("assign", "");
+    return;
+  }
+  const members = getActiveTeamMembers();
+  const current = select.value;
+  select.innerHTML = `<option value="">Optional — leave unassigned</option>${members.map(m =>
+    `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`
+  ).join("")}`;
+  if (current && members.some(m => m.name === current)) select.value = current;
+}
+
+function applyContributeMode() {
+  const cfg = contributeConfig();
+  const simpleWrap = document.getElementById("simpleSubmitWrap");
+  const simpleSuccess = document.getElementById("simpleSubmitSuccess");
+  const fullWrap = document.getElementById("suggestFormWrap");
+  const fullSuccess = document.getElementById("suggestSuccess");
+  const winSection = document.getElementById("shareWinSection");
+  const winForm = document.getElementById("winForm");
+  const winSuccess = document.getElementById("winSuccess");
+  if (simpleWrap) {
+    const showingSuccess = simpleSuccess && !simpleSuccess.hidden;
+    simpleWrap.hidden = !cfg.simpleSubmitEnabled || showingSuccess;
+  }
+  if (simpleSuccess && !cfg.simpleSubmitEnabled) simpleSuccess.hidden = true;
+  if (fullWrap) fullWrap.hidden = !cfg.fullFormEnabled;
+  if (fullSuccess && !cfg.fullFormEnabled) fullSuccess.hidden = true;
+  if (winSection) winSection.hidden = !cfg.winSubmitEnabled;
+  if (winForm && winSuccess && !cfg.winSubmitEnabled) {
+    winForm.hidden = false;
+    winSuccess.hidden = true;
+  }
+  syncSimpleSubmitAdminFields();
 }
 
 function renderContribute() {
+  applyContributeMode();
   syncContributeTabs();
   populateWinToolDropdown();
   if (syncAdminReviewVisibility()) {
-  renderReviewHowto();
-  loadPendingReviews();
+    renderReviewHowto();
+    loadPendingReviews();
   }
 }
 
@@ -2270,19 +2510,8 @@ function bindPendingAssignActions(list) {
 }
 
 function syncContributeTabs() {
-  const suggestPanel = document.getElementById("contribSuggestPanel");
   const winPanel = document.getElementById("contribWinPanel");
-  const tabSuggest = document.getElementById("tabSuggest");
-  const tabWin = document.getElementById("tabWin");
-  if (!suggestPanel || !winPanel) return;
-
-  const isWin = state.contribTab === "win";
-  suggestPanel.hidden = isWin;
-  winPanel.hidden = !isWin;
-  tabSuggest?.classList.toggle("is-active", !isWin);
-  tabWin?.classList.toggle("is-active", isWin);
-  tabSuggest?.setAttribute("aria-selected", String(!isWin));
-  tabWin?.setAttribute("aria-selected", String(isWin));
+  if (winPanel) winPanel.hidden = false;
 }
 
 function populateWinToolDropdown() {
@@ -2327,73 +2556,93 @@ function validateWinForm() {
 
   const title = (document.getElementById("w_title").value || "").trim();
   const tool = (document.getElementById("w_tool").value || "").trim();
-  const impact = (document.getElementById("w_impact").value || "").trim();
-  let ok = true;
-
-  if (!title || title.length < 4) {
-    setWinFieldError("w_title", "Add a short title (at least 4 characters).");
-    ok = false;
-  }
-  if (!tool) {
-    setWinFieldError("w_tool", "Pick the tool you used.");
-    ok = false;
-  }
-  if (!impact || impact.length < 12) {
-    setWinFieldError("w_impact", "Describe the impact (at least 12 characters).");
-    ok = false;
-  }
-  if (!ok && formErr) {
-    formErr.hidden = false;
-    formErr.textContent = "Please fix the highlighted fields before submitting.";
-  }
-  return ok;
-}
-
-function buildWinDraft() {
-  const title = (document.getElementById("w_title").value || "").trim();
-  const tool = (document.getElementById("w_tool").value || "").trim();
   const name = (document.getElementById("w_name").value || "").trim();
   const role = (document.getElementById("w_role").value || "").trim();
   const impact = (document.getElementById("w_impact").value || "").trim();
   const how = (document.getElementById("w_how").value || "").trim();
-  return [
-    `## Team win: ${title}`,
-    "",
-    `- **Tool:** ${tool}`,
-    `- **Shared by:** ${name || "—"}`,
-    `- **Role:** ${role || "—"}`,
-    "",
-    "### Impact",
-    impact,
-    "",
-    "### How we used it",
-    how || "—",
-    "",
-    "_Submitted via AI Resource Center share-a-win form._",
-  ].join("\n");
+  let ok = true;
+
+  if (!title || title.length < 4) {
+    setWinFieldError("w_title", "Add a short headline (at least 4 characters).");
+    ok = false;
+  }
+  if (!tool) {
+    setWinFieldError("w_tool", "Choose the tool you used.");
+    ok = false;
+  }
+  if (!impact || impact.length < 12) {
+    setWinFieldError("w_impact", "Describe the impact in a sentence or two (at least 12 characters).");
+    ok = false;
+  }
+  if (name && (name.length > 60 || !PERSON_PATTERN.test(name))) {
+    ok = false;
+    if (formErr) {
+      formErr.hidden = false;
+      formErr.textContent = "Use letters, spaces, apostrophes, or hyphens only in your name.";
+    }
+  }
+  if (!ok && formErr && formErr.hidden) {
+    formErr.hidden = false;
+    formErr.textContent = "Check the highlighted fields and try again.";
+  }
+  return ok ? { title, tool, submittedBy: name, role, impact, how } : null;
 }
 
-function showWinDraft() {
-  const title = (document.getElementById("w_title").value || "").trim();
-  const body = buildWinDraft();
-  window.__winDraftText = body;
-  const cfg = typeof getSiteConfig === "function" ? getSiteConfig() : {};
-  document.getElementById("winIssueLink").href = buildIssueDraftUrl({
-    title: `Team win: ${title}`,
-    body,
-    label: cfg.winLabel || "team-win",
-  });
-  document.getElementById("winCopyStatus").hidden = true;
-  document.getElementById("winForm").hidden = true;
-  document.getElementById("winSuccess").hidden = false;
+function showWinSuccess() {
+  const form = document.getElementById("winForm");
+  const success = document.getElementById("winSuccess");
+  if (form) form.hidden = true;
+  if (success) success.hidden = false;
 }
 
 function resetWinForm() {
-  document.getElementById("winForm").reset();
-  document.getElementById("winForm").hidden = false;
-  document.getElementById("winSuccess").hidden = true;
+  document.getElementById("winForm")?.reset();
+  const form = document.getElementById("winForm");
+  const success = document.getElementById("winSuccess");
+  if (form) form.hidden = !contributeConfig().winSubmitEnabled;
+  if (success) success.hidden = true;
   ["w_title", "w_tool", "w_impact"].forEach(k => setWinFieldError(k, ""));
+  const formErr = document.getElementById("winFormErr");
+  if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
   updateWinCounts();
+}
+
+async function submitWinLink(payload) {
+  const cfg = contributeConfig();
+  if (!cfg.winSubmitUrl) {
+    throw new Error("Share a win is not configured. In docs/site-config.js set contribute.winSubmit.submitUrl to your Apps Script web app URL, then reload.");
+  }
+  const body = JSON.stringify({
+    title: payload.title,
+    tool: payload.tool,
+    submittedBy: payload.submittedBy,
+    role: payload.role,
+    impact: payload.impact,
+    how: payload.how,
+  });
+  try {
+    const res = await fetch(cfg.winSubmitUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+    if (res.type !== "opaque" && res.ok) {
+      const data = await res.json().catch(() => ({ ok: true }));
+      if (data && data.ok === false) throw new Error(data.error || "Submit failed.");
+      return;
+    }
+    if (res.type !== "opaque" && !res.ok) throw new Error(`Submit failed (${res.status}).`);
+  } catch (err) {
+    if (err && /failed|not configured|Submit failed/i.test(String(err.message)) && !/Failed to fetch|NetworkError|CORS/i.test(String(err.message))) {
+      throw err;
+    }
+    await fetch(cfg.winSubmitUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+  }
 }
 
 async function copyText(text, statusEl) {
@@ -2408,8 +2657,8 @@ async function copyText(text, statusEl) {
 }
 
 function openToolByIdOrName(idOrName) {
-  const tool = TOOLS.find(t => t.id === idOrName) || findToolByName(idOrName);
-  if (tool) openModal(tool);
+  const tool = directoryTools().find(t => t.id === idOrName) || findToolByName(idOrName);
+  if (tool && !isRejectedStatus(tool.status)) openModal(tool);
 }
 
 function bindBackToTop() {
@@ -2457,15 +2706,18 @@ function bindAppNavigation() {
         state.contribTab = "win";
       }
       showView(view);
+      const scrollId = go.dataset.scrollTo;
+      if (scrollId) {
+        scrollToAnchorAfterView(scrollId);
+      } else if (go.dataset.tab === "win") {
+        scrollToAnchorAfterView("shareWinSection");
+      }
       return;
     }
 
     const scrollTo = e.target.closest("[data-scroll-to]");
     if (scrollTo) {
-      const target = document.getElementById(scrollTo.dataset.scrollTo);
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      scrollToAnchor(scrollTo.dataset.scrollTo);
       return;
     }
 
@@ -2596,18 +2848,28 @@ function bindAppNavigation() {
     syncUrl();
   });
 
-  document.getElementById("winForm")?.addEventListener("submit", e => {
+  document.getElementById("winForm")?.addEventListener("submit", async e => {
     e.preventDefault();
-    if (!validateWinForm()) return;
-    showWinDraft();
+    const payload = validateWinForm();
+    if (!payload) return;
+    const btn = document.getElementById("winSubmit");
+    const formErr = document.getElementById("winFormErr");
+    if (btn) { btn.disabled = true; btn.textContent = "Submitting…"; }
+    try {
+      await submitWinLink(payload);
+      showWinSuccess();
+    } catch (err) {
+      if (formErr) {
+        formErr.hidden = false;
+        formErr.textContent = err.message || "Something went wrong. Try again in a moment.";
+      }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Share win"; }
+    }
   });
 
   ["w_impact", "w_how"].forEach(id => {
     document.getElementById(id)?.addEventListener("input", updateWinCounts);
-  });
-
-  document.getElementById("winCopyDraft")?.addEventListener("click", () => {
-    copyText(window.__winDraftText || "", document.getElementById("winCopyStatus"));
   });
 
   document.getElementById("winAnother")?.addEventListener("click", resetWinForm);
@@ -2615,6 +2877,11 @@ function bindAppNavigation() {
   document.getElementById("pendingReviewRefresh")?.addEventListener("click", () => {
     loadPendingReviews();
   });
+
+  bindSimpleSubmit();
+  bindSubmissionsPage();
+  populateDirectoryApproveDropdowns();
+  bindDirectoryApproveModal();
 }
 
 function populateCategoryDropdown() {
@@ -2865,9 +3132,7 @@ function closeCompare() {
   const overlay = document.getElementById("compareOverlay");
   const wasOpen = overlay && !overlay.hidden;
   if (overlay) overlay.hidden = true;
-  if (document.getElementById("modalOverlay").hidden) {
-    document.body.style.overflow = "";
-  }
+  document.body.style.overflow = "";
   if (wasOpen && state.compareMode) {
     setCompareMode(false);
   }
@@ -3038,10 +3303,6 @@ function init(opts = {}) {
 
   document.getElementById("modalClose").addEventListener("click", closeModal);
   document.getElementById("modalOverlay").addEventListener("click", e => {
-    if (e.target.id === "modalOverlay") {
-      closeModal();
-      return;
-    }
     const compareBtn = e.target.closest("#modalCompareBtn");
     if (compareBtn && !compareBtn.disabled) {
       toggleCompareFromModal(compareBtn.dataset.id);
@@ -3057,7 +3318,7 @@ function init(opts = {}) {
       closeCompare();
       return;
     }
-    closeModal();
+    if (state.view === "tool") closeModal();
   });
 
   document.getElementById("assignmentClose").addEventListener("click", closeAssignmentModal);
@@ -3264,6 +3525,904 @@ function isValidHttpUrl(value) {
     return url.protocol === "http:" || url.protocol === "https:";
   } catch (_) {
     return false;
+  }
+}
+
+const SUBMISSION_STATUSES = ["All", "New", "In review", "Rejected"];
+
+function normalizeSubmissionStatus(raw) {
+  const lower = String(raw || "New").trim().toLowerCase();
+  if (lower === "investigating" || lower === "in review") return "In review";
+  const known = ["New", "Approved", "Rejected"];
+  return known.find(s => s.toLowerCase() === lower) || "New";
+}
+
+function isInReviewStatus(status) {
+  return normalizeSubmissionStatus(status) === "In review";
+}
+
+function bakedSubmissionRows() {
+  const src = (typeof SUBMISSIONS !== "undefined" && Array.isArray(SUBMISSIONS)) ? SUBMISSIONS : [];
+  return src.map(normalizeSubmission).filter(Boolean);
+}
+
+function submissionKey(row) {
+  const name = normalizeToolName(row.toolName || "");
+  if (name) return `name:${name}`;
+  return `link:${String(row.link || "").trim().toLowerCase()}`;
+}
+
+function mergeSubmissionItems(baked, live) {
+  const map = new Map();
+  baked.forEach(row => map.set(submissionKey(row), row));
+  (live || []).forEach(row => {
+    if (!row) return;
+    const key = submissionKey(row);
+    const prev = map.get(key);
+    map.set(key, prev ? { ...prev, ...row } : row);
+  });
+  return [...map.values()];
+}
+
+function effectiveSubmissionStatus(item) {
+  const assigned = Boolean((item.assignedTo || "").trim());
+  let status = normalizeSubmissionStatus(item.status || "New");
+  if (!assigned && status === "In review") status = "New";
+  return status;
+}
+
+function isActiveSubmission(item) {
+  return effectiveSubmissionStatus(item) !== "Approved";
+}
+
+function visibleSubmissionItems(items) {
+  return (items || []).filter(isActiveSubmission);
+}
+
+function submissionStatusLabel(item) {
+  return effectiveSubmissionStatus(item);
+}
+
+function submissionStatusClass(item) {
+  const status = effectiveSubmissionStatus(item).toLowerCase();
+  if (status === "in review") return "investigating";
+  if (status === "rejected") return "rejected";
+  if (status === "approved") return "approved";
+  return "new";
+}
+
+function submissionField(row, ...keys) {
+  for (const key of keys) {
+    if (row[key] != null && String(row[key]).trim()) return String(row[key]).trim();
+    const found = Object.keys(row).find(k => k.toLowerCase() === key.toLowerCase());
+    if (found && row[found] != null && String(row[found]).trim()) return String(row[found]).trim();
+  }
+  return "";
+}
+
+function parseCsvText(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+  const pushCell = () => { row.push(cell); cell = ""; };
+  const pushRow = () => { rows.push(row); row = []; };
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { cell += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else cell += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ",") pushCell();
+    else if (c === "\n") { pushCell(); pushRow(); }
+    else if (c !== "\r") cell += c;
+  }
+  if (cell.length || row.length) { pushCell(); pushRow(); }
+  return rows.filter(r => r.some(v => String(v).trim()));
+}
+
+function rowsFromCsv(text) {
+  const table = parseCsvText(text);
+  if (table.length < 2) return [];
+  const headers = table[0].map(h => String(h || "").trim());
+  return table.slice(1).map(values => {
+    const row = {};
+    headers.forEach((h, i) => { row[h] = values[i] != null ? values[i] : ""; });
+    return row;
+  });
+}
+
+function normalizeSubmission(row) {
+  const link = submissionField(row, "Link", "URL", "url");
+  if (!link) return null;
+  let status = normalizeSubmissionStatus(submissionField(row, "Status") || "New");
+  const assignedTo = submissionField(row, "Assigned to", "Assignee", "Assigned");
+  if (!assignedTo && status === "In review") status = "New";
+  return {
+    submitted: submissionField(row, "Submitted", "Date", "Timestamp"),
+    toolName: submissionField(row, "Tool name", "Tool Name", "Tool"),
+    link,
+    submittedBy: submissionField(row, "Submitted by", "Submitter"),
+    note: submissionField(row, "Note", "Notes"),
+    status,
+    assignedTo,
+    assignedDate: submissionField(row, "Assigned date", "Assigned Date"),
+    rejectedDate: submissionField(row, "Rejected date", "Rejected Date"),
+  };
+}
+
+function sortSubmissionsNewest(items) {
+  return items.slice().sort((a, b) => String(b.submitted).localeCompare(String(a.submitted)));
+}
+
+async function fetchSubmissionRows() {
+  const cfg = contributeConfig();
+  if (cfg.csvUrl) {
+    try {
+      const res = await fetch(cfg.csvUrl, { cache: "no-store" });
+      if (res.ok) {
+        const text = await res.text();
+        return rowsFromCsv(text).map(normalizeSubmission).filter(Boolean);
+      }
+    } catch (_) { /* fall through to Apps Script list */ }
+  }
+  if (cfg.submitUrl) {
+    const listUrl = cfg.submitUrl.includes("?")
+      ? `${cfg.submitUrl}&action=list`
+      : `${cfg.submitUrl}?action=list`;
+    const res = await fetch(listUrl, { cache: "no-store" });
+    if (!res.ok) throw new Error(`List request failed (${res.status})`);
+    const data = await res.json();
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    return rows.map(normalizeSubmission).filter(Boolean);
+  }
+  throw new Error("missing-config");
+}
+
+async function loadSubmissionItems() {
+  const baked = bakedSubmissionRows();
+  let live = [];
+  const cfg = contributeConfig();
+  if (cfg.csvUrl || cfg.submitUrl) {
+    try {
+      live = await fetchSubmissionRows();
+    } catch (_) { /* baked submissions still show */ }
+  }
+  return sortSubmissionsNewest(mergeSubmissionItems(baked, live));
+}
+
+function renderSubmissionFilters(items) {
+  const wrap = document.getElementById("submissionsFilters");
+  if (!wrap) return;
+  const visible = visibleSubmissionItems(items);
+  wrap.innerHTML = SUBMISSION_STATUSES.map(status => {
+    const count = status === "All"
+      ? visible.length
+      : visible.filter(i => effectiveSubmissionStatus(i) === status).length;
+    const active = state.submissionStatus === status ? " active" : "";
+    return `<button type="button" class="chip${active}" data-submission-status="${escapeHtml(status)}">${escapeHtml(status)} (${count})</button>`;
+  }).join("");
+}
+
+function hostnameFromLink(link) {
+  try { return new URL(link).hostname.replace(/^www\./, ""); }
+  catch (_) { return link; }
+}
+
+function submissionStatusBadge(status) {
+  const s = status || "New";
+  if (s === "In review") return "blue";
+  if (s === "Rejected") return "coral";
+  if (s === "Approved") return "mint";
+  return "amber";
+}
+
+function submissionCardTone(item, index) {
+  const status = effectiveSubmissionStatus(item);
+  if (status === "In review") return "engineering";
+  if (status === "Rejected") return "management";
+  if (status === "Approved") return "everyone";
+  return PLAYBOOK_CARD_TONES[index % PLAYBOOK_CARD_TONES.length];
+}
+
+function submissionAssigneeOptions() {
+  const members = getActiveTeamMembers();
+  const opts = members.map(m =>
+    `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`
+  ).join("");
+  return `<option value="">Choose a teammate</option>${opts}`;
+}
+
+function submissionTooltipDate(item, status) {
+  if (status === "In review") return item.assignedDate || item.submitted || "";
+  if (status === "Rejected") return item.rejectedDate || item.submitted || "";
+  return item.submitted || "";
+}
+
+function submissionTooltipHtml(item) {
+  const status = effectiveSubmissionStatus(item);
+  const assignee = (item.assignedTo || "").trim();
+  const date = submissionTooltipDate(item, status);
+  const cfg = contributeConfig();
+  const canAssign = isAdminSession() && cfg.submitUrl && status === "New" && !assignee;
+  const metaParts = [];
+  if (status !== "Rejected") {
+    if (assignee) {
+      metaParts.push(`<span><strong>Reviewer:</strong> ${escapeHtml(assignee)}</span>`);
+    }
+    if (date) {
+      metaParts.push(`<span><strong>Date:</strong> ${escapeHtml(date)}</span>`);
+    }
+  }
+  const lines = [];
+  if (metaParts.length) {
+    lines.push(`<p class="submission-item__tip-meta">${metaParts.join("")}</p>`);
+  }
+  if (!assignee && status === "New" && !canAssign) {
+    lines.push(`<p class="submission-item__tip-open"><span class="submission-item__tip-open-pill">Available to the team</span></p>`);
+  }
+  if (item.note) {
+    lines.push(`<p class="submission-item__tip-note">${escapeHtml(item.note)}</p>`);
+  }
+  let assignBlock = "";
+  if (canAssign) {
+    assignBlock = `
+      <div class="submission-item__assign" data-submission-link="${escapeHtml(item.link)}">
+        <label class="submission-item__assign-label">Assign reviewer</label>
+        <div class="submission-item__assign-row">
+          <select class="submission-item__assign-select">${submissionAssigneeOptions()}</select>
+          <button type="button" class="btn-base btn-secondary submission-item__assign-btn">Assign</button>
+        </div>
+        <p class="submission-item__assign-err" hidden></p>
+      </div>`;
+  }
+  const adminBlock = submissionAdminActionsHtml(item);
+  if (!lines.length && !assignBlock && !adminBlock) return "";
+  return `<div class="submission-item__tip" role="tooltip">${lines.join("")}${assignBlock}${adminBlock}</div>`;
+}
+
+function submissionAdminCanAct(item) {
+  const cfg = contributeConfig();
+  if (!isAdminSession() || !cfg.submitUrl || !cfg.assignSecret) return false;
+  const status = effectiveSubmissionStatus(item);
+  return status === "New" || status === "In review";
+}
+
+function submissionAdminActionsHtml(item) {
+  if (!submissionAdminCanAct(item)) return "";
+  return `
+    <div class="submission-item__admin" data-submission-link="${escapeHtml(item.link)}">
+      <div class="submission-item__admin-row">
+        <button type="button" class="btn-base btn-secondary submission-item__approve-btn">Approve &amp; add to Directory</button>
+        <button type="button" class="linkbtn submission-item__reject-btn">Reject</button>
+      </div>
+    </div>`;
+}
+
+function submissionDisplayName(item) {
+  const name = (item.toolName || "").trim();
+  return name || hostnameFromLink(item.link);
+}
+
+function submissionMatchesSearch(item, query) {
+  const q = String(query || "").trim().toLowerCase();
+  if (q.length < 2) return true;
+  return submissionDisplayName(item).toLowerCase().includes(q);
+}
+
+function renderSubmissionsList(items) {
+  const list = document.getElementById("submissionsList");
+  if (!list) return;
+  const searchInput = document.getElementById("submissionSearchInput");
+  if (searchInput && searchInput.value !== state.submissionSearch) {
+    searchInput.value = state.submissionSearch;
+  }
+  const visible = visibleSubmissionItems(items);
+  const statusFiltered = state.submissionStatus === "All"
+    ? visible
+    : visible.filter(i => effectiveSubmissionStatus(i) === state.submissionStatus);
+  const filtered = statusFiltered.filter(i => submissionMatchesSearch(i, state.submissionSearch));
+  if (!filtered.length) {
+    const q = state.submissionSearch.trim();
+    const msg = q
+      ? `No tools match “${escapeHtml(q)}”. Try a different spelling or clear the search.`
+      : "Nothing in this status yet. Try All, or suggest a tool on the right.";
+    list.innerHTML = `<p class="pending-list__status">${msg}</p>`;
+    return;
+  }
+  list.innerHTML = filtered.map((item, index) => {
+    const statusLabel = submissionStatusLabel(item);
+    const badge = submissionStatusBadge(statusLabel);
+    const tone = submissionCardTone(item, index);
+    const titleHtml = submissionLinkHtml(item);
+    const tip = submissionTooltipHtml(item);
+    return `
+      <article class="submission-item playbook-card playbook-card--submission playbook-tone--${tone}" tabindex="0">
+        <div class="submission-item__top">
+          <div class="submission-item__identity">
+            ${submissionLogoHtml(item)}
+            <h3 class="submission-item__title">${titleHtml}</h3>
+          </div>
+          <span class="badge badge--${badge}">${escapeHtml(statusLabel)}</span>
+        </div>
+        ${tip}
+      </article>`;
+  }).join("");
+}
+
+async function renderSubmissions() {
+  const list = document.getElementById("submissionsList");
+  if (list) list.innerHTML = `<p class="pending-list__status">Loading queue…</p>`;
+  applyContributeMode();
+  populateWinToolDropdown();
+  const items = visibleSubmissionItems(await loadSubmissionItems());
+  if (state.submissionStatus === "Approved") state.submissionStatus = "All";
+  state.submissionsCache = items;
+  renderSubmissionFilters(items);
+  renderSubmissionsList(items);
+}
+
+function setSimpleFieldError(key, message) {
+  const err = document.getElementById(`simple_${key}_err`);
+  const field = document.querySelector(`[data-simple-field="${key}"]`);
+  if (err) {
+    err.hidden = !message;
+    err.textContent = message || "";
+  }
+  if (field) field.classList.toggle("has-error", Boolean(message));
+}
+
+function validateSimpleSubmit() {
+  const fields = ["tool", "link", "note"];
+  if (isAdminSession()) fields.push("assign");
+  fields.forEach(k => setSimpleFieldError(k, ""));
+  const formErr = document.getElementById("simpleSubmitErr");
+  if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
+  const toolInput = document.getElementById("simple_tool");
+  const linkInput = document.getElementById("simple_link");
+  const toolName = (toolInput ? toolInput.value : "").trim();
+  if (toolInput) toolInput.value = toolName;
+  let link = normalizeSuggestUrl(linkInput ? linkInput.value : "");
+  if (linkInput) linkInput.value = link;
+  const note = (document.getElementById("simple_note")?.value || "").trim();
+  const assignee = isAdminSession()
+    ? (document.getElementById("simple_assign")?.value || "").trim()
+    : "";
+  let ok = true;
+  if (!toolName) {
+    setSimpleFieldError("tool", "Enter a tool name.");
+    ok = false;
+  } else if (toolName.length < SUGGEST_LIMITS.name.min || toolName.length > SUGGEST_LIMITS.name.max) {
+    setSimpleFieldError("tool", `Use ${SUGGEST_LIMITS.name.min}–${SUGGEST_LIMITS.name.max} characters.`);
+    ok = false;
+  } else if (!NAME_PATTERN.test(toolName)) {
+    setSimpleFieldError("tool", "Use letters, numbers, spaces, and . _ - & + ' / ( ) only.");
+    ok = false;
+  }
+  if (!link) {
+    setSimpleFieldError("link", "Enter a link.");
+    ok = false;
+  } else if (link.length > 300) {
+    setSimpleFieldError("link", "Keep the URL to 300 characters or fewer.");
+    ok = false;
+  } else if (!isValidHttpUrl(link)) {
+    setSimpleFieldError("link", "Use a valid URL starting with http:// or https://");
+    ok = false;
+  }
+  if (note.length > 200) {
+    setSimpleFieldError("note", "Keep your note to 200 characters or fewer.");
+    ok = false;
+  }
+  if (assignee && (assignee.length < 2 || assignee.length > 60)) {
+    setSimpleFieldError("assign", "Choose a valid teammate.");
+    ok = false;
+  }
+  if (!ok && formErr) {
+    formErr.hidden = false;
+    formErr.textContent = "Check the highlighted fields and try again.";
+  }
+  return ok ? { toolName, link, submittedBy: "", note, assignee } : null;
+}
+
+function showSimpleSubmitSuccess() {
+  const wrap = document.getElementById("simpleSubmitWrap");
+  const success = document.getElementById("simpleSubmitSuccess");
+  if (wrap) wrap.hidden = true;
+  if (success) success.hidden = false;
+}
+
+function resetSimpleSubmit() {
+  document.getElementById("simpleSubmitForm")?.reset();
+  ["tool", "link", "note", "assign"].forEach(k => setSimpleFieldError(k, ""));
+  const formErr = document.getElementById("simpleSubmitErr");
+  if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
+  const wrap = document.getElementById("simpleSubmitWrap");
+  const success = document.getElementById("simpleSubmitSuccess");
+  if (wrap) wrap.hidden = !contributeConfig().simpleSubmitEnabled;
+  if (success) success.hidden = true;
+  syncSimpleSubmitAdminFields();
+}
+
+async function assignSubmissionItem(item, assignee) {
+  const cfg = contributeConfig();
+  if (!cfg.submitUrl) throw new Error("Assign requires Google Sheet submitUrl.");
+  const body = JSON.stringify({
+    action: "assign",
+    token: cfg.assignSecret || "",
+    link: item.link,
+    toolName: item.toolName,
+    assignee,
+  });
+  try {
+    const res = await fetch(cfg.submitUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+    if (res.type !== "opaque" && res.ok) {
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (data && data.ok === false) throw new Error(data.error || "Assign failed.");
+      return data;
+    }
+    if (res.type !== "opaque" && !res.ok) throw new Error(`Assign failed (${res.status}).`);
+  } catch (err) {
+    if (err && /failed|Assign failed|Unauthorized/i.test(String(err.message)) && !/Failed to fetch|NetworkError|CORS/i.test(String(err.message))) {
+      throw err;
+    }
+    await fetch(cfg.submitUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+  }
+  return { assignedDate: new Date().toISOString().slice(0, 10) };
+}
+
+async function postSubmissionAction(payload) {
+  const cfg = contributeConfig();
+  if (!cfg.submitUrl) throw new Error("Submissions endpoint not configured.");
+  const body = JSON.stringify({ ...payload, token: cfg.assignSecret || "" });
+  try {
+    const res = await fetch(cfg.submitUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+    if (res.type !== "opaque" && res.ok) {
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (data && data.ok === false) throw new Error(data.error || "Request failed.");
+      return data;
+    }
+    if (res.type !== "opaque" && !res.ok) throw new Error(`Request failed (${res.status}).`);
+  } catch (err) {
+    if (err && /failed|Unauthorized|not configured/i.test(String(err.message)) && !/Failed to fetch|NetworkError|CORS/i.test(String(err.message))) {
+      throw err;
+    }
+    await fetch(cfg.submitUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+  }
+  return { ok: true };
+}
+
+async function rejectSubmissionItem(item, reason) {
+  return postSubmissionAction({
+    action: "reject",
+    link: item.link,
+    toolName: item.toolName,
+    reason: reason || "",
+  });
+}
+
+async function approveSubmissionItem(item, directory) {
+  return postSubmissionAction({
+    action: "approve",
+    link: item.link,
+    toolName: item.toolName,
+    directory,
+  });
+}
+
+function suggestNextToolId() {
+  let max = 0;
+  const seen = new Set();
+  (typeof TOOLS !== "undefined" ? TOOLS : []).forEach(t => {
+    const id = t.id || "";
+    if (seen.has(id)) return;
+    seen.add(id);
+    const m = /^AIT-(\d+)$/i.exec(id);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return `AIT-${String(max + 1).padStart(3, "0")}`;
+}
+
+function populateDirectoryApproveDropdowns() {
+  const cat = document.getElementById("da_category");
+  if (cat && cat.options.length <= 1) {
+    cat.innerHTML = `<option value="">Select category</option>${(typeof CATEGORIES !== "undefined" ? CATEGORIES : [])
+      .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")}`;
+  }
+  const pricing = document.getElementById("da_pricing");
+  if (pricing && pricing.options.length <= 1) {
+    pricing.innerHTML = `<option value="">Select pricing</option>${PRICING_OPTIONS
+      .map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}`;
+  }
+  const dept = document.getElementById("da_department");
+  if (dept && !dept.options.length) {
+    dept.innerHTML = DEPARTMENT_OPTIONS
+      .map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join("");
+  }
+}
+
+function setDirectoryApproveFieldError(key, message) {
+  const err = document.getElementById(`da_${key}_err`);
+  const field = document.querySelector(`[data-da-field="${key}"]`);
+  if (err) {
+    err.hidden = !message;
+    err.textContent = message || "";
+  }
+  if (field) field.classList.toggle("has-error", Boolean(message));
+}
+
+function clearDirectoryApproveErrors() {
+  ["category", "pricing", "description", "videoUrl"].forEach(k => setDirectoryApproveFieldError(k, ""));
+  const formErr = document.getElementById("directoryApproveErr");
+  if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
+}
+
+function prefillDirectoryApproveForm(item) {
+  const name = submissionDisplayName(item);
+  document.getElementById("da_link").value = item.link || "";
+  document.getElementById("da_toolName").value = item.toolName || name;
+  document.getElementById("directoryApproveTitle").textContent = `Add ${name} to Directory`;
+  document.getElementById("directoryApproveDesc").textContent =
+    `Complete catalog fields for ${name}. The submission will be marked Approved and queued for publish.`;
+  document.getElementById("da_description").value = (item.note || "").slice(0, 500);
+  document.getElementById("da_notes").value = item.note || "";
+  document.getElementById("da_videoUrl").value = "";
+  document.getElementById("da_platform").value = "Web";
+  document.getElementById("da_status").value = "Approved";
+  document.getElementById("da_department").value = "Everyone";
+  document.getElementById("da_learningCurve").value = "Medium";
+  document.getElementById("da_priority").value = "Medium";
+  document.getElementById("da_dataClassification").value = "Internal";
+  document.getElementById("da_category").value = "";
+  document.getElementById("da_subcategory").value = "";
+  document.getElementById("da_pricing").value = "";
+  document.getElementById("da_useCases").value = "";
+  document.getElementById("da_limitations").value = "";
+  document.getElementById("da_whenToUse").value = "";
+  document.getElementById("da_securityTip").value = "Internal data only unless explicitly approved.";
+  clearDirectoryApproveErrors();
+}
+
+function openDirectoryApproveModal(item) {
+  state.directoryApproveItem = item;
+  state.directoryApprovePayload = null;
+  prefillDirectoryApproveForm(item);
+  document.getElementById("directoryApproveFormWrap").hidden = false;
+  document.getElementById("directoryApproveSuccess").hidden = true;
+  document.getElementById("directoryApproveOverlay").hidden = false;
+  document.getElementById("da_category")?.focus();
+}
+
+function closeDirectoryApproveModal() {
+  document.getElementById("directoryApproveOverlay").hidden = true;
+  state.directoryApproveItem = null;
+}
+
+function validateDirectoryApproveForm() {
+  clearDirectoryApproveErrors();
+  const category = (document.getElementById("da_category")?.value || "").trim();
+  const pricing = (document.getElementById("da_pricing")?.value || "").trim();
+  const description = (document.getElementById("da_description")?.value || "").trim();
+  const videoUrl = (document.getElementById("da_videoUrl")?.value || "").trim();
+  let ok = true;
+  if (!category) {
+    setDirectoryApproveFieldError("category", "Choose a category.");
+    ok = false;
+  }
+  if (!pricing) {
+    setDirectoryApproveFieldError("pricing", "Choose a pricing model.");
+    ok = false;
+  }
+  if (description.length < 20) {
+    setDirectoryApproveFieldError("description", "Use at least 20 characters.");
+    ok = false;
+  }
+  if (!isValidHttpUrl(videoUrl)) {
+    setDirectoryApproveFieldError("videoUrl", "Enter a valid tutorial video URL.");
+    ok = false;
+  }
+  return ok;
+}
+
+function collectDirectoryApprovePayload(item) {
+  const today = new Date().toISOString().slice(0, 10);
+  const toolName = (document.getElementById("da_toolName")?.value || item.toolName || submissionDisplayName(item)).trim();
+  const link = (document.getElementById("da_link")?.value || item.link || "").trim();
+  return {
+    toolId: suggestNextToolId(),
+    toolName,
+    link,
+    submissionLink: link,
+    category: (document.getElementById("da_category")?.value || "").trim(),
+    subcategory: (document.getElementById("da_subcategory")?.value || "").trim(),
+    pricing: (document.getElementById("da_pricing")?.value || "").trim(),
+    status: (document.getElementById("da_status")?.value || "Approved").trim(),
+    url: link,
+    videoUrl: (document.getElementById("da_videoUrl")?.value || "").trim(),
+    description: (document.getElementById("da_description")?.value || "").trim(),
+    platform: (document.getElementById("da_platform")?.value || "").trim(),
+    department: (document.getElementById("da_department")?.value || "Everyone").trim(),
+    useCases: (document.getElementById("da_useCases")?.value || "").trim(),
+    learningCurve: (document.getElementById("da_learningCurve")?.value || "Medium").trim(),
+    priority: (document.getElementById("da_priority")?.value || "Medium").trim(),
+    dataClassification: (document.getElementById("da_dataClassification")?.value || "Internal").trim(),
+    owner: "Admin",
+    dateAdded: today,
+    lastReviewed: today,
+    notes: (document.getElementById("da_notes")?.value || "").trim(),
+    limitations: (document.getElementById("da_limitations")?.value || "").trim(),
+    whenToUse: (document.getElementById("da_whenToUse")?.value || "").trim(),
+    securityTip: (document.getElementById("da_securityTip")?.value || "").trim(),
+    approvedModels: "",
+  };
+}
+
+function directoryApproveJsonFilename(payload) {
+  const slug = String(payload.toolName || "tool").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tool";
+  return `directory-${slug}.json`;
+}
+
+function directoryApprovePublishCommand(filename) {
+  return `python scripts/add_directory_tool.py --json ${filename}`;
+}
+
+function downloadDirectoryApproveJson(payload) {
+  const filename = directoryApproveJsonFilename(payload);
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  return filename;
+}
+
+function showDirectoryApproveSuccess(payload, sheetOk) {
+  state.directoryApprovePayload = payload;
+  const filename = directoryApproveJsonFilename(payload);
+  const cmd = directoryApprovePublishCommand(filename);
+  document.getElementById("directoryApproveCmd").textContent = cmd;
+  document.getElementById("directoryApproveFormWrap").hidden = true;
+  document.getElementById("directoryApproveSuccess").hidden = false;
+  if (!sheetOk) {
+    const note = document.querySelector("#directoryApproveSuccess .field-note");
+    if (note) {
+      note.textContent = "Sheet update could not be confirmed — still run the publish command locally, then sync tool_submissions.csv if needed.";
+    }
+  }
+  downloadDirectoryApproveJson(payload);
+}
+
+function bindDirectoryApproveModal() {
+  const overlay = document.getElementById("directoryApproveOverlay");
+  if (!overlay || overlay.dataset.bound === "1") return;
+  overlay.dataset.bound = "1";
+
+  document.getElementById("directoryApproveClose")?.addEventListener("click", closeDirectoryApproveModal);
+  document.getElementById("directoryApproveCancel")?.addEventListener("click", closeDirectoryApproveModal);
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) closeDirectoryApproveModal();
+  });
+
+  document.getElementById("directoryApproveForm")?.addEventListener("submit", async e => {
+    e.preventDefault();
+    const item = state.directoryApproveItem;
+    if (!item || !validateDirectoryApproveForm()) return;
+    const payload = collectDirectoryApprovePayload(item);
+    const btn = document.getElementById("directoryApproveSubmit");
+    const formErr = document.getElementById("directoryApproveErr");
+    if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+    let sheetOk = false;
+    try {
+      await approveSubmissionItem(item, payload);
+      sheetOk = true;
+      item.status = "Approved";
+      renderSubmissionFilters(state.submissionsCache || []);
+      renderSubmissionsList(state.submissionsCache || []);
+      showDirectoryApproveSuccess(payload, sheetOk);
+    } catch (err) {
+      if (formErr) {
+        formErr.hidden = false;
+        formErr.textContent = err.message || "Could not update the sheet. Fix config or try again.";
+      }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Approve & queue publish"; }
+    }
+  });
+
+  document.getElementById("directoryApproveCopyCmd")?.addEventListener("click", () => {
+    const cmd = document.getElementById("directoryApproveCmd")?.textContent || "";
+    navigator.clipboard?.writeText(cmd).catch(() => {});
+  });
+
+  document.getElementById("directoryApproveDownloadJson")?.addEventListener("click", () => {
+    if (state.directoryApprovePayload) downloadDirectoryApproveJson(state.directoryApprovePayload);
+  });
+
+  document.getElementById("directoryApproveDone")?.addEventListener("click", () => {
+    closeDirectoryApproveModal();
+    renderSubmissions();
+  });
+}
+
+async function submitSimpleLink(payload) {
+  const cfg = contributeConfig();
+  if (!cfg.submitUrl) {
+    throw new Error("Submit is not configured. In docs/site-config.js set contribute.simpleSubmit.submitUrl to your Apps Script web app URL (Deploy → Web app), then reload.");
+  }
+  const body = JSON.stringify({
+    toolName: payload.toolName,
+    link: payload.link,
+    submittedBy: payload.submittedBy,
+    note: payload.note,
+    ...(payload.assignee
+      ? { assignee: payload.assignee, token: cfg.assignSecret || "" }
+      : {}),
+  });
+  try {
+    const res = await fetch(cfg.submitUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+    if (res.type !== "opaque" && res.ok) {
+      const data = await res.json().catch(() => ({ ok: true }));
+      if (data && data.ok === false) throw new Error(data.error || "Submit failed.");
+      return;
+    }
+    if (res.type !== "opaque" && !res.ok) throw new Error(`Submit failed (${res.status}).`);
+  } catch (err) {
+    if (err && /failed|not configured|Submit failed/i.test(String(err.message)) && !/Failed to fetch|NetworkError|CORS/i.test(String(err.message))) {
+      throw err;
+    }
+    await fetch(cfg.submitUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body,
+    });
+  }
+}
+
+function bindSimpleSubmit() {
+  const form = document.getElementById("simpleSubmitForm");
+  if (!form) return;
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const payload = validateSimpleSubmit();
+    if (!payload) return;
+    const btn = document.getElementById("simpleSubmitBtn");
+    const formErr = document.getElementById("simpleSubmitErr");
+    if (btn) { btn.disabled = true; btn.textContent = "Submitting…"; }
+    try {
+      await submitSimpleLink(payload);
+      showSimpleSubmitSuccess();
+      renderSubmissions();
+    } catch (err) {
+      if (formErr) {
+        formErr.hidden = false;
+        formErr.textContent = err.message || "Something went wrong. Try again in a moment.";
+      }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Suggest tool"; }
+    }
+  });
+  document.getElementById("simpleSubmitAnother")?.addEventListener("click", resetSimpleSubmit);
+}
+
+function bindSubmissionsPage() {
+  const list = document.getElementById("submissionsList");
+  if (list && list.dataset.assignBound !== "1") {
+    list.dataset.assignBound = "1";
+    list.addEventListener("click", async e => {
+      const approveBtn = e.target.closest(".submission-item__approve-btn");
+      if (approveBtn && isAdminSession()) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wrap = approveBtn.closest(".submission-item__admin");
+        const link = wrap?.dataset.submissionLink || "";
+        const item = (state.submissionsCache || []).find(i => i.link === link);
+        if (item) openDirectoryApproveModal(item);
+        return;
+      }
+      const rejectBtn = e.target.closest(".submission-item__reject-btn");
+      if (rejectBtn && isAdminSession()) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wrap = rejectBtn.closest(".submission-item__admin");
+        const link = wrap?.dataset.submissionLink || "";
+        const item = (state.submissionsCache || []).find(i => i.link === link);
+        if (!item) return;
+        const name = submissionDisplayName(item);
+        const reason = window.prompt(`Reject ${name}? Optional reason:`) ?? null;
+        if (reason === null) return;
+        rejectBtn.disabled = true;
+        try {
+          await rejectSubmissionItem(item, reason.trim());
+          item.status = "Rejected";
+          item.rejectedDate = new Date().toISOString().slice(0, 10);
+          if (reason.trim() && item.note) item.note = `${item.note} — Rejected: ${reason.trim()}`;
+          else if (reason.trim()) item.note = `Rejected: ${reason.trim()}`;
+          renderSubmissionFilters(state.submissionsCache || []);
+          renderSubmissionsList(state.submissionsCache || []);
+        } catch (err) {
+          window.alert(err.message || "Could not reject. Try again.");
+        } finally {
+          rejectBtn.disabled = false;
+        }
+        return;
+      }
+      const btn = e.target.closest(".submission-item__assign-btn");
+      if (!btn || !isAdminSession()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const wrap = btn.closest(".submission-item__assign");
+      const link = wrap?.dataset.submissionLink || "";
+      const select = wrap?.querySelector(".submission-item__assign-select");
+      const errEl = wrap?.querySelector(".submission-item__assign-err");
+      const assignee = (select?.value || "").trim();
+      if (!assignee) {
+        if (errEl) { errEl.hidden = false; errEl.textContent = "Choose a reviewer first."; }
+        select?.focus();
+        return;
+      }
+      const item = (state.submissionsCache || []).find(i => i.link === link);
+      if (!item) return;
+      if (errEl) { errEl.hidden = true; errEl.textContent = ""; }
+      btn.disabled = true;
+      btn.textContent = "Assigning…";
+      try {
+        const data = await assignSubmissionItem(item, assignee);
+        item.assignedTo = assignee;
+        item.status = "In review";
+        item.assignedDate = (data && data.assignedDate) || new Date().toISOString().slice(0, 10);
+        renderSubmissionFilters(state.submissionsCache || []);
+        renderSubmissionsList(state.submissionsCache || []);
+      } catch (err) {
+        if (errEl) {
+          errEl.hidden = false;
+          errEl.textContent = err.message || "Could not assign. Try again.";
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Assign";
+      }
+    });
+  }
+  document.getElementById("submissionsFilters")?.addEventListener("click", e => {
+    const chip = e.target.closest("[data-submission-status]");
+    if (!chip) return;
+    state.submissionStatus = chip.dataset.submissionStatus;
+    renderSubmissionFilters(state.submissionsCache || []);
+    renderSubmissionsList(state.submissionsCache || []);
+  });
+  const searchInput = document.getElementById("submissionSearchInput");
+  if (searchInput && searchInput.dataset.bound !== "1") {
+    searchInput.dataset.bound = "1";
+    searchInput.addEventListener("input", e => {
+      state.submissionSearch = e.target.value;
+      renderSubmissionsList(state.submissionsCache || []);
+    });
   }
 }
 
@@ -3502,8 +4661,9 @@ function bindSuggestValidation() {
 }
 
 function openSuggest() {
-  state.contribTab = "suggest";
   showView("contribute");
+  const panel = document.getElementById("contribSuggestPanel");
+  if (panel) panel.hidden = false;
   resetSuggestForm();
   document.getElementById("suggestFormWrap").hidden = false;
   document.getElementById("suggestSuccess").hidden = true;
@@ -3544,7 +4704,7 @@ function authConfig() {
       employeeUsername: "team",
       employeePasswordHash: "",
       inviteTokenHash: "",
-      sessionDays: 7,
+      sessionDays: 15,
       sessionSalt: "dcs-ai-rc-auth",
       sessionKey: "dcs-ai-rc-auth",
       maxLoginAttempts: 5,
@@ -3771,6 +4931,7 @@ function unlockApp() {
   const signOut = document.getElementById("signOutBtn");
   if (signOut) signOut.hidden = !authConfig().enabled;
   updateHeaderSessionBadge();
+  syncSimpleSubmitAdminFields();
 }
 
 function lockApp() {
@@ -3785,6 +4946,7 @@ function lockApp() {
   if (user) user.value = "";
   if (pass) pass.value = "";
   clearLoginErrors();
+  syncSimpleSubmitAdminFields();
   requestAnimationFrame(() => user?.focus());
 }
 
@@ -3845,7 +5007,15 @@ async function tryInviteUnlock() {
   return true;
 }
 
+function syncLoginSessionHint() {
+  const el = document.getElementById("loginSessionHint");
+  if (!el) return;
+  const days = authConfig().sessionDays || 15;
+  el.textContent = `${days}-day session on this device.`;
+}
+
 function bindAuthUi() {
+  syncLoginSessionHint();
   const form = document.getElementById("loginForm");
   form?.addEventListener("submit", async e => {
     e.preventDefault();

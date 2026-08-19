@@ -118,7 +118,7 @@ def main() -> int:
     highlights = load_js_object(data_js, "SITE_HIGHLIGHTS") or {}
 
     # ===== DATA =====
-    if len(tools) >= 25:
+    if len(tools) >= 11:
         record("PASS", "Data", f"TOOLS count = {len(tools)}")
     else:
         record("FAIL", "Data", f"TOOLS count too low: {len(tools)}")
@@ -147,17 +147,42 @@ def main() -> int:
     else:
         record("FAIL", "Data", f"Missing/invalid URLs: {missing_url}")
 
+    missing_video = [t["name"] for t in tools if not (t.get("videoUrl") or "").startswith("http")]
+    if not missing_video:
+        record("PASS", "Data", "All tools have tutorial video URLs")
+    else:
+        record("FAIL", "Data", f"Missing tutorial videos: {missing_video}")
+
     csv_tools = list(csv.DictReader((DATA / "ai_tools_directory.csv").open(encoding="utf-8-sig")))
+    csv_fields = csv_tools[0].keys() if csv_tools else []
+    if "Tutorial Video" in csv_fields:
+        record("PASS", "Data", "CSV has Tutorial Video column")
+    else:
+        record("FAIL", "Data", "CSV missing Tutorial Video column")
     if len(csv_tools) == len(tools):
         record("PASS", "Data", f"CSV vs data.js tool count match ({len(tools)})")
     else:
         record("FAIL", "Data", f"CSV={len(csv_tools)} vs data.js={len(tools)}")
 
-    for required in ("Make", "Lovable", "Exa", "Cursor", "ChatGPT"):
+    for required in ("Cursor", "ChatGPT", "Perplexity", "Antigravity"):
         if any(t.get("name") == required for t in tools):
-            record("PASS", "Data", f"Tool present: {required}")
+            record("PASS", "Data", f"Directory tool present: {required}")
         else:
-            record("FAIL", "Data", f"Missing tool: {required}")
+            record("FAIL", "Data", f"Missing directory tool: {required}")
+
+    submissions = load_js_array(data_js, "SUBMISSIONS") or []
+    sub_names = {(row.get("Tool name") or row.get("toolName") or "") for row in submissions}
+    for required in ("Firecrawl", "Gamma", "Ollama", "NotebookLM", "Windsurf"):
+        if required in sub_names:
+            record("PASS", "Data", f"Submission present: {required}")
+        else:
+            record("FAIL", "Data", f"Missing submission: {required}")
+
+    trial_in_dir = [t["name"] for t in tools if t.get("status") in {"Testing", "Exploring"}]
+    if not trial_in_dir:
+        record("PASS", "Directory", "No Testing/Exploring tools in Directory")
+    else:
+        record("FAIL", "Directory", f"Testing/Exploring still in Directory: {trial_in_dir}")
 
     if prompts and use_cases and learning and guides and jobs:
         record(
@@ -201,8 +226,8 @@ def main() -> int:
 
     # ===== HTML WIRING =====
     required_ids = [
-        "loginGate", "loginForm", "loginUsername", "loginPassword", "loginError",
-        "view-home", "view-directory", "view-guides", "view-prompts", "view-playbooks", "view-contribute",
+        "loginGate", "loginForm", "loginUsername", "loginPassword", "loginError", "loginSessionHint",
+        "view-home", "view-directory", "view-tool", "view-guides", "view-prompts", "view-playbooks", "view-submissions", "view-contribute",
         "chooserGrid", "starterRow", "toolOfWeek", "recentTools",
         "stats", "searchInput", "sortSelect", "compareToggle", "filterChips",
         "toolGrid", "emptyState", "clearFilters", "resultCount",
@@ -211,9 +236,10 @@ def main() -> int:
         "promptSearchInput", "promptGrid", "promptEmpty",
         "playbookSearchInput", "useCaseGrid", "learnGrid",
         "suggestForm", "s_name", "s_category", "s_url", "s_submitter", "s_desc", "s_reason",
-        "winForm", "w_title", "w_tool", "w_impact", "w_how",
+        "simpleSubmitForm", "simple_link", "simple_tool", "submissionsList", "submissionSearchInput",
+        "shareWinSection", "winForm", "w_title", "w_tool", "w_impact", "w_how",
         "pendingReviewList", "pendingReviewRefresh", "backToTop",
-        "tabSuggest", "tabWin", "contribSuggestPanel", "contribWinPanel",
+        "contribSuggestPanel", "contribWinPanel",
     ]
     missing_ids = [i for i in required_ids if f'id="{i}"' not in html]
     if not missing_ids:
@@ -221,14 +247,14 @@ def main() -> int:
     else:
         record("FAIL", "HTML", f"Missing IDs: {missing_ids}")
 
-    views = ["home", "directory", "guides", "prompts", "playbooks", "contribute"]
+    views = ["home", "directory", "tool", "guides", "prompts", "playbooks", "submissions", "contribute"]
     for v in views:
         if f'data-view-panel="{v}"' in html:
             record("PASS", "HTML", f"View panel: {v}")
         else:
             record("FAIL", "HTML", f"Missing view panel: {v}")
 
-    for label in ("AI hub", "Directory", "Guides", "Prompts", "Playbooks", "Contribute"):
+    for label in ("AI hub", "Directory", "Guides", "Prompts", "Playbooks", "Suggestions"):
         if label in header_js or label in html:
             record("PASS", "Nav", f"Nav includes {label}")
         else:
@@ -251,6 +277,149 @@ def main() -> int:
         record("PASS", "Contribute", "Website required in validateSuggestForm")
     else:
         record("FAIL", "Contribute", "Website validation missing in script.js")
+
+    if 'id="simpleSubmitForm"' in html and 'id="simple_link"' in html and 'id="simple_tool"' in html:
+        record("PASS", "Contribute", "Simple tool submit form present")
+    else:
+        record("FAIL", "Contribute", "Simple tool submit form missing")
+
+    if 'id="simple_assign"' in html and "syncSimpleSubmitAdminFields" in script and "assignee: payload.assignee" in script.replace(" ", ""):
+        record("PASS", "Contribute", "Admin optional assign on suggest tool wired")
+    elif 'id="simple_assign"' in html and "syncSimpleSubmitAdminFields" in script and "payload.assignee" in script:
+        record("PASS", "Contribute", "Admin optional assign on suggest tool wired")
+    else:
+        record("FAIL", "Contribute", "Admin assign-on-suggest missing")
+
+    if "submissions-split" in html and "simpleSubmitForm" in html:
+        record("PASS", "Contribute", "Add-tool form merged into Suggestions page")
+    else:
+        record("FAIL", "Contribute", "Suggestions split layout or submit form missing")
+
+    if "Enter a tool name." in script and "Enter a link." in script and "simpleSubmit" in example_cfg and "winSubmit" in example_cfg:
+        record("PASS", "Contribute", "Simple submit + win submit validation + example config")
+    else:
+        record("FAIL", "Contribute", "Submit validation or site-config example missing")
+
+    if "submitWinLink" in script and "Share win" in html and "winIssueLink" not in html:
+        record("PASS", "Contribute", "Share a win posts to Sheet (no GitHub draft UI)")
+    else:
+        record("FAIL", "Contribute", "Win submit flow missing or still uses GitHub draft")
+
+    if "submission-item__by" not in script:
+        record("PASS", "Contribute", "Submitter names hidden on Suggestions list")
+    else:
+        record("FAIL", "Contribute", "Submitter line still rendered on Suggestions")
+
+    if "DEMO_SUBMISSION_ROWS" not in script and "submissionsDemoBanner" not in html:
+        record("PASS", "Contribute", "Sample submissions fallback and demo banner removed")
+    else:
+        record("FAIL", "Contribute", "Sample submissions fallback or demo banner still present")
+
+    if "bakedSubmissionRows" in script and "mergeSubmissionItems" in script and "const SUBMISSIONS" in data_js:
+        record("PASS", "Contribute", "Baked SUBMISSIONS always show; live sheet rows merge")
+    else:
+        record("FAIL", "Contribute", "Baked submissions dataset or merge missing")
+
+    submissions = load_js_array(data_js, "SUBMISSIONS") or []
+    if len(submissions) >= 25:
+        record("PASS", "Contribute", f"SUBMISSIONS count = {len(submissions)}")
+    else:
+        record("FAIL", "Contribute", f"SUBMISSIONS too few: {len(submissions)}")
+
+    if "Status and assignee are updated in the Google Sheet" not in html:
+        record("PASS", "Contribute", "Sheet-refresh copy removed from Submissions")
+    else:
+        record("FAIL", "Contribute", "Sheet-refresh copy still on Submissions")
+
+    if "submissionsRefresh" not in html:
+        record("PASS", "Contribute", "Refresh button removed from Submissions list")
+    else:
+        record("FAIL", "Contribute", "Refresh button still on Submissions list")
+
+    if "submission-item__tip" in script and "submissionTooltipHtml" in script:
+        record("PASS", "Contribute", "Submission hover tooltip with contextual dates")
+    else:
+        record("FAIL", "Contribute", "Submission hover tooltip missing")
+
+    if 'status !== "Rejected"' in script and "submissionTooltipHtml" in script:
+        record("PASS", "Contribute", "Rejected submissions hide reviewer and date in tooltip")
+    else:
+        record("FAIL", "Contribute", "Rejected submission tooltip privacy check missing")
+
+    if "assignSubmissionItem" in script and "action: \"assign\"" in script:
+        record("PASS", "Contribute", "Admin assign submission via Apps Script")
+    else:
+        record("FAIL", "Contribute", "Admin assign flow missing")
+
+    if "openDirectoryApproveModal" in script and "directoryApproveForm" in html:
+        record("PASS", "Contribute", "Admin approve + directory entry modal")
+    else:
+        record("FAIL", "Contribute", "Directory approve modal missing")
+
+    if "rejectSubmissionItem" in script and 'action: "reject"' in script:
+        record("PASS", "Contribute", "Admin reject submission wired")
+    else:
+        record("FAIL", "Contribute", "Admin reject flow missing")
+
+    if (ROOT / "scripts" / "add_directory_tool.py").is_file():
+        record("PASS", "Contribute", "add_directory_tool.py publish helper present")
+    else:
+        record("FAIL", "Contribute", "add_directory_tool.py missing")
+
+    apps = (ROOT / "scripts" / "tool_submissions_apps_script.js").read_text(encoding="utf-8")
+    if "handleApprove" in apps and "handleReject" in apps:
+        record("PASS", "Contribute", "Apps Script approve/reject handlers")
+    else:
+        record("FAIL", "Contribute", "Apps Script approve/reject missing")
+
+    if "submissionSearchInput" in html and "submissionMatchesSearch" in script:
+        record("PASS", "Contribute", "Submitted tools search input wired")
+    else:
+        record("FAIL", "Contribute", "Submitted tools search missing")
+
+    if ('class="submission-item__link" href=' in script and "playbook-tone--" in script and "scrollToAnchor" in script):
+        record("PASS", "Contribute", "Submission cards use playbook-style tones; anchor scroll offset")
+    else:
+        record("FAIL", "Contribute", "Submission card styling or anchor scroll missing")
+
+    if "shareWinSection" in html and 'id="winForm"' in html:
+        record("PASS", "Contribute", "Share a win form on Suggestions page")
+    else:
+        record("FAIL", "Contribute", "Share a win form missing from Suggestions")
+
+    if "effectiveSubmissionStatus" in script:
+        record("PASS", "Contribute", "Unassigned submissions cannot show In review")
+    else:
+        record("FAIL", "Contribute", "Missing effectiveSubmissionStatus helper")
+
+    if "directoryTools" in script and "isRejectedStatus" in script:
+        record("PASS", "Directory", "Rejected tools are filtered out of Directory")
+    else:
+        record("FAIL", "Directory", "Directory missing rejected-tool filter")
+
+    rejected_in_dir = [t["name"] for t in tools if str(t.get("status") or "").lower() == "rejected"]
+    if not rejected_in_dir:
+        record("PASS", "Directory", "No Rejected tools in directory data")
+    else:
+        record("FAIL", "Directory", f"Rejected tools still in directory: {rejected_in_dir}")
+
+    if "playbook-card--directory" in script and "directoryCardTone" in script:
+        record("PASS", "Directory", "Directory cards use playbook-style tones")
+    else:
+        record("FAIL", "Directory", "Directory playbook-style card styling missing")
+
+    moved_names = {
+        "Windsurf", "Make", "Lovable", "Exa", "Raycast AI", "Fireflies.ai", "Bolt.new",
+        "NotebookLM", "CodeRabbit", "Julius AI", "Gamma", "OpenHands", "Browser Use",
+        "Firecrawl", "Apify", "Crawl4AI", "Ollama", "Power BI Copilot", "Dify", "v0",
+    }
+    still_in_dir = [n for n in moved_names if n in names]
+    sub_names = {(row.get("Tool name") or row.get("toolName") or "") for row in submissions}
+    missing_sub = [n for n in moved_names if n not in sub_names]
+    if not still_in_dir and not missing_sub:
+        record("PASS", "Directory", "New/recent tools moved from Directory to Submissions")
+    else:
+        record("FAIL", "Directory", f"Move incomplete dir={still_in_dir} missing_sub={missing_sub}")
 
     # Compare UX
     if "click a card" in html.lower():
@@ -277,10 +446,10 @@ def main() -> int:
                 record("WARN", "Auth", "Local site-config still has plaintext password field")
             else:
                 record("PASS", "Auth", "Local site-config uses hashed secrets")
-        if "sessionDays: 7" in cfg or "sessionDays:7" in cfg:
-            record("PASS", "Auth", "Session default is 7 days")
+        if "sessionDays: 15" in cfg or "sessionDays:15" in cfg:
+            record("PASS", "Auth", "Session default is 15 days")
         else:
-            record("WARN", "Auth", "sessionDays may not be 7")
+            record("WARN", "Auth", "sessionDays may not be 15")
     else:
         record("WARN", "Auth", "Local site-config.js missing (copy from example)")
 
@@ -309,18 +478,21 @@ def main() -> int:
         record("FAIL", "Assignments", "CSV missing assignment columns")
 
     assignable = [t for t in tools if t.get("status") in {"Testing", "Exploring"}]
-    if assignable:
-        record("PASS", "Assignments", f"{len(assignable)} Testing/Exploring tools eligible")
+    if not assignable:
+        record("PASS", "Assignments", "Trial tools live on Submissions, not Directory")
     else:
-        record("FAIL", "Assignments", "No assignable tools")
+        record("FAIL", "Assignments", f"{len(assignable)} Testing/Exploring still in Directory")
 
     bolt = next((t for t in tools if t.get("name") == "Bolt.new"), None)
-    if bolt and bolt.get("assignedTo") and bolt.get("testingNotes"):
-        record("PASS", "Assignments", f"Bolt.new has assignment ({bolt.get('assignedTo')})")
-    elif bolt and (bolt.get("assignedTo") or bolt.get("testingNotes")):
-        record("WARN", "Assignments", "Bolt.new has partial assignment data")
+    if bolt:
+        if bolt.get("assignedTo") and bolt.get("testingNotes"):
+            record("PASS", "Assignments", f"Bolt.new has assignment ({bolt.get('assignedTo')})")
+        elif bolt.get("assignedTo") or bolt.get("testingNotes"):
+            record("WARN", "Assignments", "Bolt.new has partial assignment data")
+        else:
+            record("WARN", "Assignments", "Bolt.new assignment sample missing")
     else:
-        record("WARN", "Assignments", "Bolt.new assignment sample missing")
+        record("PASS", "Assignments", "Bolt.new lives on Submissions, not Directory")
 
     assigned_samples = [
         (t.get("assignedTo"), t["name"])
@@ -424,11 +596,10 @@ def main() -> int:
         ("claude", ["Claude"], True),
         ("xyzzy", [], True),
         ("ide", None, False),  # should include IDE tools, not explode
-        ("Anshu", ["Bolt.new"], False),
-        ("power bi", ["Power BI Copilot"], True),
-        ("Make", ["Make"], True),
-        ("Lovable", ["Lovable"], True),
-        ("Exa", ["Exa"], True),
+        ("Akshay", ["Cursor"], False),
+        ("Antigravity", ["Antigravity"], True),
+        ("Perplexity", ["Perplexity"], True),
+        ("OpenClaw", ["OpenClaw"], True),
     ]
     for q, expect, exact_top in search_cases:
         hits = filtered_search(tools, q)
@@ -470,7 +641,7 @@ def main() -> int:
         record("PASS" if n >= 0 else "FAIL", "Filter", f"Status {status}: {n} tools")
 
     cats = sorted({t.get("category") for t in tools if t.get("category")})
-    if len(cats) >= 5:
+    if len(cats) >= 3:
         record("PASS", "Filter", f"Categories available: {len(cats)}")
     else:
         record("FAIL", "Filter", f"Too few categories: {cats}")
@@ -516,6 +687,11 @@ def main() -> int:
         record("PASS", "Guides", "Expandable head-to-head sections wired")
     else:
         record("FAIL", "Guides", "Expandable head-to-head sections missing")
+
+    if 'class="content guides-split"' in html and "guides-split__col" in html:
+        record("PASS", "Guides", "Decision guides and head-to-heads in equal split columns")
+    else:
+        record("FAIL", "Guides", "Guides split layout missing")
 
     if re.search(r"toolAssignments:\s*\{[^}]*enabled:\s*false", example_cfg, re.S):
         record("PASS", "Features", "toolAssignments disabled in site-config.example.js (v1)")
@@ -604,6 +780,10 @@ def main() -> int:
         ("function getFiltered", "Directory"),
         ("function openCompare", "Compare"),
         ("function openModal", "Modal"),
+        ("function youtubeEmbedId", "Tool page"),
+        ("function tutorialHtml", "Tool page"),
+        ("function glanceFactsHtml", "Tool page"),
+        ("function toolGlanceHtml", "Tool page"),
         ("function renderPrompts", "Prompts"),
         ("function renderPlaybooks", "Playbooks"),
         ("function renderGuides", "Guides"),
@@ -618,6 +798,30 @@ def main() -> int:
             record("PASS", area, f"Hook present: {needle}")
         else:
             record("FAIL", area, f"Missing hook: {needle}")
+
+    modal_fn = re.search(r"function openModal\(tool\) \{[\s\S]*?\nfunction ", script)
+    glance_fn = re.search(r"function glanceFactsHtml\(tool\) \{[\s\S]*?\nfunction ", script)
+    if (
+        modal_fn
+        and glance_fn
+        and 'detailField("Owner"' not in modal_fn.group(0)
+        and "tool.owner" not in glance_fn.group(0)
+    ):
+        record("PASS", "Tool page", "Owner is not shown on the tool detail page")
+    else:
+        record("FAIL", "Tool page", "Owner still appears in tool detail first-look or modal")
+
+    if (
+        "tool-glance" in script
+        and "Open on YouTube" in script
+        and glance_fn
+        and 'detailField("Department"' in glance_fn.group(0)
+        and 'detailField("Learning curve"' in glance_fn.group(0)
+        and "tool.useCases" in glance_fn.group(0)
+    ):
+        record("PASS", "Tool page", "First-look layout has video plus key facts")
+    else:
+        record("FAIL", "Tool page", "Missing video + facts first-look layout")
 
     # A first-time login/invite must restore the original deep-link state.
     # forceHome intentionally suppresses URL parsing and breaks ?tool, ?view, and ?compare.
@@ -652,6 +856,31 @@ def main() -> int:
             record("WARN", "Auth", "Login username still type=email (prefer text for generic username)")
         else:
             record("PASS", "Auth", "Login username input type OK")
+
+    if 'class="login-gate__logo"' in html and "shared/assets/logo.svg" in html:
+        record("PASS", "Auth", "Login page shows company wordmark logo")
+    else:
+        record("FAIL", "Auth", "Login page logo missing")
+
+    if 'class="login-gate__welcome"' in html and "Welcome back" in html and "Explore our AI toolkit" in html:
+        record("PASS", "Auth", "Login welcome and sign-in headline present")
+    else:
+        record("FAIL", "Auth", "Login welcome copy missing")
+
+    if "login-gate__shell" in html and "login-gate__layout" in html and "login-gate__brand" in html and "login-gate__panel" in html:
+        record("PASS", "Auth", "Login shell with brand hero and floating sign-in panel")
+    else:
+        record("FAIL", "Auth", "Login shell layout missing")
+
+    if "dailycodesolutions.com" in html and "linkedin.com/company/daily-code-solutions/posts" in html and "login-gate__social-btn" in html:
+        record("PASS", "Auth", "Login footer links to website and LinkedIn")
+    else:
+        record("FAIL", "Auth", "Login company links missing")
+
+    if "syncLoginSessionHint" in script:
+        record("PASS", "Auth", "Login session hint synced from config")
+    else:
+        record("FAIL", "Auth", "Login session hint helper missing")
 
     # Gitignore site-config
     gi = (ROOT / ".gitignore").read_text(encoding="utf-8")

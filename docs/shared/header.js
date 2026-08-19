@@ -1,7 +1,7 @@
 /**
  * DCS AI Resource Center header.
  * Logo stays; main-site links (Home / Services / Schedule) are replaced
- * by in-app navigation: AI hub, Directory, Guides, Prompts, Playbooks, Contribute.
+ * by in-app navigation: AI hub, Directory, Guides, Prompts, Playbooks, Suggestions.
  */
 (function () {
   const ROOT = "https://dailycodesolutions.com";
@@ -13,7 +13,7 @@
     { label: "Guides", view: "guides" },
     { label: "Prompts", view: "prompts" },
     { label: "Playbooks", view: "playbooks" },
-    { label: "Contribute", view: "contribute" },
+    { label: "Suggestions", view: "submissions" },
   ];
 
   function render() {
@@ -59,18 +59,22 @@
     const toggle = document.getElementById("dcsHeaderToggle");
     if (!header || !toggle) return;
 
-    toggle.addEventListener("click", () => {
-      const open = header.classList.toggle("is-open");
+    function setOpen(open) {
+      header.classList.toggle("is-open", open);
       toggle.setAttribute("aria-expanded", String(open));
       toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    }
+
+    toggle.addEventListener("click", () => {
+      setOpen(!header.classList.contains("is-open"));
     });
 
     mount.addEventListener("click", (e) => {
-      if (e.target.closest("[data-view]")) {
-        header.classList.remove("is-open");
-        toggle.setAttribute("aria-expanded", "false");
-        toggle.setAttribute("aria-label", "Open menu");
-      }
+      if (e.target.closest("[data-view]")) setOpen(false);
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.matchMedia("(min-width: 901px)").matches) setOpen(false);
     });
   }
 

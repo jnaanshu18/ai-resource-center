@@ -1,245 +1,138 @@
 # DCS AI Resource Center
 
-Internal hub for Daily Code Solutions to discover **which AI tools we trust**, copy useful **prompts**, follow **playbooks**, and stop re-evaluating the same options twice.
+Internal site for Daily Code Solutions — find approved AI tools, prompts, playbooks, and suggest new tools for the team to review.
 
-**Production:** https://ai.dailycodesolutions.com/
+| | URL |
+|---|---|
+| **Production** | https://ai.dailycodesolutions.com/ |
+| **Preview** | https://jnaanshu18.github.io/ai-resource-center/ |
 
-**Preview (personal fork):** https://jnaanshu18.github.io/ai-resource-center/
+Static site in `docs/`. Tool data is generated from CSVs in `data/` into `docs/data.js` on every push to `main`.
 
-**Admin:** `admin@dailycodesolutions.com` (portal operator — not a named individual owner)
+---
 
-**Focus areas:** Python engineering · Ecommerce · Scraping & automation · ETL/ELT · Data analytics & Power BI · AI agents & RAG
+## Quick start
 
-> **Hosting switch:** Contribute drafts go to the repo in `docs/site-config.js` (gitignored). Copy `docs/site-config.example.js` → `docs/site-config.js` and use SHA-256 hashes for password/invite (`python scripts/hash_auth_secret.py "secret"`). Keep `environment: "preview"` on the personal repo; set `"production"` when DCS is approved. For real access control on the live domain, use Cloudflare Access (see Deploy setup).
+**New to the repo**
+
+1. Clone the repo and open `docs/index.html` with a local static server (or use the preview URL above).
+2. Copy config: `docs/site-config.example.js` → `docs/site-config.js` (gitignored).
+3. Set login hashes: `python scripts/hash_auth_secret.py "your-password"` → paste into `site-config.js`.
+4. Regenerate data after CSV edits: `python scripts/generate_site_data.py`.
+
+**Updating content**
+
+1. Edit files in `data/`.
+2. Push to `main` — GitHub Actions regenerates `docs/data.js` and deploys Pages.
+3. Optional check: `python scripts/qa_full_site.py`
+
+**Login (v1)**
+
+| Account | Purpose |
+|---|---|
+| Admin | Full site + admin controls |
+| Employee (`team` + shared password) | Browse, suggest tools, share wins |
+| Invite link (`?invite=…`) | Same as employee |
+
+The login screen is a soft gate only — use Cloudflare Access on production for real protection.
 
 ---
 
 ## What’s on the site
 
-| Section | Purpose |
+| Nav | What it is |
 |---|---|
-| **AI hub** | Job chooser (“what do you need to do?”); Start here / Tool of the week under a secondary fold |
-| **Directory** | Full tool inventory — search, status buckets, side-by-side of 2–3 tools, detail modal |
-| **Guides** | When-to-use / skip-when decision guides + documented head-to-head winners |
-| **Prompts** | Searchable prompt library, role quick filters, Before production checklist, copy prompt / copy link |
-| **Playbooks** | Team use cases + learning resources (search + role filters) |
-| **Contribute** | Add a tool (for team Testing after admin approval) or share a win |
-| **Assignments** | Admin assigns Testing/Exploring tools to team members (from roster CSV) |
+| **AI hub** | Job chooser, Start here, Tool of the week |
+| **Directory** | Approved tools (Production, Approved, Archived) — search, compare, detail pages |
+| **Guides** | When to use / skip guides and head-to-head comparisons |
+| **Prompts** | Searchable prompt library |
+| **Playbooks** | Team use cases and learning links |
+| **Suggestions** | Tool queue (New / In review / Rejected), suggest a tool, share a win |
 
-**Access (v1)**
-
-| Login | Sees |
-|---|---|
-| Admin (`auth.username`) | Full site + pending approval panel + tool assignment controls |
-| Employee (`auth.employeeUsername`) | Full site — directory, guides, contribute; assigned tools shown in tool modals |
-| Invite link (`?invite=…`) | Same as employee login |
-
-Stack: plain HTML / CSS / vanilla JS in `docs/` (no framework). Data is generated into `docs/data.js` from CSVs. Auth and feature toggles live in `docs/site-config.js` (gitignored; copy from `site-config.example.js`).
-
-**Deep links (examples):**
-- `?view=home|directory|guides|prompts|playbooks|contribute`
-- `?job=JOB-010` — open AI hub with a job chooser selection
-- `?tool=Cursor` or `?tool=AIT-005` — open a tool detail
-- `?starter=1` — Directory Start here shortlist
-- `?bucket=trusted` — Production + Approved tools
-- `?status=Testing` — filter by status
-- `?view=prompts&pid=PRM-013` — jump to a prompt
-- `?view=prompts&pq=production` — prompt keyword search
-- `?view=playbooks&bq=report` — playbook search
-- `?view=contribute&tab=win` — Share a win form
-- `?compare=1` — Directory side-by-side mode
+Tools being evaluated live on **Suggestions**, not in the Directory, until an admin adds them to `data/ai_tools_directory.csv`.
 
 ---
 
-## Repository structure
+## Tool statuses
 
-```
-ai-resource-center/
-├── README.md
-├── .github/workflows/deploy.yml   # Regenerate data.js + GitHub Pages deploy
-├── data/                          # Source of truth (edit these)
-│   ├── ai_tools_directory.csv     # Tool inventory (+ Assigned To / Testing Notes)
-│   ├── tool_evaluation.csv        # Optional scores / notes per tool
-│   ├── tool_comparison.csv        # Head-to-head winners
-│   ├── chooser_jobs.csv           # Home job → tool recommendations
-│   ├── decision_guides.csv        # Compare tab use-when / skip-when
-│   ├── prompt_library.csv         # Prompt library
-│   ├── team_use_cases.csv         # Playbooks — use cases
-│   ├── learning_resources.csv     # Playbooks — learning links
-│   ├── site_highlights.csv        # Start here shortlist + optional Tool of the week
-│   ├── reference_lists.csv        # Controlled lists (categories, departments, roles)
-│   └── team_members.csv           # Team roster for assignments (Admin-maintained in v1)
-├── scripts/
-│   ├── generate_site_data.py      # CSV → docs/data.js
-│   ├── hash_auth_secret.py        # SHA-256 for site-config passwords
-│   ├── add_team_member.py         # Add/update team_members.csv rows
-│   ├── set_tool_assignment.py     # Set Assigned To on a tool via CLI
-│   ├── qa_full_site.py            # Automated site QA (121 checks)
-│   └── test_contribute_form.py    # Contribute form validation tests
-├── workers/assignment-notify/     # Optional Cloudflare Worker for assignment email (v1.1)
-└── docs/                          # Published site (GitHub Pages)
-    ├── index.html
-    ├── style.css
-    ├── script.js
-    ├── data.js                    # Auto-generated — do not edit by hand
-    ├── site-config.example.js     # Safe template (committed)
-    ├── site-config.js             # Local secrets — gitignored
-    └── shared/                    # DCS header chrome
-```
-
-### Current data snapshot (from generator)
-
-| Source | Count |
+| Status | Where |
 |---|---|
-| Tools | 31 |
-| Categories | 7 |
-| Comparisons | 7 |
-| Evaluations | 30 |
-| Chooser jobs | 10 |
-| Decision guides | 3 |
-| Prompts | 16 |
-| Use cases | 8 |
-| Learning resources | 9 |
-| Team members | 2 |
+| **Production** | Directory — core daily tools |
+| **Approved** | Directory — cleared for team use |
+| **Archived** | Directory — kept for history |
+| **New / In review / Rejected** | Suggestions queue (`data/tool_submissions.csv`) |
 
 ---
 
-## Decision path
+## Configuration (`docs/site-config.js`)
 
-Research → Testing with safe data → Measure impact → **Approved** / **Production**, or archive / reject.
+Copy from `site-config.example.js`. Never commit real secrets.
 
-### Tool status guide
-
-| Status | Meaning |
+| Setting | Purpose |
 |---|---|
-| **Production** | Core daily workflow tool |
-| **Approved** | Approved for team use |
-| **Testing** | Being evaluated now |
-| **Exploring** | On the radar, not day-to-day yet |
-| **Archived** | No longer used — kept for history |
-| **Rejected** | Evaluated and declined |
+| `environment` | `"preview"` or `"production"` |
+| `auth.*` | Login hashes and session settings |
+| `contribute.simpleSubmit` | Google Apps Script URL for tool suggestions |
+| `contribute.winSubmit` | Apps Script URL for share-a-win |
+
+For production deploy, paste the full `site-config.js` into the GitHub Actions secret **`SITE_CONFIG_JS`**.
+
+Apps Script templates: `scripts/tool_submissions_apps_script.js`, `scripts/team_wins_apps_script.js`.
+
+---
+
+## Deploy (maintainers)
+
+1. Repo **Settings → Pages → GitHub Actions** as the source.
+2. Add secret **`SITE_CONFIG_JS`** with production config.
+3. Push to `main`.
+4. Point DNS for `ai.dailycodesolutions.com` at GitHub Pages (CNAME to your org Pages host).
+
+---
+
+## Repository layout
+
+```
+data/                  CSV source of truth
+scripts/
+  generate_site_data.py   CSV → docs/data.js
+  qa_full_site.py         Automated checks
+  hash_auth_secret.py     Password / invite hashes
+docs/                  Published site (HTML, CSS, JS)
+  data.js              Generated — do not edit by hand
+  site-config.js       Local secrets (gitignored)
+.github/workflows/     Deploy on push to main
+```
+
+**Main CSVs**
+
+| File | Powers |
+|---|---|
+| `ai_tools_directory.csv` | Directory + tool detail pages |
+| `tool_submissions.csv` | Suggestions queue |
+| `prompt_library.csv` | Prompts |
+| `team_use_cases.csv` / `learning_resources.csv` | Playbooks |
+| `chooser_jobs.csv` | AI hub job chooser |
+| `decision_guides.csv` / `tool_comparison.csv` | Guides |
+| `site_highlights.csv` | Start here + Tool of the week |
+| `team_members.csv` | Team roster (assignments / admin) |
 
 ---
 
 ## Data safety
 
-Never paste client secrets, API keys, production data, payment data, PII, or confidential client code into unapproved AI tools or into Contribute drafts.
+Do not paste client secrets, production data, or confidential code into AI tools or suggestion forms.
 
 ---
 
-## Updating content
-
-1. Edit the relevant file(s) under `data/` (or re-export from the Google Sheet and replace the CSV).
-2. Push to `main`.
-3. GitHub Actions runs `scripts/generate_site_data.py`, updates `docs/data.js` if needed, and deploys `docs/` to Pages.
-
-**Manual regenerate (optional):**
+## Useful commands
 
 ```bash
 python scripts/generate_site_data.py
-```
-
-**QA before release (optional):**
-
-```bash
-python scripts/test_contribute_form.py
 python scripts/qa_full_site.py
+python scripts/hash_auth_secret.py "secret"
+python scripts/add_team_member.py --name "Name" --email "name@dailycodesolutions.com"
 node --check docs/script.js
 ```
 
-**Local preview:** copy `docs/site-config.example.js` to `docs/site-config.js`, then open `docs/index.html` via any static file server (or open the file in a browser).
-
-### Which CSV feeds what
-
-| CSV | Powers |
-|---|---|
-| `ai_tools_directory.csv` | Directory, Home shortlist / Tool of the week, tool modals |
-| `chooser_jobs.csv` | Home job chooser |
-| `decision_guides.csv` | Guides — decision guides |
-| `tool_comparison.csv` | Guides — head-to-heads + Directory side-by-side notes |
-| `tool_evaluation.csv` | Ratings / eval notes on tool details |
-| `prompt_library.csv` | Prompts tab |
-| `team_use_cases.csv` | Playbooks — use cases |
-| `learning_resources.csv` | Playbooks — learning |
-| `site_highlights.csv` | Home Start here shortlist; optional fixed Tool of the week (`Kind=Tool of the week`) |
-| `reference_lists.csv` | Add-tool form categories, departments, and team roles |
-| `team_members.csv` | Team roster — assignment dropdown; v1 is Admin-maintained via CSV/CLI |
-
-### Team roster and assignments (v1)
-
-- Roster lives in `data/team_members.csv`. Add people with `python scripts/add_team_member.py`.
-- Admin assigns Testing/Exploring tools in the Directory tool modal (saved to `Assigned To` in `ai_tools_directory.csv`) — **off** in v1 (`toolAssignments.enabled: false`).
-- CLI alternative: `python scripts/set_tool_assignment.py --tool "Cursor" --assignee "Akshay"`.
-- Self-registration on Home is **off** in v1 (`teamDirectory.allowSelfRegister: false` in site-config).
-- Assignment email notifications are **off** in v1 (`toolAssignments.notify.enabled: false`).
-
-Use **`Admin`** (not a personal name) for the portal **Owner** field on tools, prompts, and use cases unless a specific team member owns that item.
-
----
-
-## Deploy setup (one-time)
-
-1. GitHub → repo **Settings → Pages → Build and deployment → Source → GitHub Actions**
-2. Add GitHub Actions secret **`SITE_CONFIG_JS`** with the full contents of your production `docs/site-config.js` (deploy fails without it)
-3. Push to `main` — Actions regenerates `docs/data.js` and publishes `docs/`
-4. Set custom domain **`ai.dailycodesolutions.com`** under Pages settings and configure DNS (see below)
-5. Set `environment: "production"` in site-config so Contribute drafts target the company repo
-
-### Soft login gate (client-side)
-
-The username/password screen is a **soft gate** only. Anyone can still download `docs/` assets. Do not treat it as real security for confidential data.
-
-**Local setup**
-
-1. Copy `docs/site-config.example.js` → `docs/site-config.js`
-2. Generate hashes (never commit plaintext passwords):
-
-```bash
-python scripts/hash_auth_secret.py "admin-password"
-python scripts/hash_auth_secret.py "shared-employee-password"
-python scripts/hash_auth_secret.py "your-invite-token"
-```
-
-3. Set `auth.passwordHash` (admin), `auth.employeePasswordHash` (shared team login), and optional `auth.inviteTokenHash`. Use `auth.username` for admin (e.g. `admin@dailycodesolutions.com`) and `auth.employeeUsername` for the shared employee account (default `team`). Set a unique `auth.sessionSalt`. Default session length is **7 days**.
-
-**V1 production defaults** (in site-config):
-
-```javascript
-environment: "production",
-teamDirectory: { enabled: true, allowSelfRegister: false },
-toolAssignments: { enabled: false, notify: { enabled: false } },
-```
-
-See **Access (v1)** above for who sees what after login.
-
-**Deploy secret (GitHub Actions)**
-
-- Repo → **Settings → Secrets → Actions** → add `SITE_CONFIG_JS` with the full contents of your real `docs/site-config.js`
-- Deploy uses that secret when present; otherwise it falls back to the example file
-
-### Real protection for production (`ai.dailycodesolutions.com`)
-
-Put auth **in front of** the static site before company-wide release:
-
-1. Put the domain behind **Cloudflare** (or similar)
-2. Enable **Cloudflare Access** — allow `@dailycodesolutions.com` (Google Workspace / email OTP)
-3. Optionally set `auth.enabled: false` in site-config once Access is on (avoid double login)
-
-Client-only login cannot hide `data.js`. Prefer Access (or SSO) for anything sensitive.
-
-### Custom domain (`ai.dailycodesolutions.com`)
-
-1. In the **company** GitHub repo (Pages settings), set custom domain to `ai.dailycodesolutions.com` and enable HTTPS.
-2. At your DNS provider, add a **CNAME** record: `ai` → `daily-code-solutions.github.io` (use the org/user Pages host GitHub shows).
-3. Wait for DNS + GitHub certificate, then open https://ai.dailycodesolutions.com/
-4. In `docs/site-config.js`, set `environment: "production"` so Contribute drafts and pending queue point at the company repo.
-
-### Personal notes (not in git)
-
-Put local-only checklists and runbooks in **`personal/`** (gitignored). Examples: launch guide, feature toggles, production checklist. Add any future personal files there — no need to update `.gitignore`.
-
----
-
-## Source
-
-Content originated from Google Sheets: *AI Resource Center — DCS AI Capability Draft*. The CSVs under `data/` are the versioned source used by this repo and the live site.
+Personal runbooks and notes: `personal/` (gitignored).
