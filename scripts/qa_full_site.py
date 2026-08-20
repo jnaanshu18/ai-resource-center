@@ -387,6 +387,11 @@ def main() -> int:
     else:
         record("FAIL", "Contribute", "Share a win form missing from Playbooks")
 
+    if "fetchApprovedWinUseCases" in script and "listWins" in apps and "mergeUseCases" in script:
+        record("PASS", "Contribute", "Approved Team wins merge into Playbooks use cases")
+    else:
+        record("FAIL", "Contribute", "Live Team wins → Playbooks wiring missing")
+
     if "effectiveSubmissionStatus" in script:
         record("PASS", "Contribute", "Unassigned submissions cannot show In review")
     else:

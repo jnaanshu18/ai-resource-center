@@ -46,8 +46,8 @@ The login screen is a soft gate only — use Cloudflare Access on production for
 | **Directory** | Approved tools (Production, Approved, Archived) — search, compare, detail pages |
 | **Guides** | When to use / skip guides and head-to-head comparisons |
 | **Prompts** | Searchable prompt library |
-| **Playbooks** | Team use cases and learning links |
-| **Suggestions** | Tool queue (New / In review / Rejected), suggest a tool, share a win |
+| **Playbooks** | Team use cases (CSV + **Approved** rows from Team wins) and learning links |
+| **Suggestions** | Tool queue (New / In review / Rejected), suggest a tool |
 
 Tools being evaluated live on **Suggestions**, not in the Directory, until an admin adds them to `data/ai_tools_directory.csv`.
 

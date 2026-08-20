@@ -12,10 +12,12 @@
  * 6. Copy the web app URL into docs/site-config.js:
  *      contribute.simpleSubmit.submitUrl  AND  contribute.winSubmit.submitUrl  (same URL)
  * 7. Optional: File → Share → Publish to web → CSV of the Submissions tab → csvUrl
+ * 8. After updating this script: Deploy → Manage deployments → pencil → New version.
  *
  * Status values (Submissions): New | In review | Approved | Rejected
  * Status values (Team wins): New | Approved | Rejected
- * Approve also appends a row to the "Directory queue" tab for maintainer sync.
+ * Approve a tool suggestion: also appends a row to "Directory queue".
+ * Approve a team win: set Status to Approved on Team wins — the site lists it in Playbooks.
  */
 
 const SUBMISSION_HEADERS = [
@@ -160,6 +162,30 @@ function colIndex(map, names) {
     if (map[key] != null) return map[key];
   }
   return -1;
+}
+
+function jsonCell_(value) {
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  }
+  return value;
+}
+
+function sheetObjects_(sheet) {
+  const values = sheet.getDataRange().getValues();
+  if (!values.length) return [];
+  const headers = values[0].map(function (h) {
+    return String(h || "").trim();
+  });
+  const rows = [];
+  for (var i = 1; i < values.length; i++) {
+    const row = {};
+    headers.forEach(function (h, idx) {
+      row[h] = jsonCell_(values[i][idx]);
+    });
+    rows.push(row);
+  }
+  return rows;
 }
 
 function jsonOut(obj) {
@@ -518,30 +544,29 @@ function doPost(e) {
   }
 }
 
+function listWinRows_() {
+  const sheet = winSheet();
+  const rows = sheetObjects_(sheet).filter(function (row) {
+    return String(row.Title || row.title || "").trim();
+  });
+  return jsonOut({ ok: true, rows: rows });
+}
+
 function doGet(e) {
   try {
-    const action = e && e.parameter ? String(e.parameter.action || "") : "";
+    const action = String(e && e.parameter ? e.parameter.action || "" : "").trim().toLowerCase();
+    if (action === "listwins") return listWinRows_();
     if (action !== "list") {
       return jsonOut({
         ok: true,
-        message: "Tool submissions endpoint. Use ?action=list or POST submit/assign/approve/reject.",
+        message: "Tool submissions endpoint. Use ?action=list, ?action=listWins, or POST submit/assign/approve/reject/win.",
       });
     }
     const sheet = submissionSheet();
     ensureHeaders(sheet);
-    const values = sheet.getDataRange().getValues();
-    if (!values.length) return jsonOut({ ok: true, rows: [] });
-    const headers = values[0].map(function (h) {
-      return String(h || "").trim();
+    const rows = sheetObjects_(sheet).filter(function (row) {
+      return String(row.Link || row.link || "").trim();
     });
-    const rows = [];
-    for (var i = 1; i < values.length; i++) {
-      const row = {};
-      headers.forEach(function (h, idx) {
-        row[h] = values[i][idx];
-      });
-      if (String(row.Link || row.link || "").trim()) rows.push(row);
-    }
     return jsonOut({ ok: true, rows: rows });
   } catch (err) {
     return jsonOut({ ok: false, error: String(err), rows: [] });

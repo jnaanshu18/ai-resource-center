@@ -1287,6 +1287,28 @@ const USE_CASES = [
     "impact": "Faster exploratory charts on sample datasets",
     "date": "2026-08-05",
     "role": "Data"
+  },
+  {
+    "id": "UC-009",
+    "title": "Cut project busywork even when I am away from the laptop",
+    "department": "Engineering",
+    "tool": "Hermes Agent",
+    "status": "Approved",
+    "owner": "Anshu Jain",
+    "impact": "I can keep the AI Resource Center moving from Telegram, not only at the desk. Hermes handles setup questions, Google Apps Script steps, permission checks, and verification so I do not stall until I am back on the laptop. That shortened the loop from blocked to done on the same day.",
+    "date": "2026-08-20",
+    "role": "Engineering"
+  },
+  {
+    "id": "UC-010",
+    "title": "Run Gmail, WhatsApp, calendar, and daily follow-ups from one OpenClaw thread",
+    "department": "Engineering",
+    "tool": "OpenClaw",
+    "status": "Approved",
+    "owner": "Anshu Jain",
+    "impact": "Inbox and chat no longer wait until I am at the desk. OpenClaw triages Gmail, drafts WhatsApp replies, checks the calendar, and knocks out small everyday tasks in one place. I spend less time hopping apps and less time catching up after I step away.",
+    "date": "2026-08-20",
+    "role": "Engineering"
   }
 ];
 const LEARNING = [

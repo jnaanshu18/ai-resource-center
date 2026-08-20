@@ -3417,13 +3417,6 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   gap: 1.25rem;
   container-type: inline-size;
 }
-.playbooks-split__aside {
-  position: sticky;
-  top: calc(var(--header-offset, 72px) + 0.75rem);
-}
-@media (max-width: 960px) {
-  .playbooks-split__aside { position: static; }
-}
 .submissions-split__form,
 .submissions-split__win,
 .playbooks-split__win {

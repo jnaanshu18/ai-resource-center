@@ -120,6 +120,7 @@ const state = {
   submissionStatus: "All",
   submissionSearch: "",
   submissionsCache: [],
+  playbookUseCases: null,
   directoryApproveItem: null,
   directoryApprovePayload: null,
 };
@@ -1601,7 +1602,7 @@ function renderCurrentView() {
   if (state.view === "home") renderHome();
   else if (state.view === "guides") renderGuides();
   else if (state.view === "prompts") renderPrompts();
-  else if (state.view === "playbooks") renderPlaybooks();
+  else if (state.view === "playbooks") renderPlaybooks(true);
   else if (state.view === "contribute") renderContribute();
   else if (state.view === "submissions") renderSubmissions();
   else if (state.view === "directory") {
@@ -2270,6 +2271,7 @@ function playbookMatchesSearch(item, query) {
     item.status,
     item.owner,
     item.impact,
+    item.how,
     item.role,
     item.type,
     item.skillLevel,
@@ -2278,9 +2280,115 @@ function playbookMatchesSearch(item, query) {
   return tokens.every(token => haystack.includes(token));
 }
 
-function renderPlaybooks() {
+function useCaseKey(item) {
+  const title = String(item.title || "").trim().toLowerCase();
+  const tool = String(item.tool || "").trim().toLowerCase();
+  return `${title}::${tool}`;
+}
+
+function sheetDateText(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+  return raw;
+}
+
+function normalizeWinStatus(raw) {
+  const lower = String(raw || "New").trim().toLowerCase();
+  if (lower === "approved") return "Approved";
+  if (lower === "rejected") return "Rejected";
+  return "New";
+}
+
+function winToUseCase(row) {
+  const title = submissionField(row, "Title");
+  if (!title) return null;
+  if (normalizeWinStatus(submissionField(row, "Status")) !== "Approved") return null;
+  const tool = submissionField(row, "Tool used", "Tool");
+  const role = submissionField(row, "Role") || "Everyone";
+  const owner = submissionField(row, "Submitted by", "Submitter", "Name") || "Team";
+  return {
+    id: `WIN-${useCaseKey({ title, tool }).replace(/[^a-z0-9]+/gi, "-").slice(0, 40)}`,
+    title,
+    department: role,
+    tool,
+    status: "Approved",
+    owner,
+    impact: submissionField(row, "Impact"),
+    how: submissionField(row, "How"),
+    date: sheetDateText(submissionField(row, "Submitted", "Date", "Timestamp")),
+    role,
+    fromSheet: true,
+  };
+}
+
+function mergeUseCases(baked, liveApproved) {
+  const map = new Map();
+  (baked || []).forEach(item => map.set(useCaseKey(item), item));
+  const extras = [];
+  (liveApproved || []).forEach(item => {
+    if (!item) return;
+    const key = useCaseKey(item);
+    if (map.has(key)) map.set(key, { ...map.get(key), ...item });
+    else extras.push(item);
+  });
+  extras.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+  return [...extras, ...map.values()];
+}
+
+function contributeListUrl(base, action) {
+  const url = String(base || "").trim();
+  if (!url) return "";
+  return url.includes("?") ? `${url}&action=${action}` : `${url}?action=${action}`;
+}
+
+async function fetchJsonRows(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`List request failed (${res.status})`);
+  const data = await res.json();
+  return Array.isArray(data.rows) ? data.rows : [];
+}
+
+async function fetchApprovedWinUseCases() {
+  const cfg = contributeConfig();
+  let rows = [];
+  if (cfg.winCsvUrl) {
+    try {
+      const res = await fetch(cfg.winCsvUrl, { cache: "no-store" });
+      if (res.ok) rows = rowsFromCsv(await res.text());
+    } catch (_) { /* fall through to Apps Script list */ }
+  }
+  if (!rows.length && cfg.winSubmitUrl) {
+    try {
+      rows = await fetchJsonRows(contributeListUrl(cfg.winSubmitUrl, "listWins"));
+    } catch (_) {
+      if (cfg.winSubmitUrl !== cfg.submitUrl) {
+        rows = await fetchJsonRows(contributeListUrl(cfg.winSubmitUrl, "list"));
+      }
+    }
+  }
+  return rows.map(winToUseCase).filter(Boolean);
+}
+
+async function refreshPlaybookWinsFromSheet() {
+  let merged = useCasesData();
+  try {
+    merged = mergeUseCases(useCasesData(), await fetchApprovedWinUseCases());
+  } catch (_) { /* baked use cases still show */ }
+  state.playbookUseCases = merged;
+  if (state.view === "playbooks") paintPlaybooks(merged);
+}
+
+function renderPlaybooks(refreshSheet = false) {
   applyContributeMode();
   populateWinToolDropdown();
+  paintPlaybooks(state.playbookUseCases || useCasesData());
+  if (refreshSheet || !state.playbookUseCases) refreshPlaybookWinsFromSheet();
+}
+
+function paintPlaybooks(cases) {
   const useGrid = document.getElementById("useCaseGrid");
   const learnGrid = document.getElementById("learnGrid");
   const countEl = document.getElementById("playbookResultCount");
@@ -2292,7 +2400,6 @@ function renderPlaybooks() {
     searchInput.value = state.playbookSearch;
   }
 
-  const cases = useCasesData();
   const learning = learningData();
   const roles = uniqueRoles([...cases, ...learning]);
   renderFilterChips("playbookRoleChips", roles, state.playbookRole, "playbook-role");
@@ -2324,6 +2431,7 @@ function renderPlaybooks() {
           <span class="badge badge--${group}">${escapeHtml(uc.status || "—")}</span>
         </div>
         <p class="usecase-card__impact">${escapeHtml(uc.impact)}</p>
+        ${uc.how ? `<p class="usecase-card__impact">${escapeHtml(uc.how)}</p>` : ""}
         <div class="usecase-card__meta">
           ${tool
             ? `<button type="button" class="linkbtn" data-open-tool="${escapeHtml(tool.id)}">${escapeHtml(uc.tool)}</button>`

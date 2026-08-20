@@ -12,7 +12,7 @@
  * 5. Optional: File → Share → Publish to web → CSV; paste URL into winSubmit.csvUrl
  *
  * Status values: New | Approved | Rejected
- * Approve by adding the row to data/team_use_cases.csv, then push to main.
+ * Approved rows are listed by the site (?action=list or ?action=listWins) in Playbooks.
  */
 
 const WIN_HEADERS = [
@@ -116,9 +116,9 @@ function doPost(e) {
 
 function doGet(e) {
   try {
-    const action = e && e.parameter ? String(e.parameter.action || "") : "";
-    if (action !== "list") {
-      return jsonOut({ ok: true, message: "Team wins endpoint. Use ?action=list" });
+    const action = String(e && e.parameter ? e.parameter.action || "" : "").trim().toLowerCase();
+    if (action !== "list" && action !== "listwins") {
+      return jsonOut({ ok: true, message: "Team wins endpoint. Use ?action=list or ?action=listWins" });
     }
     const sheet = winSheet();
     ensureWinHeaders(sheet);
