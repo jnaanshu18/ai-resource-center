@@ -1,3 +1,8 @@
 Member ID,Name,Email,Department,Role,Active
-TM-001,Anshu Jain,jnaanshu@gmail.com,Engineering,Admin,yes
-TM-002,Akshay,akshay@dailycodesolutions.com,Engineering,Team,yes
+TM-001,Anshu Jain,jnaanshu@gmail.com,Engineering,Team,yes
+TM-002,Akshay Jain,akshay@dailycodesolutions.com,Engineering,Admin,yes
+TM-003,Aagam Jain,aagam@dailycodesolutions.com,Engineering,Admin,yes
+TM-004,Sourabh Jain,sourabh@dailycodesolutions.com,Engineering,Team,yes
+TM-005,Chinmay Jain,chinmay@dailycodesolutions.com,Engineering,Team,yes
+TM-006,Parmeshver,parmeshver@dailycodesolutions.com,Engineering,Team,yes
+TM-007,Karan Longani,karan@dailycodesolutions.com,Engineering,Team,yes

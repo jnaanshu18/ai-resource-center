@@ -24,7 +24,7 @@
         </a>
         <p class="login-gate__welcome">Internal access</p>
         <h1 class="login-gate__brand-title">Explore our AI toolkit</h1>
-        <p class="login-gate__lead">Approved tools, prompts, and playbooks for Daily Code Solutions.</p>
+        <p class="login-gate__lead">Approved tools, prompts, and team stories for Daily Code Solutions.</p>
         <nav class="login-gate__social" aria-label="Daily Code Solutions on the web">
           <a class="login-gate__social-btn login-gate__social-btn--site" href="https://dailycodesolutions.com/" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions website">
             <img src="shared/assets/favicon.jpg" width="22" height="22" alt="">
@@ -278,10 +278,10 @@
     <section class="hero">
       <div class="hero__container">
         <h1 class="hero-heading">
-          When to <span class="text-gradient">use</span>
+          Choose a <span class="text-gradient">tool</span>
         </h1>
         <p class="hero-text">
-          When to pick a tool, when to skip it, and which one won last time.
+          Official DCS picks: when to use a tool, when to skip it, and what won last time. For a teammate’s real example, <button type="button" class="linkbtn" data-go-view="playbooks">Team stories →</button>
         </p>
       </div>
     </section>
@@ -289,8 +289,8 @@
       <section class="panel guides-split__col" aria-labelledby="guidesTitle">
         <div class="panel__head">
           <div>
-            <h2 class="panel__title" id="guidesTitle">Decision guides</h2>
-            <p class="panel__desc">Expand Assistants, Coding, or Research to see use-when / skip-when picks.</p>
+            <h2 class="panel__title" id="guidesTitle">Official picks</h2>
+            <p class="panel__desc">Expand Assistants, Coding, or Research to see use-when / skip-when. Need a real example from a teammate? <button type="button" class="linkbtn" data-go-view="playbooks">Team stories →</button></p>
           </div>
         </div>
         <div id="guidesList"></div>
@@ -363,9 +363,9 @@
   <section class="view" id="view-playbooks" data-view-panel="playbooks" hidden>
     <section class="hero">
       <div class="hero__container">
-        <h1 class="hero-heading">Playbooks</h1>
+        <h1 class="hero-heading">Team stories</h1>
         <p class="hero-text">
-          Real team use cases, learning paths by role, and a place to share a win.
+          Real write-ups from Daily Code Solutions people — not vendor copy. Not sure which tool to start with? <button type="button" class="linkbtn" data-go-view="guides">Choose a tool →</button>
         </p>
       </div>
     </section>
@@ -374,10 +374,10 @@
         <div class="prompt-search-row">
           <div class="search prompt-search">
             <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            <input type="search" id="playbookSearchInput" placeholder="Search use cases & learning — e.g. report, Power BI, Cursor…" autocomplete="off" aria-label="Search playbooks">
+            <input type="search" id="playbookSearchInput" placeholder="Search teammate stories &amp; learning — e.g. Gmail, Cursor, reporting…" autocomplete="off" aria-label="Search team stories">
           </div>
         </div>
-        <div class="role-chips" id="playbookRoleChips" aria-label="Filter playbooks by role"></div>
+        <div class="role-chips" id="playbookRoleChips" aria-label="Filter team stories by role"></div>
         <div class="resultbar">
           <span id="playbookResultCount"></span>
           <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
@@ -386,8 +386,8 @@
         <section class="panel" aria-labelledby="useCasesTitle">
           <div class="panel__head">
             <div>
-              <h2 class="panel__title" id="useCasesTitle">Team use cases</h2>
-              <p class="panel__desc">Proof from peers — what we actually run and the impact.</p>
+              <h2 class="panel__title" id="useCasesTitle">How DCS people use these tools</h2>
+              <p class="panel__desc">Each card is a real experience from a Daily Code Solutions employee: the tool, what they did, and what it changed. Need an official pick instead? <button type="button" class="linkbtn" data-go-view="guides">Choose a tool →</button></p>
             </div>
           </div>
           <div class="usecase-grid" id="useCaseGrid"></div>
@@ -409,7 +409,7 @@
           <div class="panel__head">
             <div>
               <h2 class="panel__title" id="shareWinTitle">Share a win</h2>
-              <p class="panel__desc">Which tool helped, and what changed?</p>
+              <p class="panel__desc">Add your own DCS story. After a teammate reviews it, it appears in the list on the left.</p>
             </div>
           </div>
           <form id="winForm" novalidate>
@@ -459,11 +459,11 @@
             <div class="form-actions">
               <button type="submit" class="btn-base btn-primary" id="winSubmit">Share win</button>
             </div>
-            <p class="field-note">New until someone sets Status to Approved on the Team wins tab — then it shows in Team use cases.</p>
+            <p class="field-note">Reviewed first — then it shows with the other DCS experiences.</p>
           </form>
           <div id="winSuccess" hidden>
             <h3 class="panel__title">Win submitted</h3>
-            <p class="panel__desc" id="winSuccessDesc">It stays off Playbooks until Status is Approved on the Team wins tab.</p>
+            <p class="panel__desc" id="winSuccessDesc">Thanks. After review it will show with the other DCS experiences on the left.</p>
             <div class="suggest-draft-actions">
               <button type="button" class="linkbtn" id="winAnother">Share another</button>
             </div>
@@ -488,6 +488,7 @@
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="submissionsTitle">Tool queue</h2>
+            <p class="panel__desc" id="submissionsQueueHint" hidden></p>
           </div>
         </div>
         <div class="submissions-search-row">
@@ -524,22 +525,20 @@
               </div>
               <div class="field" data-simple-field="note">
                 <label for="simple_note">Why suggest this?</label>
-                <input type="text" id="simple_note" name="note" maxlength="200" placeholder="Optional — what problem it might solve">
+                <input type="text" id="simple_note" name="note" maxlength="200" placeholder="What problem it might solve" aria-describedby="simple_note_err">
                 <p class="field-error" id="simple_note_err" hidden></p>
               </div>
               <div class="field" id="simpleAssignField" data-simple-field="assign" hidden>
                 <label for="simple_assign">Assign to</label>
-                <select id="simple_assign" name="assignTo" aria-describedby="simple_assign_hint">
-                  <option value="">Optional — leave unassigned</option>
+                <select id="simple_assign" name="assignTo">
+                  <option value="">Choose a teammate</option>
                 </select>
-                <p class="field-note" id="simple_assign_hint">Assign a reviewer when you suggest the tool.</p>
                 <p class="field-error" id="simple_assign_err" hidden></p>
               </div>
               <p class="field-error field-error--form" id="simpleSubmitErr" hidden></p>
               <div class="form-actions">
                 <button type="submit" class="btn-base btn-primary" id="simpleSubmitBtn">Suggest tool</button>
               </div>
-              <p class="field-note" style="text-align:left">New suggestions appear in the queue first. They join the Directory only after review and approval.</p>
             </form>
           </div>
 
@@ -563,7 +562,7 @@
           Share a <span class="text-gradient">win</span>
         </h1>
         <p class="hero-text">
-          Tell the team what tool helped and what impact it had. Submissions are reviewed before they land in Playbooks.
+          Tell the team what tool helped and what impact it had. Submissions are reviewed before they land in Team stories.
         </p>
       </div>
     </section>
@@ -724,6 +723,43 @@
   <div class="modal modal--assignment" id="assignmentModal" role="dialog" aria-modal="true" aria-labelledby="assignmentTitle">
     <button class="modal__close" id="assignmentClose" aria-label="Close">✕</button>
     <div id="assignmentBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="submissionReviewOverlay" hidden>
+  <div class="modal modal--submission-review" id="submissionReviewModal" role="dialog" aria-modal="true" aria-labelledby="submissionReviewTitle">
+    <button class="modal__close" id="submissionReviewClose" aria-label="Close">✕</button>
+    <p class="submission-review__kicker">Review</p>
+    <h2 class="modal__name" id="submissionReviewTitle">Tool</h2>
+    <div class="submission-review__meta">
+      <span class="badge" id="submissionReviewBadge">New</span>
+      <span id="submissionReviewDate"></span>
+      <span id="submissionReviewLinkWrap"></span>
+    </div>
+    <div class="submission-review__block" id="submissionReviewWhy" hidden>
+      <p class="submission-review__text" id="submissionReviewWhyText"></p>
+    </div>
+    <div class="submission-review__block" id="submissionReviewAdminNote" hidden>
+      <p class="submission-review__text" id="submissionReviewAdminNoteText"></p>
+    </div>
+    <p class="field-warn" id="submissionReviewDup" hidden></p>
+    <div class="field" data-review-field="assign">
+      <label for="submissionReviewAssign">Assign to</label>
+      <select id="submissionReviewAssign"></select>
+      <p class="field-error" id="submissionReviewAssignErr" hidden></p>
+    </div>
+    <div class="field" data-review-field="comment">
+      <label for="submissionReviewComment">Comment</label>
+      <textarea id="submissionReviewComment" rows="2" maxlength="400" placeholder="Required if you reject"></textarea>
+      <div class="field-meta"><span class="field-count" id="submissionReviewCommentCount">0 / 400</span></div>
+      <p class="field-error" id="submissionReviewCommentErr" hidden></p>
+    </div>
+    <p class="field-error field-error--form" id="submissionReviewErr" hidden></p>
+    <div class="form-actions submission-review__actions">
+      <button type="button" class="btn-base btn-secondary submission-review__reject" id="submissionReviewReject">Reject</button>
+      <button type="button" class="btn-base btn-secondary" id="submissionReviewAssignBtn">Assign</button>
+      <button type="button" class="btn-base btn-primary" id="submissionReviewDirectory" hidden>Add to Directory</button>
+    </div>
   </div>
 </div>
 

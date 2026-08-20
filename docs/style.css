@@ -3482,6 +3482,7 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 0.9rem;
   margin-top: 0.75rem;
+  overflow: visible;
 }
 @media (min-width: 961px) {
   .submissions-list {
@@ -3501,6 +3502,10 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
 .submission-item:hover,
 .directory-item:hover {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+}
+.submission-item:hover,
+.submission-item:focus-within {
+  z-index: 40;
 }
 .submission-item.playbook-tone--everyone,
 .directory-item.playbook-tone--everyone {
@@ -3553,30 +3558,45 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
+.submission-item__top-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
 .submission-item__tip {
   display: none;
   position: absolute;
-  z-index: 30;
-  left: 0;
-  right: 0;
-  top: calc(100% + 0.35rem);
-  padding: 0.75rem 0.85rem;
+  z-index: 50;
+  left: 0.4rem;
+  right: 0.4rem;
+  top: calc(100% + 0.45rem);
+  padding: 0.8rem 0.9rem;
   background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 0.65rem;
-  box-shadow: var(--shadow-soft);
+  border: 2px solid #334155;
+  border-radius: 0.7rem;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
   font-size: 0.84rem;
   line-height: 1.45;
-  color: var(--text-muted);
+  color: var(--text);
   pointer-events: none;
+}
+.submission-item__tip::before {
+  content: "";
+  position: absolute;
+  left: 1.1rem;
+  top: -8px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-left: 2px solid #334155;
+  border-top: 2px solid #334155;
+  transform: rotate(45deg);
 }
 .submission-item:hover .submission-item__tip,
 .submission-item:focus-within .submission-item__tip {
   display: block;
-}
-.submission-item__tip:has(.submission-item__assign),
-.submission-item__tip:has(.submission-item__admin) {
-  pointer-events: auto;
 }
 .submission-item__tip-meta {
   display: flex;
@@ -3587,82 +3607,141 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
 .submission-item__tip-meta span {
   white-space: nowrap;
 }
-.submission-item__tip-open {
-  margin: 0.5rem 0 0;
-}
-.submission-item__tip-open-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #0f766e;
-  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
-  border: 1px dashed #6ee7b7;
-}
 .submission-item__tip-note {
   margin: 0.5rem 0 0;
   font-size: 0.84rem;
   color: var(--text);
   line-height: 1.45;
 }
-.submission-item__assign {
-  margin-top: 0.65rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--border);
+.submission-item__tip-note:first-child {
+  margin-top: 0;
 }
-.submission-item__assign-label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.78rem;
-  font-weight: 600;
+.submission-item__why {
+  margin: 0;
+  font-size: 0.82rem;
   color: var(--text);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.submission-item__assign-row {
+.submission-item__why--reject {
+  color: #9f1239;
+}
+.submission-item__owner {
+  margin: auto 0 0;
+  padding-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.submission-item__owner--open {
+  color: #b45309;
+  font-weight: 650;
+}
+.submission-item__review-btn {
+  width: auto;
+  min-width: 0;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+.modal--submission-review {
+  max-width: min(460px, calc(100vw - 32px));
+  padding: 1.25rem 1.35rem 1.15rem;
+}
+.modal--submission-review .modal__close {
+  top: 12px;
+  right: 12px;
+}
+.modal--submission-review .modal__name {
+  font-size: 1.2rem;
+  line-height: 1.25;
+  margin: 0 2.2rem 0.45rem 0;
+}
+.submission-review__kicker {
+  margin: 0 0 0.1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.submission-review__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
   align-items: center;
+  gap: 0.35rem 0.7rem;
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
-.submission-item__assign-select {
-  flex: 1 1 8rem;
-  min-width: 0;
-  padding: 0.35rem 0.5rem;
+.submission-review__site {
+  color: var(--brand);
+  text-decoration: none;
+  font-weight: 600;
+}
+.submission-review__site:hover {
+  text-decoration: underline;
+}
+.submission-review__block {
+  margin: 0 0 0.85rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-soft);
   border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  font: inherit;
+  border-radius: var(--radius-sm);
+}
+.submission-review__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.submission-review__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.submission-review__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+.submission-review__actions .btn-base {
+  min-width: 0;
+  padding: 0.42rem 0.8rem;
   font-size: 0.84rem;
 }
-.submission-item__assign-btn {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.82rem;
-}
-.submission-item__assign-err {
-  margin: 0.35rem 0 0;
-  font-size: 0.78rem;
+.submission-review__reject {
+  margin-right: auto;
   color: #b91c1c;
+  border-color: #fecaca;
+  background: #fff;
 }
-.submission-item__admin {
-  margin-top: 0.65rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--border);
+.submission-review__reject:hover {
+  color: #991b1b;
+  border-color: #fca5a5;
+  background: #fff1f2;
 }
-.submission-item__admin-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem 0.65rem;
-  align-items: center;
+#view-submissions .submissions-split__form .form-actions {
+  justify-content: flex-start;
+  margin-top: 0.15rem;
 }
-.submission-item__approve-btn {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.82rem;
+#view-submissions .submissions-split__form .panel__head {
+  margin-bottom: 0.45rem;
 }
-.submission-item__reject-btn {
-  font-size: 0.82rem;
-  color: #b91c1c;
+#view-submissions .submissions-split__list .panel__head {
+  margin-bottom: 0.65rem;
 }
 .modal--directory-approve {
   max-width: 720px;

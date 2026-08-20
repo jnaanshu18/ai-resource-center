@@ -17,7 +17,7 @@
  * Status values (Submissions): New | In review | Approved | Rejected
  * Status values (Team wins): New | Approved | Rejected
  * Approve a tool suggestion: also appends a row to "Directory queue".
- * Approve a team win: set Status to Approved on Team wins — the site lists it in Playbooks.
+ * Approve a team win: set Status to Approved on Team wins — the site lists it in Team stories.
  */
 
 const SUBMISSION_HEADERS = [
@@ -25,6 +25,8 @@ const SUBMISSION_HEADERS = [
   "Tool name",
   "Link",
   "Submitted by",
+  "Why Suggested",
+  "Why Rejected",
   "Note",
   "Status",
   "Assigned to",
@@ -133,12 +135,26 @@ function ensureHeaders(sheet) {
   const refreshed = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(function (h) {
     return String(h || "").trim();
   });
+  var hasWhySuggested = refreshed.some(function (h) {
+    return h.toLowerCase() === "why suggested";
+  });
+  if (!hasWhySuggested) {
+    for (var i = 0; i < refreshed.length; i++) {
+      var lower = refreshed[i].toLowerCase();
+      if (lower === "note" || lower === "notes") {
+        sheet.getRange(1, i + 1).setValue("Why Suggested");
+        refreshed[i] = "Why Suggested";
+        break;
+      }
+    }
+  }
   SUBMISSION_HEADERS.forEach(function (name) {
     if (!refreshed.some(function (h) {
       return h.toLowerCase() === name.toLowerCase();
     })) {
       const col = sheet.getLastColumn() + 1;
       sheet.getRange(1, col).setValue(name);
+      refreshed.push(name);
     }
   });
 }
@@ -243,6 +259,15 @@ function getCell(sheet, rowNum, info, names) {
   return String(sheet.getRange(rowNum, idx + 1).getValue() || "").trim();
 }
 
+function appendAdminNote_(sheet, rowNum, info, comment) {
+  const idx = colIndex(info.map, ["Note"]);
+  if (idx < 0) return;
+  const prev = String(sheet.getRange(rowNum, idx + 1).getValue() || "").trim();
+  const next = prev ? prev + " — " + comment : comment;
+  sheet.getRange(rowNum, idx + 1).setValue(next.slice(0, 500));
+}
+}
+
 function joinList(value) {
   if (!value) return "";
   if (Object.prototype.toString.call(value) === "[object Array]") {
@@ -283,6 +308,8 @@ function handleAssign(data) {
   setCell(sheet, rowNum, info, ["Assigned date"], today);
   setCell(sheet, rowNum, info, ["Status"], "In review");
   setCell(sheet, rowNum, info, ["Rejected date"], "");
+  const comment = String(data.comment || "").trim().slice(0, 400);
+  if (comment) appendAdminNote_(sheet, rowNum, info, comment);
   return jsonOut({ ok: true, assignedDate: today });
 }
 
@@ -305,14 +332,7 @@ function handleReject(data) {
   const today = new Date().toISOString().slice(0, 10);
   setCell(sheet, rowNum, info, ["Status"], "Rejected");
   setCell(sheet, rowNum, info, ["Rejected date"], today);
-  if (reason) {
-    const noteIdx = colIndex(info.map, ["Note", "Notes"]);
-    if (noteIdx >= 0) {
-      const prev = String(sheet.getRange(rowNum, noteIdx + 1).getValue() || "").trim();
-      const next = prev ? prev + " — Rejected: " + reason : "Rejected: " + reason;
-      sheet.getRange(rowNum, noteIdx + 1).setValue(next.slice(0, 500));
-    }
-  }
+  if (reason) setCell(sheet, rowNum, info, ["Why Rejected"], reason);
   return jsonOut({ ok: true, rejectedDate: today });
 }
 
@@ -371,7 +391,7 @@ function handleApprove(data) {
     pickDir(dir, ["owner", "Owner"], "Admin"),
     pickDir(dir, ["dateAdded", "Date Added"], today),
     pickDir(dir, ["lastReviewed", "Last Reviewed"], today),
-    pickDir(dir, ["notes", "Notes"], getCell(sheet, rowNum, info, ["Note", "Notes"])),
+    pickDir(dir, ["notes", "Notes"], getCell(sheet, rowNum, info, ["Note"])),
     pickDir(dir, ["limitations", "Limitations"], ""),
     pickDir(dir, ["whenToUse", "When to Use"], ""),
     pickDir(dir, ["alternatives", "Alternatives"], ""),
@@ -406,7 +426,7 @@ function handleSubmit(data) {
   set(["Tool name", "Tool"], toolName);
   set(["Link", "URL"], link);
   set(["Submitted by", "Submitter"], String(data.submittedBy || "").trim().slice(0, 60));
-  set(["Note", "Notes"], String(data.note || "").trim().slice(0, 200));
+  set(["Why Suggested"], String(data.note || data.whySuggested || "").trim().slice(0, 200));
   const assignee = String(data.assignee || data.assignedTo || "").trim();
   const assignOnSubmit = assignee && checkAssignSecret(data.token);
   if (assignOnSubmit) {

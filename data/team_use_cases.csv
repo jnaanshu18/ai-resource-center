@@ -1,11 +1,11 @@
-Use Case ID,Title,Department,Tool Used,Status,Owner,Impact,Date,Role
-UC-001,Weekly report automation,Operations,ChatGPT,Approved,Admin,Saves ~2 hours per week drafting ops summaries,2026-07-07,Operations
-UC-002,Code review assistant,Engineering,Cursor,Approved,Admin,Faster first-pass review consistency on PRs,2026-07-07,Engineering
-UC-003,Customer email drafting,Operations,Claude,Testing,Admin,Faster response drafts with clearer tone,2026-07-07,Operations
-UC-004,Cited competitor research,Everyone,Perplexity,Approved,Admin,Cuts discovery time before proposal writing,2026-08-05,Everyone
-UC-005,Doc-pack briefings,Everyone,NotebookLM,Testing,Admin,Quick Q&A over internal briefing packs,2026-08-05,Everyone
-UC-006,Agentic coding spikes,Engineering,Antigravity,Production,Admin,Accelerates prototypes that humans then harden,2026-08-05,Engineering
-UC-007,Website-to-RAG extraction,Engineering,Firecrawl,Testing,Admin,Cleaner markdown/JSON for LLM pipelines,2026-08-05,Engineering
-UC-008,Ad hoc CSV analysis,Data Engineering,Julius AI,Testing,Admin,Faster exploratory charts on sample datasets,2026-08-05,Data
-UC-009,Cut project busywork even when I am away from the laptop,Engineering,Hermes Agent,Approved,Anshu Jain,"I can keep the AI Resource Center moving from Telegram, not only at the desk. Hermes handles setup questions, Google Apps Script steps, permission checks, and verification so I do not stall until I am back on the laptop. That shortened the loop from blocked to done on the same day.",2026-08-20,Engineering
-UC-010,"Run Gmail, WhatsApp, calendar, and daily follow-ups from one OpenClaw thread",Engineering,OpenClaw,Approved,Anshu Jain,"Inbox and chat no longer wait until I am at the desk. OpenClaw triages Gmail, drafts WhatsApp replies, checks the calendar, and knocks out small everyday tasks in one place. I spend less time hopping apps and less time catching up after I step away.",2026-08-20,Engineering
+Use Case ID,Title,Department,Tool Used,Owner,Impact,Date,Role
+UC-001,Weekly report automation,Operations,ChatGPT,Admin,Saves ~2 hours per week drafting ops summaries,2026-07-07,Operations
+UC-002,Code review assistant,Engineering,Cursor,Admin,Faster first-pass review consistency on PRs,2026-07-07,Engineering
+UC-003,Customer email drafting,Operations,Claude,Admin,Faster response drafts with clearer tone,2026-07-07,Operations
+UC-004,Cited competitor research,Everyone,Perplexity,Admin,Cuts discovery time before proposal writing,2026-08-05,Everyone
+UC-005,Doc-pack briefings,Everyone,NotebookLM,Admin,Quick Q&A over internal briefing packs,2026-08-05,Everyone
+UC-006,Agentic coding spikes,Engineering,Antigravity,Admin,Accelerates prototypes that humans then harden,2026-08-05,Engineering
+UC-007,Website-to-RAG extraction,Engineering,Firecrawl,Admin,Cleaner markdown/JSON for LLM pipelines,2026-08-05,Engineering
+UC-008,Ad hoc CSV analysis,Data Engineering,Julius AI,Admin,Faster exploratory charts on sample datasets,2026-08-05,Data
+UC-009,Cut project busywork even when I am away from the laptop,Engineering,Hermes Agent,Anshu Jain,"I can keep the AI Resource Center moving from Telegram, not only at the desk. Hermes handles setup questions, Google Apps Script steps, permission checks, and verification so I do not stall until I am back on the laptop. That shortened the loop from blocked to done on the same day.",2026-08-20,Engineering
+UC-010,"Run Gmail, WhatsApp, calendar, and daily follow-ups from one OpenClaw thread",Engineering,OpenClaw,Anshu Jain,"Inbox and chat no longer wait until I am at the desk. OpenClaw triages Gmail, drafts WhatsApp replies, checks the calendar, and knocks out small everyday tasks in one place. I spend less time hopping apps and less time catching up after I step away.",2026-08-20,Engineering

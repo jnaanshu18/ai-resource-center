@@ -12,7 +12,7 @@
  * 5. Optional: File → Share → Publish to web → CSV; paste URL into winSubmit.csvUrl
  *
  * Status values: New | Approved | Rejected
- * Approved rows are listed by the site (?action=list or ?action=listWins) in Playbooks.
+ * Approved rows are listed by the site (?action=list or ?action=listWins) in Team stories.
  */
 
 const WIN_HEADERS = [

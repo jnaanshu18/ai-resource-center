@@ -1,6 +1,6 @@
 # DCS AI Resource Center
 
-Internal site for Daily Code Solutions — find approved AI tools, prompts, playbooks, and suggest new tools for the team to review.
+Internal site for Daily Code Solutions — find approved AI tools, prompts, team stories, and suggest new tools for the team to review.
 
 | | URL |
 |---|---|
@@ -44,9 +44,9 @@ The login screen is a soft gate only — use Cloudflare Access on production for
 |---|---|
 | **AI hub** | Job chooser, Start here, Tool of the week |
 | **Directory** | Approved tools (Production, Approved, Archived) — search, compare, detail pages |
-| **Guides** | When to use / skip guides and head-to-head comparisons |
+| **Choose a tool** | Official picks: when to use / skip, and head-to-head winners |
 | **Prompts** | Searchable prompt library |
-| **Playbooks** | Team use cases (CSV + **Approved** rows from Team wins) and learning links |
+| **Team stories** | Real DCS employee write-ups (CSV + approved Share a win) and learning links |
 | **Suggestions** | Tool queue (New / In review / Rejected), suggest a tool |
 
 Tools being evaluated live on **Suggestions**, not in the Directory, until an admin adds them to `data/ai_tools_directory.csv`.
@@ -111,9 +111,9 @@ docs/                  Published site (HTML, CSS, JS)
 | `ai_tools_directory.csv` | Directory + tool detail pages |
 | `tool_submissions.csv` | Suggestions queue |
 | `prompt_library.csv` | Prompts |
-| `team_use_cases.csv` / `learning_resources.csv` | Playbooks |
+| `team_use_cases.csv` / `learning_resources.csv` | Team stories |
 | `chooser_jobs.csv` | AI hub job chooser |
-| `decision_guides.csv` / `tool_comparison.csv` | Guides |
+| `decision_guides.csv` / `tool_comparison.csv` | Choose a tool |
 | `site_highlights.csv` | Start here + Tool of the week |
 | `team_members.csv` | Team roster (assignments / admin) |
 

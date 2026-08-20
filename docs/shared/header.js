@@ -1,7 +1,7 @@
 /**
  * DCS AI Resource Center header.
  * Logo stays; main-site links (Home / Services / Schedule) are replaced
- * by in-app navigation: AI hub, Directory, Guides, Prompts, Playbooks, Suggestions.
+ * by in-app navigation: AI hub, Directory, Choose a tool, Prompts, Team stories, Suggestions.
  */
 (function () {
   const ROOT = "https://dailycodesolutions.com";
@@ -10,9 +10,9 @@
   const NAV = [
     { label: "AI hub", view: "home" },
     { label: "Directory", view: "directory" },
-    { label: "Guides", view: "guides" },
+    { label: "Choose a tool", view: "guides" },
     { label: "Prompts", view: "prompts" },
-    { label: "Playbooks", view: "playbooks" },
+    { label: "Team stories", view: "playbooks" },
     { label: "Suggestions", view: "submissions" },
   ];
 

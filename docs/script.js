@@ -123,6 +123,8 @@ const state = {
   playbookUseCases: null,
   directoryApproveItem: null,
   directoryApprovePayload: null,
+  submissionReviewItem: null,
+  submissionReviewComment: "",
 };
 
 const jobsData = () => (typeof CHOOSER_JOBS !== "undefined" ? CHOOSER_JOBS : []);
@@ -505,7 +507,7 @@ function modalMetaAssignmentHtml(tool) {
   }
   const assignee = effectiveAssignment(tool).assignedTo;
   if (!assignee) return "";
-  return `<span class="card__tag card__tag--assignee">Assigned to: ${escapeHtml(assignee)}</span>`;
+  return `<span class="card__tag card__tag--assignee">Assigned to: ${escapeHtml(teamShortName(assignee))}</span>`;
 }
 
 function starsHtml(evalData) {
@@ -576,6 +578,16 @@ function getActiveTeamMembers() {
   return teamMembersData()
     .filter(member => member.active !== false && member.name && member.email)
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function teamShortName(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "";
+  if (parts.length === 1) return parts[0];
+  const last = parts.pop().replace(/\.+$/, "");
+  const initial = last.charAt(0).toUpperCase();
+  if (!/[A-Za-z]/.test(initial)) return [ ...parts, last ].join(" ");
+  return `${parts.join(" ")} ${initial}`;
 }
 
 function findTeamMemberByName(name) {
@@ -667,7 +679,7 @@ function assignmentAssigneeFieldHtml(assignedTo) {
       .concat(members.map(member => {
         const selected = member.name === assignedTo ? " selected" : "";
         const dept = member.department ? ` · ${member.department}` : "";
-        return `<option value="${escapeHtml(member.name)}"${selected}>${escapeHtml(member.name)}${escapeHtml(dept)}</option>`;
+        return `<option value="${escapeHtml(member.name)}"${selected}>${escapeHtml(teamShortName(member.name))}${escapeHtml(dept)}</option>`;
       }));
     const email = resolveAssigneeEmail(assignedTo);
     return `
@@ -765,7 +777,7 @@ function appendAssignmentNotifyStatus(result, assigneeName) {
     return;
   }
   if (result.reason === "no-email") {
-    status.innerHTML += `<br>No email on file for ${escapeHtml(assigneeName)} — add them via Home → Team directory.`;
+    status.innerHTML += `<br>No email on file for ${escapeHtml(teamShortName(assigneeName))} — add them via Home → Team directory.`;
     return;
   }
   if (!result.skipped) {
@@ -1110,10 +1122,10 @@ function syncToolBackLabel() {
   const labels = {
     home: "← Back to AI hub",
     directory: "← Back to directory",
-    guides: "← Back to guides",
+    guides: "← Back to Choose a tool",
     prompts: "← Back to prompts",
-    playbooks: "← Back to playbooks",
-    submissions: "← Back to submissions",
+    playbooks: "← Back to Team stories",
+    submissions: "← Back to Suggestions",
     contribute: "← Back to contribute",
   };
   btn.textContent = labels[back] || "← Back to directory";
@@ -2063,7 +2075,7 @@ function renderGuides() {
   const guides = guidesData();
 
   if (!guides.length) {
-    list.innerHTML = `<p class="empty">No decision guides yet.</p>`;
+    list.innerHTML = `<p class="empty">No official picks yet.</p>`;
   } else {
     list.innerHTML = `
       <div class="guides-categories">
@@ -2268,7 +2280,6 @@ function playbookMatchesSearch(item, query) {
     item.title,
     item.department,
     item.tool,
-    item.status,
     item.owner,
     item.impact,
     item.how,
@@ -2314,7 +2325,6 @@ function winToUseCase(row) {
     title,
     department: role,
     tool,
-    status: "Approved",
     owner,
     impact: submissionField(row, "Impact"),
     how: submissionField(row, "How"),
@@ -2421,15 +2431,11 @@ function paintPlaybooks(cases) {
 
   useGrid.innerHTML = shownCases.map(uc => {
     const tool = findToolByName(uc.tool);
-    const group = STATUS_GROUP[uc.status] || "blue";
     const tone = playbookTone(uc.role || uc.department);
     return `
       <article class="usecase-card playbook-card playbook-card--usecase playbook-tone--${tone}">
-        <div class="playbook-card__kind">Use case</div>
-        <div class="usecase-card__top">
-          <h3 class="usecase-card__title">${escapeHtml(uc.title)}</h3>
-          <span class="badge badge--${group}">${escapeHtml(uc.status || "—")}</span>
-        </div>
+        <div class="playbook-card__kind">DCS experience</div>
+        <h3 class="usecase-card__title">${escapeHtml(uc.title)}</h3>
         <p class="usecase-card__impact">${escapeHtml(uc.impact)}</p>
         ${uc.how ? `<p class="usecase-card__impact">${escapeHtml(uc.how)}</p>` : ""}
         <div class="usecase-card__meta">
@@ -2443,7 +2449,7 @@ function paintPlaybooks(cases) {
         </div>
       </article>
     `;
-  }).join("") || `<p class="empty">No use cases match.</p>`;
+  }).join("") || `<p class="empty">No DCS experiences match.</p>`;
 
   learnGrid.innerHTML = shownLearning.map(res => {
     const tone = playbookTone(res.role);
@@ -2502,8 +2508,8 @@ function syncSimpleSubmitAdminFields() {
   }
   const members = getActiveTeamMembers();
   const current = select.value;
-  select.innerHTML = `<option value="">Optional — leave unassigned</option>${members.map(m =>
-    `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`
+    select.innerHTML = `<option value="">Choose a teammate</option>${members.map(m =>
+    `<option value="${escapeHtml(m.name)}">${escapeHtml(teamShortName(m.name))}</option>`
   ).join("")}`;
   if (current && members.some(m => m.name === current)) select.value = current;
 }
@@ -2530,6 +2536,20 @@ function applyContributeMode() {
     winSuccess.hidden = true;
   }
   syncSimpleSubmitAdminFields();
+  syncSubmissionsAdminHint();
+}
+
+function syncSubmissionsAdminHint() {
+  const el = document.getElementById("submissionsQueueHint");
+  if (!el) return;
+  const cfg = contributeConfig();
+  if (isAdminSession() && cfg.submitUrl && cfg.assignSecret) {
+    el.hidden = false;
+    el.textContent = "Open Review to assign, reject, or add a tool to the Directory.";
+    return;
+  }
+  el.hidden = true;
+  el.textContent = "";
 }
 
 function renderContribute() {
@@ -2596,7 +2616,7 @@ async function loadPendingReviews() {
       const assignBlock = !isWin ? `
           <div class="pending-item__assign">
             ${assigned
-              ? `<p class="pending-item__assigned">Assigned to <strong>${escapeHtml(assigned.name)}</strong> for testing</p>`
+              ? `<p class="pending-item__assigned">Assigned to <strong>${escapeHtml(teamShortName(assigned.name))}</strong> for testing</p>`
               : `<p class="pending-item__hint">Waiting for Admin</p>`}
             ${admin ? `
               <div class="pending-assign" data-issue-key="${escapeHtml(String(issueKey))}">
@@ -3030,6 +3050,7 @@ function bindAppNavigation() {
 
   bindSimpleSubmit();
   bindSubmissionsPage();
+  bindSubmissionReviewModal();
   populateDirectoryApproveDropdowns();
   bindDirectoryApproveModal();
 }
@@ -3180,7 +3201,7 @@ function renderComparePanel() {
       values: tools.map(t => {
         if (!toolIsInTestTrack(t)) return "—";
         const a = effectiveAssignment(t).assignedTo;
-        return a || "—";
+        return a ? teamShortName(a) : "—";
       }),
     },
     {
@@ -3472,6 +3493,16 @@ function init(opts = {}) {
   });
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
+    const directoryOverlay = document.getElementById("directoryApproveOverlay");
+    if (directoryOverlay && !directoryOverlay.hidden) {
+      closeDirectoryApproveModal();
+      return;
+    }
+    const reviewOverlay = document.getElementById("submissionReviewOverlay");
+    if (reviewOverlay && !reviewOverlay.hidden) {
+      closeSubmissionReviewModal();
+      return;
+    }
     if (!document.getElementById("assignmentOverlay").hidden) {
       closeAssignmentModal();
       return;
@@ -3737,8 +3768,12 @@ function isActiveSubmission(item) {
   return effectiveSubmissionStatus(item) !== "Approved";
 }
 
+function isCatalogedSubmission(item) {
+  return Boolean(existingDirectoryTool(item.toolName, item.link));
+}
+
 function visibleSubmissionItems(items) {
-  return (items || []).filter(isActiveSubmission);
+  return (items || []).filter(item => isActiveSubmission(item) && !isCatalogedSubmission(item));
 }
 
 function submissionStatusLabel(item) {
@@ -3796,18 +3831,55 @@ function rowsFromCsv(text) {
   });
 }
 
+function parseSubmissionNotes(raw) {
+  let why = String(raw || "").trim();
+  let rejected = "";
+  const rejectedOnly = why.match(/^Rejected:\s*([\s\S]*)$/i);
+  if (rejectedOnly) {
+    return { why: "", rejected: (rejectedOnly[1] || "").trim() };
+  }
+  const rejectedTail = why.match(/\s+[—–-]\s+Rejected:\s*([\s\S]*)$/i);
+  if (rejectedTail) {
+    rejected = (rejectedTail[1] || "").trim();
+    why = why.slice(0, rejectedTail.index).trim();
+  }
+  const assignedTail = why.match(/\s+[—–-]\s+Assigned:\s*([\s\S]*)$/i);
+  if (assignedTail) why = why.slice(0, assignedTail.index).trim();
+  if (/^Assigned:\s*/i.test(why)) why = "";
+  return { why, rejected };
+}
+
+function submissionNoteParts(item) {
+  const parsed = parseSubmissionNotes(item && item.note);
+  return {
+    why: String((item && item.whySuggested) || parsed.why || "").trim(),
+    rejected: String((item && item.rejectReason) || parsed.rejected || "").trim(),
+    adminNote: String((item && item.adminNote) || "").trim(),
+  };
+}
+
 function normalizeSubmission(row) {
   const link = submissionField(row, "Link", "URL", "url");
   if (!link) return null;
   let status = normalizeSubmissionStatus(submissionField(row, "Status") || "New");
   const assignedTo = submissionField(row, "Assigned to", "Assignee", "Assigned");
   if (!assignedTo && status === "In review") status = "New";
+  const whySuggested = submissionField(row, "Why Suggested", "Why suggested");
+  const rejectReason = submissionField(row, "Why Rejected", "Why rejected");
+  const adminNote = whySuggested
+    ? submissionField(row, "Note")
+    : "";
+  const legacyNote = whySuggested ? "" : submissionField(row, "Note", "Notes");
+  const parsed = parseSubmissionNotes(legacyNote);
   return {
     submitted: submissionField(row, "Submitted", "Date", "Timestamp"),
     toolName: submissionField(row, "Tool name", "Tool Name", "Tool"),
     link,
     submittedBy: submissionField(row, "Submitted by", "Submitter"),
-    note: submissionField(row, "Note", "Notes"),
+    note: whySuggested || parsed.why || legacyNote,
+    whySuggested: whySuggested || parsed.why,
+    rejectReason: rejectReason || parsed.rejected,
+    adminNote,
     status,
     assignedTo,
     assignedDate: submissionField(row, "Assigned date", "Assigned Date"),
@@ -3889,60 +3961,20 @@ function submissionCardTone(item, index) {
   return PLAYBOOK_CARD_TONES[index % PLAYBOOK_CARD_TONES.length];
 }
 
-function submissionAssigneeOptions() {
+function submissionAssigneeOptions(selected) {
+  const current = String(selected || "").trim();
   const members = getActiveTeamMembers();
   const opts = members.map(m =>
-    `<option value="${escapeHtml(m.name)}">${escapeHtml(m.name)}</option>`
+    `<option value="${escapeHtml(m.name)}"${m.name === current ? " selected" : ""}>${escapeHtml(teamShortName(m.name))}</option>`
   ).join("");
-  return `<option value="">Choose a teammate</option>${opts}`;
+  const placeholderSelected = current ? "" : " selected";
+  return `<option value=""${placeholderSelected}>Choose a teammate</option>${opts}`;
 }
 
 function submissionTooltipDate(item, status) {
   if (status === "In review") return item.assignedDate || item.submitted || "";
   if (status === "Rejected") return item.rejectedDate || item.submitted || "";
   return item.submitted || "";
-}
-
-function submissionTooltipHtml(item) {
-  const status = effectiveSubmissionStatus(item);
-  const assignee = (item.assignedTo || "").trim();
-  const date = submissionTooltipDate(item, status);
-  const cfg = contributeConfig();
-  const canAssign = isAdminSession() && cfg.submitUrl && status === "New" && !assignee;
-  const metaParts = [];
-  if (status !== "Rejected") {
-    if (assignee) {
-      metaParts.push(`<span><strong>Reviewer:</strong> ${escapeHtml(assignee)}</span>`);
-    }
-    if (date) {
-      metaParts.push(`<span><strong>Date:</strong> ${escapeHtml(date)}</span>`);
-    }
-  }
-  const lines = [];
-  if (metaParts.length) {
-    lines.push(`<p class="submission-item__tip-meta">${metaParts.join("")}</p>`);
-  }
-  if (!assignee && status === "New" && !canAssign) {
-    lines.push(`<p class="submission-item__tip-open"><span class="submission-item__tip-open-pill">Available to the team</span></p>`);
-  }
-  if (item.note) {
-    lines.push(`<p class="submission-item__tip-note">${escapeHtml(item.note)}</p>`);
-  }
-  let assignBlock = "";
-  if (canAssign) {
-    assignBlock = `
-      <div class="submission-item__assign" data-submission-link="${escapeHtml(item.link)}">
-        <label class="submission-item__assign-label">Assign reviewer</label>
-        <div class="submission-item__assign-row">
-          <select class="submission-item__assign-select">${submissionAssigneeOptions()}</select>
-          <button type="button" class="btn-base btn-secondary submission-item__assign-btn">Assign</button>
-        </div>
-        <p class="submission-item__assign-err" hidden></p>
-      </div>`;
-  }
-  const adminBlock = submissionAdminActionsHtml(item);
-  if (!lines.length && !assignBlock && !adminBlock) return "";
-  return `<div class="submission-item__tip" role="tooltip">${lines.join("")}${assignBlock}${adminBlock}</div>`;
 }
 
 function submissionAdminCanAct(item) {
@@ -3952,15 +3984,34 @@ function submissionAdminCanAct(item) {
   return status === "New" || status === "In review";
 }
 
-function submissionAdminActionsHtml(item) {
+function submissionReviewButtonHtml(item) {
   if (!submissionAdminCanAct(item)) return "";
-  return `
-    <div class="submission-item__admin" data-submission-link="${escapeHtml(item.link)}">
-      <div class="submission-item__admin-row">
-        <button type="button" class="btn-base btn-secondary submission-item__approve-btn">Approve &amp; add to Directory</button>
-        <button type="button" class="linkbtn submission-item__reject-btn">Reject</button>
-      </div>
-    </div>`;
+  return `<button type="button" class="btn-base btn-secondary submission-item__review-btn" data-submission-link="${escapeHtml(item.link)}">Review</button>`;
+}
+
+function submissionTooltipHtml(item) {
+  const status = effectiveSubmissionStatus(item);
+  const parts = submissionNoteParts(item);
+  const date = submissionTooltipDate(item, status);
+  const assignee = (item.assignedTo || "").trim();
+  const lines = [];
+  if (date) {
+    lines.push(`<p class="submission-item__tip-meta"><span><strong>Date:</strong> ${escapeHtml(date)}</span></p>`);
+  }
+  if (status !== "Rejected" && assignee) {
+    lines.push(`<p class="submission-item__tip-meta"><span><strong>Assigned To:</strong> ${escapeHtml(teamShortName(assignee))}</span></p>`);
+  }
+  if (parts.why) {
+    lines.push(`<p class="submission-item__tip-note"><strong>Why:</strong> ${escapeHtml(parts.why)}</p>`);
+  }
+  if (status === "Rejected" && parts.rejected) {
+    lines.push(`<p class="submission-item__tip-note"><strong>Why rejected:</strong> ${escapeHtml(parts.rejected)}</p>`);
+  }
+  if (parts.adminNote) {
+    lines.push(`<p class="submission-item__tip-note"><strong>Note:</strong> ${escapeHtml(parts.adminNote)}</p>`);
+  }
+  if (!lines.length) return "";
+  return `<div class="submission-item__tip" role="tooltip">${lines.join("")}</div>`;
 }
 
 function submissionDisplayName(item) {
@@ -3999,16 +4050,37 @@ function renderSubmissionsList(items) {
     const badge = submissionStatusBadge(statusLabel);
     const tone = submissionCardTone(item, index);
     const titleHtml = submissionLinkHtml(item);
+    const parts = submissionNoteParts(item);
+    const assignee = (item.assignedTo || "").trim();
+    const why = statusLabel === "Rejected" && parts.rejected
+      ? `<p class="submission-item__why submission-item__why--reject"><strong>Why rejected:</strong> ${escapeHtml(parts.rejected)}</p>`
+      : parts.why
+        ? `<p class="submission-item__why"><strong>Why:</strong> ${escapeHtml(parts.why)}</p>`
+        : "";
+    const owner = statusLabel === "Rejected"
+      ? ""
+      : assignee
+        ? `<p class="submission-item__owner">Assigned To: ${escapeHtml(teamShortName(assignee))}</p>`
+        : `<p class="submission-item__owner submission-item__owner--open">Not assigned yet</p>`;
+    const reviewBtn = submissionReviewButtonHtml(item);
+    const badgeHtml = statusLabel === "Rejected"
+      ? `<span class="badge badge--${badge}">${escapeHtml(statusLabel)}</span>`
+      : "";
+    const topEnd = (badgeHtml || reviewBtn)
+      ? `<div class="submission-item__top-end">${badgeHtml}${reviewBtn}</div>`
+      : "";
     const tip = submissionTooltipHtml(item);
     return `
-      <article class="submission-item playbook-card playbook-card--submission playbook-tone--${tone}" tabindex="0">
+      <article class="submission-item playbook-card playbook-card--submission playbook-tone--${tone}">
         <div class="submission-item__top">
           <div class="submission-item__identity">
             ${submissionLogoHtml(item)}
             <h3 class="submission-item__title">${titleHtml}</h3>
           </div>
-          <span class="badge badge--${badge}">${escapeHtml(statusLabel)}</span>
+          ${topEnd}
         </div>
+        ${why}
+        ${owner}
         ${tip}
       </article>`;
   }).join("");
@@ -4072,6 +4144,11 @@ function validateSimpleSubmit() {
     setSimpleFieldError("link", "Use a valid URL starting with http:// or https://");
     ok = false;
   }
+  const listed = existingDirectoryTool(toolName, link);
+  if (listed) {
+    setSimpleFieldError("tool", `“${listed.name}” is already in the Directory.`);
+    ok = false;
+  }
   if (note.length > 200) {
     setSimpleFieldError("note", "Keep your note to 200 characters or fewer.");
     ok = false;
@@ -4106,7 +4183,7 @@ function resetSimpleSubmit() {
   syncSimpleSubmitAdminFields();
 }
 
-async function assignSubmissionItem(item, assignee) {
+async function assignSubmissionItem(item, assignee, comment) {
   const cfg = contributeConfig();
   if (!cfg.submitUrl) throw new Error("Assign requires Google Sheet submitUrl.");
   const body = JSON.stringify({
@@ -4115,6 +4192,7 @@ async function assignSubmissionItem(item, assignee) {
     link: item.link,
     toolName: item.toolName,
     assignee,
+    comment: comment || "",
   });
   try {
     const res = await fetch(cfg.submitUrl, {
@@ -4244,8 +4322,10 @@ function prefillDirectoryApproveForm(item) {
   document.getElementById("directoryApproveTitle").textContent = `Add ${name} to Directory`;
   document.getElementById("directoryApproveDesc").textContent =
     `Complete catalog fields for ${name}. The submission will be marked Approved and queued for publish.`;
-  document.getElementById("da_description").value = (item.note || "").slice(0, 500);
-  document.getElementById("da_notes").value = item.note || "";
+  document.getElementById("da_description").value = (submissionNoteParts(item).why || item.note || "").slice(0, 500);
+  const reviewComment = (state.submissionReviewComment || "").trim();
+  document.getElementById("da_notes").value = reviewComment || submissionNoteParts(item).why || "";
+  state.submissionReviewComment = "";
   document.getElementById("da_videoUrl").value = "";
   document.getElementById("da_platform").value = "Web";
   document.getElementById("da_status").value = "Approved";
@@ -4491,83 +4571,214 @@ function bindSimpleSubmit() {
   document.getElementById("simpleSubmitAnother")?.addEventListener("click", resetSimpleSubmit);
 }
 
+function setSubmissionReviewFieldError(key, message) {
+  const err = document.getElementById(`submissionReview${key === "assign" ? "Assign" : "Comment"}Err`);
+  const field = document.querySelector(`[data-review-field="${key}"]`);
+  if (err) {
+    err.hidden = !message;
+    err.textContent = message || "";
+  }
+  if (field) field.classList.toggle("has-error", Boolean(message));
+}
+
+function clearSubmissionReviewErrors() {
+  setSubmissionReviewFieldError("assign", "");
+  setSubmissionReviewFieldError("comment", "");
+  const formErr = document.getElementById("submissionReviewErr");
+  if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
+}
+
+function updateSubmissionReviewCommentCount() {
+  const input = document.getElementById("submissionReviewComment");
+  const count = document.getElementById("submissionReviewCommentCount");
+  if (input && count) count.textContent = `${input.value.length} / 400`;
+}
+
+function setSubmissionReviewBusy(busy) {
+  ["submissionReviewAssignBtn", "submissionReviewReject", "submissionReviewDirectory"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = Boolean(busy);
+  });
+}
+
+function openSubmissionReviewModal(item) {
+  const overlay = document.getElementById("submissionReviewOverlay");
+  if (!overlay || !item) return;
+  state.submissionReviewItem = item;
+  state.submissionReviewComment = "";
+  const status = effectiveSubmissionStatus(item);
+  const name = submissionDisplayName(item);
+  const date = submissionTooltipDate(item, status);
+  const assignee = (item.assignedTo || "").trim();
+  const parts = submissionNoteParts(item);
+  document.getElementById("submissionReviewTitle").textContent = name;
+  const badge = document.getElementById("submissionReviewBadge");
+  if (badge) {
+    badge.className = `badge badge--${submissionStatusBadge(status)}`;
+    badge.textContent = status;
+  }
+  const dateEl = document.getElementById("submissionReviewDate");
+  if (dateEl) dateEl.textContent = date || "";
+  const linkWrap = document.getElementById("submissionReviewLinkWrap");
+  if (linkWrap) {
+    const href = item.link || "";
+    linkWrap.innerHTML = href
+      ? `<a class="submission-review__site" href="${escapeHtml(href)}" target="_blank" rel="noopener">Open site<span aria-hidden="true"> ↗</span></a>`
+      : "";
+  }
+  const whyWrap = document.getElementById("submissionReviewWhy");
+  const whyText = document.getElementById("submissionReviewWhyText");
+  if (whyWrap && whyText) {
+    whyWrap.hidden = !parts.why;
+    whyText.textContent = parts.why ? `Why: ${parts.why}` : "";
+  }
+  const adminWrap = document.getElementById("submissionReviewAdminNote");
+  const adminText = document.getElementById("submissionReviewAdminNoteText");
+  if (adminWrap && adminText) {
+    adminWrap.hidden = !parts.adminNote;
+    adminText.textContent = parts.adminNote ? `Admin note: ${parts.adminNote}` : "";
+  }
+  const dup = document.getElementById("submissionReviewDup");
+  const listed = existingDirectoryTool(item.toolName, item.link);
+  if (dup) {
+    if (listed) {
+      dup.hidden = false;
+      dup.textContent = `Already in the Directory as ${listed.name}.`;
+    } else {
+      dup.hidden = true;
+      dup.textContent = "";
+    }
+  }
+  const select = document.getElementById("submissionReviewAssign");
+  if (select) select.innerHTML = submissionAssigneeOptions(assignee);
+  const comment = document.getElementById("submissionReviewComment");
+  if (comment) comment.value = "";
+  updateSubmissionReviewCommentCount();
+  const assignBtn = document.getElementById("submissionReviewAssignBtn");
+  if (assignBtn) {
+    assignBtn.textContent = assignee ? "Reassign" : "Assign";
+    assignBtn.className = assignee ? "btn-base btn-secondary" : "btn-base btn-primary";
+  }
+  const dirBtn = document.getElementById("submissionReviewDirectory");
+  if (dirBtn) dirBtn.hidden = status !== "In review";
+  clearSubmissionReviewErrors();
+  overlay.hidden = false;
+  select?.focus();
+}
+
+function closeSubmissionReviewModal() {
+  const overlay = document.getElementById("submissionReviewOverlay");
+  if (overlay) overlay.hidden = true;
+  state.submissionReviewItem = null;
+}
+
+function refreshQueueAfterReview() {
+  renderSubmissionFilters(state.submissionsCache || []);
+  renderSubmissionsList(state.submissionsCache || []);
+}
+
+async function submitSubmissionReviewAssign() {
+  const item = state.submissionReviewItem;
+  if (!item) return;
+  clearSubmissionReviewErrors();
+  const assignee = (document.getElementById("submissionReviewAssign")?.value || "").trim();
+  const comment = (document.getElementById("submissionReviewComment")?.value || "").trim();
+  if (!assignee) {
+    setSubmissionReviewFieldError("assign", "Choose who to assign first.");
+    document.getElementById("submissionReviewAssign")?.focus();
+    return;
+  }
+  const btn = document.getElementById("submissionReviewAssignBtn");
+  const prev = btn?.textContent || "Assign";
+  setSubmissionReviewBusy(true);
+  if (btn) btn.textContent = "Saving…";
+  try {
+    const data = await assignSubmissionItem(item, assignee, comment);
+    item.assignedTo = assignee;
+    item.status = "In review";
+    item.assignedDate = (data && data.assignedDate) || new Date().toISOString().slice(0, 10);
+    if (comment) item.adminNote = item.adminNote ? `${item.adminNote} — ${comment}` : comment;
+    closeSubmissionReviewModal();
+    refreshQueueAfterReview();
+  } catch (err) {
+    const formErr = document.getElementById("submissionReviewErr");
+    if (formErr) {
+      formErr.hidden = false;
+      formErr.textContent = err.message || "Could not assign. Try again.";
+    }
+  } finally {
+    setSubmissionReviewBusy(false);
+    if (btn) btn.textContent = prev;
+  }
+}
+
+async function submitSubmissionReviewReject() {
+  const item = state.submissionReviewItem;
+  if (!item) return;
+  clearSubmissionReviewErrors();
+  const comment = (document.getElementById("submissionReviewComment")?.value || "").trim();
+  if (!comment) {
+    setSubmissionReviewFieldError("comment", "Add a comment to reject.");
+    document.getElementById("submissionReviewComment")?.focus();
+    return;
+  }
+  const btn = document.getElementById("submissionReviewReject");
+  setSubmissionReviewBusy(true);
+  try {
+    await rejectSubmissionItem(item, comment);
+    const parts = submissionNoteParts(item);
+    item.status = "Rejected";
+    item.rejectedDate = new Date().toISOString().slice(0, 10);
+    item.whySuggested = parts.why;
+    item.rejectReason = comment;
+    item.note = parts.why;
+    closeSubmissionReviewModal();
+    refreshQueueAfterReview();
+  } catch (err) {
+    const formErr = document.getElementById("submissionReviewErr");
+    if (formErr) {
+      formErr.hidden = false;
+      formErr.textContent = err.message || "Could not reject. Try again.";
+    }
+  } finally {
+    setSubmissionReviewBusy(false);
+  }
+}
+
+function submitSubmissionReviewDirectory() {
+  const item = state.submissionReviewItem;
+  if (!item) return;
+  state.submissionReviewComment = (document.getElementById("submissionReviewComment")?.value || "").trim();
+  closeSubmissionReviewModal();
+  openDirectoryApproveModal(item);
+}
+
+function bindSubmissionReviewModal() {
+  const overlay = document.getElementById("submissionReviewOverlay");
+  if (!overlay || overlay.dataset.bound === "1") return;
+  overlay.dataset.bound = "1";
+  document.getElementById("submissionReviewClose")?.addEventListener("click", closeSubmissionReviewModal);
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) closeSubmissionReviewModal();
+  });
+  document.getElementById("submissionReviewComment")?.addEventListener("input", updateSubmissionReviewCommentCount);
+  document.getElementById("submissionReviewAssignBtn")?.addEventListener("click", submitSubmissionReviewAssign);
+  document.getElementById("submissionReviewReject")?.addEventListener("click", submitSubmissionReviewReject);
+  document.getElementById("submissionReviewDirectory")?.addEventListener("click", submitSubmissionReviewDirectory);
+}
+
 function bindSubmissionsPage() {
   const list = document.getElementById("submissionsList");
   if (list && list.dataset.assignBound !== "1") {
     list.dataset.assignBound = "1";
-    list.addEventListener("click", async e => {
-      const approveBtn = e.target.closest(".submission-item__approve-btn");
-      if (approveBtn && isAdminSession()) {
-        e.preventDefault();
-        e.stopPropagation();
-        const wrap = approveBtn.closest(".submission-item__admin");
-        const link = wrap?.dataset.submissionLink || "";
-        const item = (state.submissionsCache || []).find(i => i.link === link);
-        if (item) openDirectoryApproveModal(item);
-        return;
-      }
-      const rejectBtn = e.target.closest(".submission-item__reject-btn");
-      if (rejectBtn && isAdminSession()) {
-        e.preventDefault();
-        e.stopPropagation();
-        const wrap = rejectBtn.closest(".submission-item__admin");
-        const link = wrap?.dataset.submissionLink || "";
-        const item = (state.submissionsCache || []).find(i => i.link === link);
-        if (!item) return;
-        const name = submissionDisplayName(item);
-        const reason = window.prompt(`Reject ${name}? Optional reason:`) ?? null;
-        if (reason === null) return;
-        rejectBtn.disabled = true;
-        try {
-          await rejectSubmissionItem(item, reason.trim());
-          item.status = "Rejected";
-          item.rejectedDate = new Date().toISOString().slice(0, 10);
-          if (reason.trim() && item.note) item.note = `${item.note} — Rejected: ${reason.trim()}`;
-          else if (reason.trim()) item.note = `Rejected: ${reason.trim()}`;
-          renderSubmissionFilters(state.submissionsCache || []);
-          renderSubmissionsList(state.submissionsCache || []);
-        } catch (err) {
-          window.alert(err.message || "Could not reject. Try again.");
-        } finally {
-          rejectBtn.disabled = false;
-        }
-        return;
-      }
-      const btn = e.target.closest(".submission-item__assign-btn");
-      if (!btn || !isAdminSession()) return;
+    list.addEventListener("click", e => {
+      const reviewBtn = e.target.closest(".submission-item__review-btn");
+      if (!reviewBtn || !isAdminSession()) return;
       e.preventDefault();
       e.stopPropagation();
-      const wrap = btn.closest(".submission-item__assign");
-      const link = wrap?.dataset.submissionLink || "";
-      const select = wrap?.querySelector(".submission-item__assign-select");
-      const errEl = wrap?.querySelector(".submission-item__assign-err");
-      const assignee = (select?.value || "").trim();
-      if (!assignee) {
-        if (errEl) { errEl.hidden = false; errEl.textContent = "Choose a reviewer first."; }
-        select?.focus();
-        return;
-      }
+      const link = reviewBtn.dataset.submissionLink || "";
       const item = (state.submissionsCache || []).find(i => i.link === link);
-      if (!item) return;
-      if (errEl) { errEl.hidden = true; errEl.textContent = ""; }
-      btn.disabled = true;
-      btn.textContent = "Assigning…";
-      try {
-        const data = await assignSubmissionItem(item, assignee);
-        item.assignedTo = assignee;
-        item.status = "In review";
-        item.assignedDate = (data && data.assignedDate) || new Date().toISOString().slice(0, 10);
-        renderSubmissionFilters(state.submissionsCache || []);
-        renderSubmissionsList(state.submissionsCache || []);
-      } catch (err) {
-        if (errEl) {
-          errEl.hidden = false;
-          errEl.textContent = err.message || "Could not assign. Try again.";
-        }
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Assign";
-      }
+      if (item) openSubmissionReviewModal(item);
     });
   }
   document.getElementById("submissionsFilters")?.addEventListener("click", e => {
@@ -4609,13 +4820,39 @@ function levenshtein(a, b) {
   return row[b.length];
 }
 
+function catalogUrlKey(url) {
+  try {
+    const parsed = new URL(normalizeSuggestUrl(String(url || "").trim()));
+    const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = parsed.pathname.replace(/\/+$/, "") || "";
+    return `${host}${path}`;
+  } catch (_) {
+    return String(url || "").trim()
+      .replace(/^https?:\/\//i, "")
+      .replace(/^www\./i, "")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+  }
+}
+
 function existingToolMatch(name) {
   const q = name.trim().toLowerCase();
   const qNorm = normalizeToolName(name);
-  return TOOLS.find(t => {
+  if (!qNorm) return null;
+  const all = typeof TOOLS !== "undefined" ? TOOLS : [];
+  return all.find(t => {
     const n = (t.name || "").trim().toLowerCase();
     return n === q || normalizeToolName(t.name) === qNorm;
   }) || null;
+}
+
+function existingDirectoryTool(name, url) {
+  const byName = existingToolMatch(name);
+  if (byName) return byName;
+  const key = catalogUrlKey(url);
+  if (!key) return null;
+  const all = typeof TOOLS !== "undefined" ? TOOLS : [];
+  return all.find(t => catalogUrlKey(t.url) === key) || null;
 }
 
 function findSimilarTools(name) {
@@ -4687,8 +4924,8 @@ function validateSuggestForm() {
   } else if (!NAME_PATTERN.test(name)) {
     errors.name = "Use letters, numbers, spaces, and . _ - & + ' / ( ) only.";
   } else {
-    const dup = existingToolMatch(name);
-    if (dup) errors.name = `“${dup.name}” is already in the directory.`;
+    const dup = existingDirectoryTool(name, urlRaw);
+    if (dup) errors.name = `“${dup.name}” is already in the Directory.`;
   }
 
   if (!category) {

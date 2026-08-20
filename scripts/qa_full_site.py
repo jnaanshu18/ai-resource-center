@@ -164,7 +164,7 @@ def main() -> int:
     else:
         record("FAIL", "Data", f"CSV={len(csv_tools)} vs data.js={len(tools)}")
 
-    for required in ("Cursor", "ChatGPT", "Perplexity", "Antigravity"):
+    for required in ("Cursor", "ChatGPT", "Perplexity", "Antigravity", "Notion AI", "Julius AI", "NotebookLM", "Gamma", "Hostinger"):
         if any(t.get("name") == required for t in tools):
             record("PASS", "Data", f"Directory tool present: {required}")
         else:
@@ -254,7 +254,7 @@ def main() -> int:
         else:
             record("FAIL", "HTML", f"Missing view panel: {v}")
 
-    for label in ("AI hub", "Directory", "Guides", "Prompts", "Playbooks", "Suggestions"):
+    for label in ("AI hub", "Directory", "Choose a tool", "Prompts", "Team stories", "Suggestions"):
         if label in header_js or label in html:
             record("PASS", "Nav", f"Nav includes {label}")
         else:
@@ -300,6 +300,11 @@ def main() -> int:
     else:
         record("FAIL", "Contribute", "Submit validation or site-config example missing")
 
+    if "existingDirectoryTool" in script and "already in the Directory" in script and "isCatalogedSubmission" in script:
+        record("PASS", "Contribute", "Directory tools cannot be re-submitted; hidden from Suggestions")
+    else:
+        record("FAIL", "Contribute", "Missing directory duplicate block on Suggestions")
+
     if "submitWinLink" in script and "Share win" in html and "winIssueLink" not in html:
         record("PASS", "Contribute", "Share a win posts to Sheet (no GitHub draft UI)")
     else:
@@ -336,15 +341,15 @@ def main() -> int:
     else:
         record("FAIL", "Contribute", "Refresh button still on Submissions list")
 
-    if "submission-item__tip" in script and "submissionTooltipHtml" in script:
-        record("PASS", "Contribute", "Submission hover tooltip with contextual dates")
+    if "submissionNoteParts" in script and "Why rejected" in script and "<strong>Why:</strong>" in script:
+        record("PASS", "Contribute", "Queue cards split Why vs why rejected")
     else:
-        record("FAIL", "Contribute", "Submission hover tooltip missing")
+        record("FAIL", "Contribute", "Rejected reason not shown separately from suggestion note")
 
-    if 'status !== "Rejected"' in script and "submissionTooltipHtml" in script:
-        record("PASS", "Contribute", "Rejected submissions hide reviewer and date in tooltip")
+    if "openSubmissionReviewModal" in script and 'statusLabel !== "Rejected"' in script:
+        record("PASS", "Contribute", "Rejected cards hide Assigned To")
     else:
-        record("FAIL", "Contribute", "Rejected submission tooltip privacy check missing")
+        record("FAIL", "Contribute", "Rejected cards still show Assigned To")
 
     if "assignSubmissionItem" in script and "action: \"assign\"" in script:
         record("PASS", "Contribute", "Admin assign submission via Apps Script")
@@ -382,15 +387,20 @@ def main() -> int:
     else:
         record("FAIL", "Contribute", "Submission card styling or anchor scroll missing")
 
-    if "shareWinSection" in html and 'id="winForm"' in html and "playbooks-split" in html:
-        record("PASS", "Contribute", "Share a win form on Playbooks page")
+    if "openSubmissionReviewModal" in script and "submissionReviewOverlay" in html and "submission-item__review-btn" in script:
+        record("PASS", "Contribute", "Admin Review dialog for queue cards")
     else:
-        record("FAIL", "Contribute", "Share a win form missing from Playbooks")
+        record("FAIL", "Contribute", "Queue Review dialog missing")
+
+    if "shareWinSection" in html and 'id="winForm"' in html and "playbooks-split" in html:
+        record("PASS", "Contribute", "Share a win form on Team stories page")
+    else:
+        record("FAIL", "Contribute", "Share a win form missing from Team stories")
 
     if "fetchApprovedWinUseCases" in script and "listWins" in apps and "mergeUseCases" in script:
-        record("PASS", "Contribute", "Approved Team wins merge into Playbooks use cases")
+        record("PASS", "Contribute", "Approved Team wins merge into Team stories")
     else:
-        record("FAIL", "Contribute", "Live Team wins → Playbooks wiring missing")
+        record("FAIL", "Contribute", "Live Team wins → Team stories wiring missing")
 
     if "effectiveSubmissionStatus" in script:
         record("PASS", "Contribute", "Unassigned submissions cannot show In review")
@@ -420,7 +430,7 @@ def main() -> int:
 
     moved_names = {
         "Windsurf", "Make", "Lovable", "Exa", "Raycast AI", "Fireflies.ai", "Bolt.new",
-        "NotebookLM", "CodeRabbit", "Julius AI", "Gamma", "OpenHands", "Browser Use",
+        "CodeRabbit", "OpenHands", "Browser Use",
         "Firecrawl", "Apify", "Crawl4AI", "Ollama", "Power BI Copilot", "Dify", "v0",
     }
     still_in_dir = [n for n in moved_names if n in names]
@@ -678,34 +688,34 @@ def main() -> int:
     record("PASS" if phits else "WARN", "Prompts", f"Search '{pq}' hits {len(phits)} prompts")
 
     if use_cases:
-        record("PASS", "Playbooks", f"Use cases: {len(use_cases)}")
+        record("PASS", "Team stories", f"Use cases: {len(use_cases)}")
     if learning:
-        record("PASS", "Playbooks", f"Learning items: {len(learning)}")
+        record("PASS", "Team stories", f"Learning items: {len(learning)}")
 
-    # ===== GUIDES =====
+    # ===== CHOOSE A TOOL =====
     if guides:
         for g in guides[:3]:
             if g.get("title") or g.get("name") or g.get("feature"):
-                record("PASS", "Guides", f"Guide entry OK: {g.get('title') or g.get('name') or g.get('feature')}")
+                record("PASS", "Choose a tool", f"Guide entry OK: {g.get('title') or g.get('name') or g.get('feature')}")
             else:
-                record("WARN", "Guides", f"Sparse guide entry keys: {list(g.keys())[:6]}")
+                record("WARN", "Choose a tool", f"Sparse guide entry keys: {list(g.keys())[:6]}")
     if comparisons:
-        record("PASS", "Guides", f"Comparisons: {len(comparisons)}")
+        record("PASS", "Choose a tool", f"Comparisons: {len(comparisons)}")
 
     if "guides-categories" in script and "guide-category" in script and "renderGuideTips" in script:
-        record("PASS", "Guides", "Expandable decision guide sections wired")
+        record("PASS", "Choose a tool", "Expandable decision guide sections wired")
     else:
-        record("FAIL", "Guides", "Expandable decision guide sections missing")
+        record("FAIL", "Choose a tool", "Expandable decision guide sections missing")
 
     if "compare-categories" in script and "renderComparisonsList" in script:
-        record("PASS", "Guides", "Expandable head-to-head sections wired")
+        record("PASS", "Choose a tool", "Expandable head-to-head sections wired")
     else:
-        record("FAIL", "Guides", "Expandable head-to-head sections missing")
+        record("FAIL", "Choose a tool", "Expandable head-to-head sections missing")
 
     if 'class="content guides-split"' in html and "guides-split__col" in html:
-        record("PASS", "Guides", "Decision guides and head-to-heads in equal split columns")
+        record("PASS", "Choose a tool", "Official picks and head-to-heads in equal split columns")
     else:
-        record("FAIL", "Guides", "Guides split layout missing")
+        record("FAIL", "Choose a tool", "Choose a tool split layout missing")
 
     if re.search(r"toolAssignments:\s*\{[^}]*enabled:\s*false", example_cfg, re.S):
         record("PASS", "Features", "toolAssignments disabled in site-config.example.js (v1)")
@@ -799,8 +809,8 @@ def main() -> int:
         ("function glanceFactsHtml", "Tool page"),
         ("function toolGlanceHtml", "Tool page"),
         ("function renderPrompts", "Prompts"),
-        ("function renderPlaybooks", "Playbooks"),
-        ("function renderGuides", "Guides"),
+        ("function renderPlaybooks", "Team stories"),
+        ("function renderGuides", "Choose a tool"),
         ("function renderContribute", "Contribute"),
         ("function renderHome", "Home"),
         ("toolCanHaveScore", "Scores"),

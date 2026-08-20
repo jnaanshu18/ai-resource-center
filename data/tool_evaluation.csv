@@ -9,11 +9,12 @@ Notion AI,DCS catalog review,3.7,"Writing, Summarization, Workspace Fit",★★�
 OpenClaw,DCS catalog review,4.5,"Autonomy, Integrations, Self-hosting",★★★★★,2026-08-06,Production messaging-gateway agent; lock down channels and keep secrets off unapproved models
 Hermes Agent,DCS catalog review,4.5,"Autonomy, Memory, Scheduling",★★★★★,2026-08-06,Production self-hosted agent for terminal browser and cron-style automations
 Antigravity,DCS catalog review,4.5,"Agent Coding, Speed, Team Adoption",★★★★★,2026-08-06,Production agentic coding already used in delivery; human review still required
-NotebookLM,DCS catalog review,,"Doc grounding, Briefings, Ease of use",,2026-08-05,Pilot for document Q&A and briefing packs — no client-confidential uploads without approval
+NotebookLM,DCS catalog review,4.0,"Doc grounding, Briefings, Ease of use",★★★★☆,2026-08-20,Approved for internal doc Q&A and briefing packs — no client-confidential uploads without approval
 CodeRabbit,DCS catalog review,,"PR review quality, Security signals, Noise",,2026-08-05,High-value Testing candidate for first-pass PR review; humans still own merge decisions
-Julius AI,DCS catalog review,,"Ad hoc analysis, Charts, Data safety",,2026-08-05,Pilot for CSV/spreadsheet exploration — Internal/sample data only
+Julius AI,DCS catalog review,3.8,"Ad hoc analysis, Charts, Data safety",★★★★☆,2026-08-20,Approved for Internal/sample CSV exploration — not for confidential client extracts
 n8n,DCS catalog review,2.8,"Workflow fit, Maintainability, Current need",★★☆☆☆,2026-08-05,Archived reference — prefer OpenClaw/Hermes or modern agent pipelines for new work
-Gamma,DCS catalog review,,"Speed, Deck quality, Brand polish",,2026-08-05,Pilot for fast internal decks; review branding before external client use
+Gamma,DCS catalog review,3.7,"Speed, Deck quality, Brand polish",★★★☆☆,2026-08-20,Approved for fast first-pass decks — review branding and accuracy before external use
+Hostinger,DCS catalog review,3.6,"Ease of use, Hosting fit, AI builder",★★★☆☆,2026-08-20,Approved for DCS hosting and AI-assisted site launches — keep credentials on the DCS account
 OpenHands,DCS catalog review,,"Autonomy, Sandbox safety, Review burden",,2026-08-05,Planned — revisit after Cursor/Antigravity capacity is stable; sandbox-only experiments
 Browser Use,DCS catalog review,,"Python fit, Playwright control, Reliability",,2026-08-05,Strong Testing fit for agent-driven browser automation on approved targets
 Firecrawl,DCS catalog review,,"Clean extraction, RAG readiness, Hosted ease",,2026-08-05,Testing winner for scraping-to-RAG markdown/JSON versus brittle custom parsers

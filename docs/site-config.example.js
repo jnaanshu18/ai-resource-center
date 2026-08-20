@@ -75,7 +75,7 @@ const SITE_CONFIG = {
    * fullForm: legacy GitHub-issue “Add a tool” (kept, off by default).
    * simpleSubmit: tool name + link POST to Apps Script.
    * winSubmit: share-a-win POST (same Apps Script URL is fine if Team wins tab exists).
-   * Approved Team wins (Sheet Status = Approved) merge into Playbooks use cases live.
+   * Approved Team wins (Sheet Status = Approved) merge into Team stories live.
    * See scripts/tool_submissions_apps_script.js and scripts/team_wins_apps_script.js.
    */
   contribute: {
@@ -91,7 +91,7 @@ const SITE_CONFIG = {
     },
     winSubmit: {
       enabled: true,
-      /** Apps Script web app URL (same as simpleSubmit.submitUrl is fine). Approved wins load into Playbooks. */
+      /** Apps Script web app URL (same as simpleSubmit.submitUrl is fine). Approved wins load into Team stories. */
       submitUrl: "",
       /** Optional published CSV of the Team wins tab. Leave empty to use ?action=listWins. */
       csvUrl: "",
