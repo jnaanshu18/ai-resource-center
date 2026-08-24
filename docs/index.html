@@ -46,7 +46,7 @@
               name="username"
               autocomplete="username"
               required
-              placeholder="team"
+              placeholder="team or admin"
             >
             <p class="field-error" id="loginUsernameError" hidden></p>
           </div>
@@ -58,7 +58,7 @@
               name="password"
               autocomplete="current-password"
               required
-              placeholder="Password"
+              placeholder="Enter your password"
             >
             <p class="field-error" id="loginPasswordError" hidden></p>
           </div>
@@ -81,22 +81,33 @@
   <section class="view" id="view-home" data-view-panel="home">
     <section class="hero hero--home">
       <div class="hero__container">
-        <p class="hero-kicker">Internal · Daily Code Solutions · AI Resource Center</p>
         <h1 class="hero-heading">
-          Stuck on a task? <span class="text-gradient">We’ll tell you which AI we trust.</span>
+          Stuck on a task? <span class="hero-heading__payoff">We’ll point you to tools DCS already trusts.</span>
         </h1>
         <p class="hero-text">
-          Pick a job below — we’ll recommend tools the team already trusts.
+          Pick a job for instant recommendations—or scroll for Start here, what’s new, and the full directory.
         </p>
       </div>
     </section>
+
+    <aside class="hub-orient" id="hubOrientBanner" hidden aria-label="How this site is organized">
+      <div class="hub-orient__inner">
+        <p class="hub-orient__title">New here? Three places to start</p>
+        <ul class="hub-orient__list">
+          <li><strong>Directory</strong> — approved tools we trust</li>
+          <li><strong>Choose a tool</strong> — pick between options in a category</li>
+          <li><strong>Team stories</strong> — real wins from the team</li>
+        </ul>
+        <button type="button" class="linkbtn hub-orient__dismiss" id="hubOrientDismiss">Got it</button>
+      </div>
+    </aside>
 
     <div class="content content--home">
       <section class="panel" aria-labelledby="chooserTitle">
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="chooserTitle">What do you need to do?</h2>
-            <p class="panel__desc">Tap a job — recommendations appear right here.</p>
+            <p class="panel__desc">Tap a job—trusted tools appear below. Pick two or more to compare side by side.</p>
           </div>
           <div class="panel__actions">
             <button type="button" class="linkbtn" data-scroll-to="startHere">Start here ↓</button>
@@ -115,7 +126,7 @@
             <div class="panel__head">
               <div>
                 <h2 class="panel__title" id="startHereTitle">Start here</h2>
-                <p class="panel__desc">Shortlist for new joiners and everyday work.</p>
+                <p class="panel__desc">The shortlist we’d hand a new joiner on day one.</p>
               </div>
               <button type="button" class="linkbtn" data-go-view="directory" data-starter="1">See in directory →</button>
             </div>
@@ -127,6 +138,7 @@
               <div>
                 <p class="panel__eyebrow">This week</p>
                 <h2 class="panel__title" id="totwTitle">Tool of the week</h2>
+                <p class="panel__desc">One spotlight pick—what it’s for and why the team likes it.</p>
               </div>
             </div>
             <div id="toolOfWeek"></div>
@@ -138,7 +150,7 @@
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="recentTitle">Recently added</h2>
-            <p class="panel__desc">Tools approved and added to the directory in the last 15 days.</p>
+            <p class="panel__desc">Approved tools added to the directory in the last 15 days.</p>
           </div>
         </div>
         <div class="starter-row" id="recentToolsRow"></div>
@@ -149,7 +161,7 @@
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="teamDirectoryTitle">Team directory</h2>
-            <p class="panel__desc">Add yourself so admins can assign you to tool testing — your email is used for assignment notifications.</p>
+            <p class="panel__desc">Sign up so admins can assign you to test new tools. We only use your email for assignment alerts.</p>
           </div>
         </div>
         <div class="team-register" id="teamRegisterWrap">
@@ -157,7 +169,7 @@
             <div class="team-register__grid">
               <div class="field">
                 <label for="tr_name">Full name <span class="req">*</span></label>
-                <input type="text" id="tr_name" maxlength="60" required placeholder="e.g. Priya Sharma" autocomplete="name">
+                <input type="text" id="tr_name" maxlength="60" required placeholder="e.g. Alex Rivera" autocomplete="name">
               </div>
               <div class="field">
                 <label for="tr_email">Work email <span class="req">*</span></label>
@@ -204,10 +216,10 @@
     <section class="hero">
       <div class="hero__container">
         <h1 class="hero-heading">
-          Tool <span class="text-gradient">directory</span>
+          Too many AI tools? <span class="hero-heading__payoff">We only list what DCS actually uses.</span>
         </h1>
         <p class="hero-text">
-          Every AI tool we run — search, filter, open details, or compare tools.
+          Search and filter approved tools. Open any card for tutorials, notes, and ratings. Tools still being tested live on Suggestions.
         </p>
       </div>
     </section>
@@ -225,7 +237,7 @@
         <div class="controls__row">
           <div class="search">
             <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            <input type="text" id="searchInput" placeholder="Search tools…" autocomplete="off">
+            <input type="text" id="searchInput" placeholder="Search tools — e.g. Cursor, ChatGPT, Perplexity…" autocomplete="off">
           </div>
           <select id="sortSelect" aria-label="Sort by">
             <option value="name">Name (A–Z)</option>
@@ -235,15 +247,22 @@
             <option value="category">Category</option>
             <option value="pricing">Pricing</option>
           </select>
-          <button type="button" class="btn-compare" id="compareToggle" aria-pressed="false">Compare</button>
         </div>
         <div class="filter-groups" id="filterChips" aria-label="More filters"></div>
       </section>
 
-      <section id="toolResults" aria-label="Tool results">
-        <div class="compare-banner" id="compareBanner" hidden role="status">
-          Selecting tools — tap a card to add it (up to 3), then Compare in the bar below.
+      <section class="compare-tools" id="compareTools" aria-labelledby="compareToolsTitle">
+        <div class="compare-tools__row">
+          <div class="compare-tools__text">
+            <h2 class="compare-tools__title" id="compareToolsTitle">Compare tools</h2>
+            <p class="compare-tools__desc" id="compareToolsDesc">Pick up to 3 tools from the list below for a side-by-side view.</p>
+          </div>
+          <button type="button" class="btn-compare compare-tools__toggle" id="compareToggle" aria-pressed="false">Compare</button>
         </div>
+        <p class="compare-tools__status" id="compareToolsStatus" hidden role="status"></p>
+      </section>
+
+      <section id="toolResults" aria-label="Tool results">
         <div class="resultbar">
           <span id="resultCount"></span>
           <button id="clearFilters" class="linkbtn" hidden>Clear filters</button>
@@ -256,20 +275,10 @@
 
   <!-- TOOL DETAIL PAGE -->
   <section class="view" id="view-tool" data-view-panel="tool" hidden>
-    <section class="hero hero--tool">
-      <div class="hero__container">
-        <button type="button" class="linkbtn tool-page__back" id="modalClose">← Back to directory</button>
-        <h1 class="hero-heading">
-          Tool <span class="text-gradient">details</span>
-        </h1>
-      </div>
-    </section>
     <div class="content content--tool">
-      <div id="modalOverlay" class="tool-page">
-        <article class="tool-page__card" id="modal">
-          <div id="modalBody"></div>
-        </article>
-      </div>
+      <article class="tool-page__card" id="modal">
+        <div id="modalBody"></div>
+      </article>
     </div>
   </section>
 
@@ -278,19 +287,17 @@
     <section class="hero">
       <div class="hero__container">
         <h1 class="hero-heading">
-          Choose a <span class="text-gradient">tool</span>
+          Which tool should I use? <span class="hero-heading__payoff">Start with the category—or compare two for your exact task.</span>
         </h1>
-        <p class="hero-text">
-          Official DCS picks: when to use a tool, when to skip it, and what won last time. For a teammate’s real example, <button type="button" class="linkbtn" data-go-view="playbooks">Team stories →</button>
-        </p>
       </div>
     </section>
     <div class="content guides-split">
       <section class="panel guides-split__col" aria-labelledby="guidesTitle">
         <div class="panel__head">
           <div>
-            <h2 class="panel__title" id="guidesTitle">Official picks</h2>
-            <p class="panel__desc">Expand Assistants, Coding, or Research to see use-when / skip-when. Need a real example from a teammate? <button type="button" class="linkbtn" data-go-view="playbooks">Team stories →</button></p>
+            <p class="panel__eyebrow">Many tools in a category</p>
+            <h2 class="panel__title" id="guidesTitle">Category guides</h2>
+            <p class="panel__desc">Expand a category—each tool gets a clear <strong>use when</strong> and <strong>skip when</strong>. Want a real teammate story instead? <button type="button" class="linkbtn" data-go-view="playbooks">Team stories →</button></p>
           </div>
         </div>
         <div id="guidesList"></div>
@@ -299,10 +306,10 @@
       <section class="panel guides-split__col" aria-labelledby="compTitle">
         <div class="panel__head">
           <div>
-            <h2 class="panel__title" id="compTitle">Documented head-to-heads</h2>
-            <p class="panel__desc">Expand a comparison to see notes and open each tool.</p>
+            <p class="panel__eyebrow">Two tools, same task</p>
+            <h2 class="panel__title" id="compTitle">Tool vs tool</h2>
+            <p class="panel__desc">Expand a category—each row is a specific situation (e.g. cited web facts). See DCS pick, why, and when to choose the other tool.</p>
           </div>
-          <button type="button" class="btn-base btn-secondary" data-go-view="directory" data-compare="1">Open Compare →</button>
         </div>
         <div id="comparisonsList"></div>
       </section>
@@ -314,10 +321,10 @@
     <section class="hero">
       <div class="hero__container">
         <h1 class="hero-heading">
-          Prompt <span class="text-gradient">library</span>
+          Skip the guesswork. <span class="hero-heading__payoff">Start with prompts we’ve battle-tested.</span>
         </h1>
         <p class="hero-text">
-          Copy a team prompt, paste into your approved tool, and ship faster.
+          Filter by role or use case, search what you need, then copy into your approved tool and run.
         </p>
       </div>
     </section>
@@ -363,9 +370,11 @@
   <section class="view" id="view-playbooks" data-view-panel="playbooks" hidden>
     <section class="hero">
       <div class="hero__container">
-        <h1 class="hero-heading">Team stories</h1>
+        <h1 class="hero-heading">
+          Proof beats promises. <span class="hero-heading__payoff">Read what a teammate actually did with it.</span>
+        </h1>
         <p class="hero-text">
-          Real write-ups from Daily Code Solutions people — not vendor copy. Not sure which tool to start with? <button type="button" class="linkbtn" data-go-view="guides">Choose a tool →</button>
+          Read real wins from teammates, browse learning links, or share your own story.
         </p>
       </div>
     </section>
@@ -387,7 +396,7 @@
           <div class="panel__head">
             <div>
               <h2 class="panel__title" id="useCasesTitle">How DCS people use these tools</h2>
-              <p class="panel__desc">Each card is a real experience from a Daily Code Solutions employee: the tool, what they did, and what it changed. Need an official pick instead? <button type="button" class="linkbtn" data-go-view="guides">Choose a tool →</button></p>
+              <p class="panel__desc">Real examples from DCS teammates—the tool they used, what they did, and what changed. Need help choosing a tool? <button type="button" class="linkbtn" data-go-view="guides">Category guides →</button></p>
             </div>
           </div>
           <div class="usecase-grid" id="useCaseGrid"></div>
@@ -397,7 +406,7 @@
           <div class="panel__head">
             <div>
               <h2 class="panel__title" id="learnTitle">Learning by role</h2>
-              <p class="panel__desc">Courses and docs to level up without reinventing the wheel.</p>
+              <p class="panel__desc">Curated courses and docs—use search and role filters above to narrow down.</p>
             </div>
           </div>
           <div class="learn-grid" id="learnGrid"></div>
@@ -409,7 +418,7 @@
           <div class="panel__head">
             <div>
               <h2 class="panel__title" id="shareWinTitle">Share a win</h2>
-              <p class="panel__desc">Add your own DCS story. After a teammate reviews it, it appears in the list on the left.</p>
+              <p class="panel__desc">Tell us what worked—tool, outcome, and how you used it.</p>
             </div>
           </div>
           <form id="winForm" novalidate>
@@ -430,12 +439,12 @@
             <div class="field-row">
               <div class="field" data-field="w_name">
                 <label for="w_name">Your name</label>
-                <input type="text" id="w_name" maxlength="60" autocomplete="name" placeholder="Optional">
+                <input type="text" id="w_name" maxlength="60" autocomplete="name" placeholder="e.g. Alex Rivera (optional)">
               </div>
               <div class="field" data-field="w_role">
                 <label for="w_role">Role</label>
                 <select id="w_role">
-                  <option value="">Optional</option>
+                  <option value="">Select role (optional)</option>
                   <option>Everyone</option>
                   <option>Engineering</option>
                   <option>Data</option>
@@ -446,24 +455,23 @@
             </div>
             <div class="field" data-field="w_impact">
               <label for="w_impact">Impact <span class="req">*</span></label>
-              <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours per week; fewer follow-up emails"></textarea>
+              <textarea id="w_impact" rows="4" maxlength="400" placeholder="e.g. Saved ~2 hours/week; fewer follow-up emails; what changed for you or the team"></textarea>
               <div class="field-meta"><span class="field-count" id="w_impact_count">0 / 400</span></div>
               <p class="field-error" id="w_impact_err" hidden></p>
             </div>
             <div class="field" data-field="w_how">
               <label for="w_how">How you used it</label>
-              <textarea id="w_how" rows="4" maxlength="600" placeholder="Optional — prompts, workflow, or tips for the team"></textarea>
+              <textarea id="w_how" rows="4" maxlength="600" placeholder="e.g. Used this prompt in Cursor to draft the client update"></textarea>
               <div class="field-meta"><span class="field-count" id="w_how_count">0 / 600</span></div>
             </div>
             <p class="field-error field-error--form" id="winFormErr" hidden></p>
             <div class="form-actions">
               <button type="submit" class="btn-base btn-primary" id="winSubmit">Share win</button>
             </div>
-            <p class="field-note">Reviewed first — then it shows with the other DCS experiences.</p>
           </form>
           <div id="winSuccess" hidden>
             <h3 class="panel__title">Win submitted</h3>
-            <p class="panel__desc" id="winSuccessDesc">Thanks. After review it will show with the other DCS experiences on the left.</p>
+            <p class="panel__desc" id="winSuccessDesc">Thanks—we got your story.</p>
             <div class="suggest-draft-actions">
               <button type="button" class="linkbtn" id="winAnother">Share another</button>
             </div>
@@ -477,9 +485,11 @@
   <section class="view" id="view-submissions" data-view-panel="submissions" hidden>
     <section class="hero">
       <div class="hero__container">
-        <h1 class="hero-heading">Team <span class="text-gradient">suggestions</span></h1>
+        <h1 class="hero-heading">
+          Spotted a tool we should try? <span class="hero-heading__payoff">Throw it in the suggestion box.</span>
+        </h1>
         <p class="hero-text">
-          Suggest a tool and see what’s in review.
+          Submit on the right. Track status on the left. Tools in review or testing appear here until they reach Directory.
         </p>
       </div>
     </section>
@@ -488,13 +498,13 @@
         <div class="panel__head">
           <div>
             <h2 class="panel__title" id="submissionsTitle">Tool queue</h2>
-            <p class="panel__desc" id="submissionsQueueHint" hidden></p>
+            <p class="panel__desc" id="submissionsQueueHint">Search and filter by status—see what’s waiting, in review, testing, or rejected.</p>
           </div>
         </div>
         <div class="submissions-search-row">
           <div class="search submissions-search">
             <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            <input type="search" id="submissionSearchInput" placeholder="Search by tool name…" autocomplete="off" aria-label="Search tools by name">
+            <input type="search" id="submissionSearchInput" placeholder="Search queue — e.g. Firecrawl, Gamma…" autocomplete="off" aria-label="Search tools by name">
           </div>
         </div>
         <div class="filter-chips submissions-filters" id="submissionsFilters" role="group" aria-label="Filter the queue by status"></div>
@@ -508,6 +518,7 @@
           <div class="panel__head">
             <div>
               <h2 class="panel__title" id="suggestTitle">Suggest a tool</h2>
+              <p class="panel__desc">Name, link, and why—we review every suggestion before it moves forward.</p>
             </div>
           </div>
 
@@ -525,7 +536,7 @@
               </div>
               <div class="field" data-simple-field="note">
                 <label for="simple_note">Why suggest this?</label>
-                <input type="text" id="simple_note" name="note" maxlength="200" placeholder="What problem it might solve" aria-describedby="simple_note_err">
+                <input type="text" id="simple_note" name="note" maxlength="200" placeholder="e.g. Faster research for client reports" aria-describedby="simple_note_err">
                 <p class="field-error" id="simple_note_err" hidden></p>
               </div>
               <div class="field" id="simpleAssignField" data-simple-field="assign" hidden>
@@ -562,7 +573,7 @@
           Share a <span class="text-gradient">win</span>
         </h1>
         <p class="hero-text">
-          Tell the team what tool helped and what impact it had. Submissions are reviewed before they land in Team stories.
+          Tell the team what tool helped and what impact it had.
         </p>
       </div>
     </section>
@@ -592,14 +603,14 @@
               <div class="field" data-field="pricing">
                 <label for="s_pricing">Pricing model</label>
                 <select id="s_pricing" name="pricing" aria-describedby="s_pricing_err">
-                  <option value="">Optional</option>
+                  <option value="">Select pricing (optional)</option>
                 </select>
                 <p class="field-error" id="s_pricing_err" hidden></p>
               </div>
               <div class="field" data-field="urgency">
                 <label for="s_urgency">When should the team try it?</label>
                 <select id="s_urgency" name="urgency" aria-describedby="s_urgency_err">
-                  <option value="">Optional</option>
+                  <option value="">Select timing (optional)</option>
                   <option value="Exploring / learning">Exploring / learning</option>
                   <option value="Nice to have">Nice to have</option>
                   <option value="Useful this quarter">Useful this quarter</option>
@@ -612,20 +623,20 @@
 
             <div class="field" data-field="url">
               <label for="s_url">Website <span class="req">*</span></label>
-              <input type="url" id="s_url" name="url" maxlength="300" required placeholder="https://example.com" aria-describedby="s_url_err">
+              <input type="url" id="s_url" name="url" maxlength="300" required placeholder="https://… official site, repo, or demo" aria-describedby="s_url_err">
               <p class="field-error" id="s_url_err" hidden></p>
             </div>
 
             <div class="field-row">
               <div class="field" data-field="submitter">
                 <label for="s_submitter">Your name <span class="req">*</span></label>
-                <input type="text" id="s_submitter" name="submitter" maxlength="60" autocomplete="name" required placeholder="Your name" aria-describedby="s_submitter_err">
+                <input type="text" id="s_submitter" name="submitter" maxlength="60" autocomplete="name" required placeholder="e.g. Alex Rivera" aria-describedby="s_submitter_err">
                 <p class="field-error" id="s_submitter_err" hidden></p>
               </div>
               <div class="field" data-field="dept">
                 <label for="s_dept">Department</label>
                 <select id="s_dept" name="dept" aria-describedby="s_dept_err">
-                  <option value="">Optional</option>
+                  <option value="">Select department (optional)</option>
                 </select>
                 <p class="field-error" id="s_dept_err" hidden></p>
               </div>
@@ -633,7 +644,7 @@
 
             <div class="field" data-field="desc">
               <label for="s_desc">What does it do? <span class="req">*</span></label>
-              <textarea id="s_desc" name="desc" rows="4" maxlength="500" placeholder="Short description of what it's for" aria-describedby="s_desc_err s_sensitive_warn"></textarea>
+              <textarea id="s_desc" name="desc" rows="4" maxlength="500" placeholder="e.g. AI writing assistant for client docs and emails" aria-describedby="s_desc_err s_sensitive_warn"></textarea>
               <div class="field-meta">
                 <span class="field-count" id="s_desc_count">0 / 500</span>
               </div>
@@ -642,7 +653,7 @@
 
             <div class="field" data-field="reason">
               <label for="s_reason">How should teammates test it?</label>
-              <textarea id="s_reason" name="reason" rows="4" maxlength="800" placeholder="What to try, who should test, what “good” looks like…" aria-describedby="s_reason_err s_sensitive_warn"></textarea>
+              <textarea id="s_reason" name="reason" rows="4" maxlength="800" placeholder="e.g. Try on a sample report; good if it saves 30+ minutes" aria-describedby="s_reason_err s_sensitive_warn"></textarea>
               <div class="field-meta">
                 <span class="field-count" id="s_reason_count">0 / 800</span>
               </div>
@@ -705,6 +716,7 @@
   <div class="compare-bar__inner">
     <span class="compare-bar__text" id="compareBarText">Select 2–3 tools to compare</span>
     <div class="compare-bar__actions">
+      <button type="button" class="linkbtn" id="compareDismiss">Dismiss</button>
       <button type="button" class="linkbtn" id="compareClear">Clear</button>
       <button type="button" class="compare-bar__btn" id="compareOpen" disabled>Compare</button>
     </div>
@@ -716,6 +728,22 @@
     <button class="modal__close" id="compareClose" aria-label="Close">✕</button>
     <h2 class="modal__name" id="compareTitle">Compare tools</h2>
     <div id="compareBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="storyDetailOverlay" hidden>
+  <div class="modal modal--story" id="storyDetailModal" role="dialog" aria-modal="true" aria-labelledby="storyDetailTitle">
+    <button class="modal__close" id="storyDetailClose" aria-label="Close">✕</button>
+    <p class="story-detail__meta" id="storyDetailMeta"></p>
+    <h2 class="modal__name" id="storyDetailTitle">Story</h2>
+    <div class="story-detail__section">
+      <h3 class="story-detail__label">Impact</h3>
+      <p class="story-detail__text" id="storyDetailImpact"></p>
+    </div>
+    <div class="story-detail__section" id="storyDetailHowWrap" hidden>
+      <h3 class="story-detail__label">How they used it</h3>
+      <p class="story-detail__text" id="storyDetailHow"></p>
+    </div>
   </div>
 </div>
 
@@ -750,7 +778,7 @@
     </div>
     <div class="field" data-review-field="comment">
       <label for="submissionReviewComment">Comment</label>
-      <textarea id="submissionReviewComment" rows="2" maxlength="400" placeholder="Required if you reject"></textarea>
+      <textarea id="submissionReviewComment" rows="2" maxlength="400" placeholder="Reason for rejection (required when rejecting)"></textarea>
       <div class="field-meta"><span class="field-count" id="submissionReviewCommentCount">0 / 400</span></div>
       <p class="field-error" id="submissionReviewCommentErr" hidden></p>
     </div>

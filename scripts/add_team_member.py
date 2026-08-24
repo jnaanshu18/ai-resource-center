@@ -2,8 +2,8 @@
 """Add or update a person in data/team_members.csv.
 
 Usage:
-  python scripts/add_team_member.py --name "Priya Sharma" --email priya@dailycodesolutions.com --department Operations
-  python scripts/add_team_member.py --id TM-003 --name "Priya Sharma" --email priya@dailycodesolutions.com --inactive
+  python scripts/add_team_member.py --name "Alex Rivera" --email alex@dailycodesolutions.com --department Operations
+  python scripts/add_team_member.py --id TM-003 --name "Alex Rivera" --email alex@dailycodesolutions.com --inactive
 """
 from __future__ import annotations
 

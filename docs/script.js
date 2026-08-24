@@ -28,11 +28,15 @@ const STATUS_ORDER = [
 ];
 
 const COMPARE_MAX = 3;
+const WIN_IMPACT_MAX_CHARS = 400;
 const TOOL_ASSIGNMENT_KEY = "dcs-ai-rc-tool-assignments";
 const TEAM_REGISTER_PENDING_KEY = "dcs-ai-rc-team-register-pending";
+const HUB_ORIENT_KEY = "dcs-ai-rc-hub-orient-dismissed";
 const TOOL_ASSIGNABLE_STATUSES = new Set(["Testing", "Exploring"]);
 /** Set true later to restore the Directory Filters expand/collapse control. */
 const FILTERS_COLLAPSIBLE = false;
+/** Client-work + internal-contact row on tool detail — flip on when ready. */
+const TOOL_TRUST_ROW_ENABLED = false;
 
 /** Fallback if SITE_HIGHLIGHTS is missing from data.js. */
 const START_HERE_FALLBACK = ["Cursor", "Antigravity", "ChatGPT", "Claude", "Perplexity"];
@@ -107,6 +111,7 @@ const state = {
   sort: "name",
   compareMode: false,
   compareIds: [],
+  compareReturnView: null,
   promptRole: "All",
   promptUseCase: "All",
   promptSearch: "",
@@ -466,13 +471,7 @@ function submissionLinkHtml(item) {
 
 function cardNameHtml(tool) {
   const name = escapeHtml(tool.name);
-  return `<h3 class="card__name"><button type="button" class="card__name-btn" data-open-details="${escapeHtml(tool.id)}" aria-label="View details for ${name}">${name}</button></h3>`;
-}
-
-function cardSiteLinkHtml(tool) {
-  if (!tool.url) return "";
-  const name = escapeHtml(tool.name);
-  return `<a class="card__cta-secondary" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener" aria-label="Open ${name} website in a new tab">Open site <span aria-hidden="true">↗</span></a>`;
+  return `<h3 class="card__name"><button type="button" class="card__name-btn" data-open-details="${escapeHtml(tool.id)}" aria-label="View details for ${name}">${name}<span class="card__name-arrow" aria-hidden="true">→</span></button></h3>`;
 }
 
 function tagListHtml(tool, { includePlatform = false } = {}) {
@@ -992,13 +991,9 @@ function renderCards() {
             <span class="badge badge--${group}">${escapeHtml(t.status)}</span>
           </div>
         </div>
-        ${tagListHtml(t)}
+        ${tagListHtml(t) || `<div class="card__tags card__tags--spacer" aria-hidden="true"></div>`}
         <p class="card__desc">${escapeHtml(t.description)}</p>
         ${assignmentSummaryHtml(t)}
-        <div class="card__actions">
-          <button type="button" class="card__cta" data-open-details="${escapeHtml(t.id)}">View details</button>
-          ${cardSiteLinkHtml(t)}
-        </div>
       </article>
     `;
   }).join("");
@@ -1084,17 +1079,61 @@ function tutorialHtml(tool) {
   `;
 }
 
+function toolClientWorkLabel(classification) {
+  const c = String(classification || "").trim();
+  if (!c) return "";
+  const map = {
+    Internal: "Internal only",
+    Confidential: "Not for confidential client work",
+    Public: "Public material OK",
+  };
+  return map[c] || c;
+}
+
+function internalContactFor(tool) {
+  const email = String(tool.contactEmail || "").trim();
+  if (email) return email;
+  const owner = String(tool.owner || "").trim();
+  if (!owner || /^admin$/i.test(owner)) return "Ask Admin";
+  return owner;
+}
+
+function toolDetailTrustHtml(tool) {
+  if (!TOOL_TRUST_ROW_ENABLED) return "";
+  const clientWork = toolClientWorkLabel(tool.dataClassification);
+  const contact = internalContactFor(tool);
+  if (!clientWork && !contact) return "";
+  const parts = [];
+  if (clientWork) {
+    parts.push(`<span class="tool-detail__client-work">Client work: ${escapeHtml(clientWork)}</span>`);
+  }
+  if (contact) {
+    const label = contact.includes("@") ? contact : teamShortName(contact);
+    parts.push(`<span class="tool-detail__contact">Internal contact: ${escapeHtml(label)}</span>`);
+  }
+  return `<p class="tool-detail__trust">${parts.join('<span class="tool-detail__trust-sep" aria-hidden="true">·</span>')}</p>`;
+}
+
+function promptsForTool(toolName) {
+  const name = String(toolName || "").trim().toLowerCase();
+  if (!name) return [];
+  return promptsData().filter(p =>
+    (p.models || []).some(m => String(m).trim().toLowerCase() === name)
+  );
+}
+
 function glanceFactsHtml(tool) {
   const useCases = detailPills("Use cases", tool.useCases);
   const models = detailPills("Approved models", tool.approvedModels);
   return `
     <div class="tool-glance__facts">
       <div class="tool-tutorial__head">
-        <h3 class="tool-tutorial__title">Basic details</h3>
+        <h3 class="tool-tutorial__title">Key facts</h3>
       </div>
       <div class="tool-facts">
-        ${detailField("Subcategory", tool.subcategory || "—")}
         ${detailField("Department", tool.department || "—")}
+        ${detailField("Subcategory", tool.subcategory || "—")}
+        ${detailField("Data handling", tool.dataClassification || "—")}
         ${detailField("Priority", tool.priority || "—")}
         ${detailField("Learning curve", tool.learningCurve || "—")}
         ${detailField("Date added", tool.dateAdded || "—")}
@@ -1111,6 +1150,107 @@ function toolGlanceHtml(tool) {
     <section class="tool-glance${tutorial ? "" : " tool-glance--facts-only"}" aria-label="Tutorial and key facts">
       ${tutorial ? `<div class="tool-glance__media">${tutorial}</div>` : ""}
       ${glanceFactsHtml(tool)}
+    </section>
+  `;
+}
+
+function toolDetailMetaHtml(tool) {
+  const group = STATUS_GROUP[tool.status] || "blue";
+  const evalData = evaluationFor(tool);
+  const classChip = tool.dataClassification
+    ? `<span class="card__tag card__tag--class card__tag--class-${String(tool.dataClassification).toLowerCase()}">${escapeHtml(tool.dataClassification)} data</span>`
+    : "";
+  const platformTags = (tool.platform || []).slice(0, 4).map(p =>
+    `<span class="card__tag card__tag--muted">${escapeHtml(p)}</span>`
+  ).join("");
+  return `
+    <div class="tool-detail__meta">
+      <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
+      ${tool.category ? `<span class="card__tag">${escapeHtml(tool.category)}</span>` : ""}
+      ${tool.pricing ? `<span class="card__tag">${escapeHtml(tool.pricing)}</span>` : ""}
+      ${classChip}
+      ${platformTags}
+      ${ratingHtml(evalData, tool)}
+      ${modalMetaAssignmentHtml(tool)}
+    </div>
+  `;
+}
+
+function toolDetailComparisonsHtml(tool) {
+  const comps = comparisonsForTool(tool.name);
+  if (!comps.length) return "";
+  return `
+    <section class="tool-detail__related" aria-label="Related matchups">
+      <h3 class="tool-detail__section-title">Tool vs tool</h3>
+      <div class="tool-detail__links">
+        ${comps.slice(0, 4).map(c => `
+          <button type="button" class="linkbtn" data-open-comparison="${escapeHtml(c.id || comparisonTitle(c))}">${escapeHtml(comparisonTitle(c))} →</button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function toolDetailStoriesHtml(tool) {
+  const stories = useCasesData().filter(uc => uc.tool === tool.name).slice(0, 3);
+  if (!stories.length) return "";
+  return `
+    <section class="tool-detail__related" aria-label="Team stories">
+      <h3 class="tool-detail__section-title">Team stories</h3>
+      <div class="tool-detail__links">
+        ${stories.map(uc => `
+          <button type="button" class="linkbtn" data-playbook-search="${escapeHtml(uc.title)}">${escapeHtml(uc.title)} →</button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function toolDetailPromptsHtml(tool) {
+  const prompts = promptsForTool(tool.name).slice(0, 3);
+  if (!prompts.length) return "";
+  return `
+    <section class="tool-detail__related" aria-label="Related prompts">
+      <h3 class="tool-detail__section-title">Related prompts</h3>
+      <div class="tool-detail__links">
+        ${prompts.map(p => `
+          <button type="button" class="linkbtn" data-open-prompt="${escapeHtml(p.id)}">${escapeHtml(p.title)} →</button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function toolDetailNoteBlock(label, content, { variant = "" } = {}) {
+  if (!content) return "";
+  return `
+    <section class="tool-detail__note tool-detail__note--${variant || "default"}">
+      <h3 class="tool-detail__note-title">${escapeHtml(label)}</h3>
+      <p class="tool-detail__note-body">${escapeHtml(content)}</p>
+    </section>
+  `;
+}
+
+function toolDetailEvalHtml(tool, evalData) {
+  if (!hasUsefulEval(evalData, tool)) return "";
+  return `
+    <section class="tool-detail__note tool-detail__note--eval">
+      <h3 class="tool-detail__note-title">DCS evaluation</h3>
+      ${toolCanHaveScore(tool) ? `<div class="tool-detail__stars">${ratingHtml(evalData, tool)}</div>` : ""}
+      ${evalData.criteria ? `<p class="tool-detail__eval-row"><span>Criteria</span> ${escapeHtml(evalData.criteria)}</p>` : ""}
+      ${evalData.date ? `<p class="tool-detail__eval-row"><span>Evaluated</span> ${escapeHtml(evalData.date)}</p>` : ""}
+      ${evalData.notes ? `<p class="tool-detail__note-body">${escapeHtml(evalData.notes)}</p>` : ""}
+    </section>
+  `;
+}
+
+function toolDetailCostSecurityHtml(tool) {
+  if (!tool.costNote && !tool.securityTip) return "";
+  return `
+    <section class="tool-detail__note tool-detail__note--security">
+      <h3 class="tool-detail__note-title">Cost &amp; security</h3>
+      ${tool.costNote ? `<p class="tool-detail__eval-row"><span>Cost</span> ${escapeHtml(tool.costNote)}</p>` : ""}
+      ${tool.securityTip ? `<p class="tool-detail__eval-row"><span>Security</span> ${escapeHtml(tool.securityTip)}</p>` : ""}
     </section>
   `;
 }
@@ -1137,74 +1277,85 @@ function openModal(tool) {
     state.toolReturnView = VIEWS.includes(state.view) && state.view !== "tool" ? state.view : "directory";
   }
   state.currentToolId = tool.id;
-  const group = STATUS_GROUP[tool.status] || "blue";
   const evalData = evaluationFor(tool);
+  const back = state.toolReturnView && state.toolReturnView !== "tool" ? state.toolReturnView : "directory";
+  const backLabels = {
+    home: "← Back to AI hub",
+    directory: "← Back to directory",
+    guides: "← Back to Choose a tool",
+    prompts: "← Back to prompts",
+    playbooks: "← Back to Team stories",
+    submissions: "← Back to Suggestions",
+    contribute: "← Back to contribute",
+  };
+
   document.getElementById("modalBody").innerHTML = `
-    <div class="modal__header">
-      ${logoHtml(tool)}
-      <div>
-        <h2 class="modal__name" id="modalName">${escapeHtml(tool.name)}</h2>
-        <div class="modal__meta">
-          <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
-          ${ratingHtml(evalData, tool)}
-          ${modalMetaTagsHtml(tool)}
-          ${modalMetaAssignmentHtml(tool)}
+    <div class="tool-detail">
+      <div class="tool-detail__toolbar">
+        <button type="button" class="linkbtn tool-detail__back" id="modalClose">${escapeHtml(backLabels[back] || backLabels.directory)}</button>
+        <div class="tool-detail__toolbar-actions">
+          <button type="button" class="btn-base btn-secondary btn-sm" id="modalCompareBtn" data-id="${escapeHtml(tool.id)}">
+            ${isCompared(tool.id) ? "Remove from compare" : state.compareIds.length >= COMPARE_MAX ? "Compare list full" : "Add to compare"}
+          </button>
         </div>
       </div>
-    </div>
-    <p class="modal__desc">${escapeHtml(tool.description)}</p>
-    ${toolGlanceHtml(tool)}
 
-    <div class="detail-panels">
-      ${tool.whenToUse ? `<div class="modal__notes"><strong>When to use</strong>${escapeHtml(tool.whenToUse)}</div>` : ""}
-      ${tool.alternatives ? `<div class="modal__notes"><strong>Alternatives</strong>${escapeHtml(tool.alternatives)}</div>` : ""}
-      ${tool.notes ? `<div class="modal__notes"><strong>Team notes</strong>${escapeHtml(tool.notes)}</div>` : ""}
-      ${tool.limitations ? `<div class="modal__notes modal__notes--caution"><strong>Limitations</strong>${escapeHtml(tool.limitations)}</div>` : ""}
-      ${tool.costNote || tool.securityTip ? `
-        <div class="modal__notes">
-          <strong>Cost & security</strong>
-          ${tool.costNote ? `
-            <div class="eval-row">
-              <span class="eval-label">Cost</span>
-              <span class="eval-value">${escapeHtml(tool.costNote)}</span>
-            </div>` : ""}
-          ${tool.securityTip ? `
-            <div class="eval-row">
-              <span class="eval-label">Security</span>
-              <span class="eval-value">${escapeHtml(tool.securityTip)}</span>
-            </div>` : ""}
-        </div>` : ""}
-      ${hasUsefulEval(evalData, tool) ? `
-        <div class="modal__notes modal__eval">
-          <strong>Evaluation</strong>
-          ${toolCanHaveScore(tool) ? `<div class="modal__stars-row">${ratingHtml(evalData, tool)}</div>` : ""}
-          ${evalData.criteria ? `
-            <div class="eval-row">
-              <span class="eval-label">Criteria</span>
-              <span class="eval-value">${escapeHtml(evalData.criteria)}</span>
-            </div>` : ""}
-          ${evalData.date ? `
-            <div class="eval-row">
-              <span class="eval-label">Evaluated</span>
-              <span class="eval-value">${escapeHtml(evalData.date)}</span>
-            </div>` : ""}
-          ${evalData.notes ? `<div class="eval-note">${escapeHtml(evalData.notes)}</div>` : ""}
+      <header class="tool-detail__header">
+        <div class="tool-detail__identity">
+          ${logoHtml(tool)}
+          <div class="tool-detail__titleblock">
+            <div class="tool-detail__name-row">
+              <h1 class="tool-detail__name" id="modalName">${escapeHtml(tool.name)}</h1>
+              ${tool.url ? `<a class="tool-detail__website" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener">Visit website<span class="tool-detail__website-icon" aria-hidden="true">↗</span></a>` : ""}
+            </div>
+            <p class="tool-detail__lead">${escapeHtml(tool.description)}</p>
+            ${toolDetailTrustHtml(tool)}
+            ${toolDetailMetaHtml(tool)}
+          </div>
+        </div>
+      </header>
+
+      ${toolGlanceHtml(tool)}
+
+      ${tool.whenToUse || tool.alternatives ? `
+        <div class="tool-detail__guidance">
+          ${toolDetailNoteBlock("When to use", tool.whenToUse, { variant: "go" })}
+          ${toolDetailNoteBlock("Alternatives", tool.alternatives, { variant: "alt" })}
         </div>
       ` : ""}
-    </div>
-    <div class="modal__actions">
-      <button type="button" class="modal__cta modal__cta--secondary" id="modalCompareBtn" data-id="${escapeHtml(tool.id)}">
-        ${isCompared(tool.id) ? "Remove from compare" : state.compareIds.length >= COMPARE_MAX ? "Compare list is full" : "Add to compare"}
-      </button>
-      ${tool.url ? `<a class="modal__cta" href="${escapeHtml(tool.url)}" target="_blank" rel="noopener">Open ${escapeHtml(tool.name)}</a>` : ""}
+
+      ${tool.notes ? `
+        <section class="tool-detail__notes-banner" aria-label="Team notes">
+          <h3 class="tool-detail__section-title">Team notes</h3>
+          <p class="tool-detail__notes-banner-body">${escapeHtml(tool.notes)}</p>
+        </section>
+      ` : ""}
+
+      <div class="tool-detail__panels">
+        ${toolDetailNoteBlock("Limitations", tool.limitations, { variant: "caution" })}
+        ${toolDetailCostSecurityHtml(tool)}
+        ${toolDetailEvalHtml(tool, evalData)}
+      </div>
+
+      ${toolDetailComparisonsHtml(tool) || toolDetailStoriesHtml(tool) || toolDetailPromptsHtml(tool) ? `
+        <div class="tool-detail__related-row">
+          ${toolDetailComparisonsHtml(tool)}
+          ${toolDetailStoriesHtml(tool)}
+          ${toolDetailPromptsHtml(tool)}
+        </div>
+      ` : ""}
+
+      ${state.compareIds.length === 1 && !isCompared(tool.id) ? `
+        <p class="modal__compare-hint">One tool already selected—add this one to compare side by side in Directory.</p>
+      ` : ""}
     </div>
   `;
+
   const compareBtn = document.getElementById("modalCompareBtn");
   if (compareBtn && !isCompared(tool.id) && state.compareIds.length >= COMPARE_MAX) {
     compareBtn.disabled = true;
   }
   bindToolAssignmentTrigger(tool);
-  syncToolBackLabel();
   showView("tool");
 }
 
@@ -1300,6 +1451,15 @@ function syncUrl({ tool } = {}) {
 
   if (state.view === "home" && state.chooserJobId) params.set("job", state.chooserJobId);
   else params.delete("job");
+
+  if (state.view === "directory" && state.compareMode) params.set("compare", "1");
+  else params.delete("compare");
+
+  if (state.view === "directory" && state.compareIds.length) {
+    params.set("compareTools", state.compareIds.join(","));
+  } else {
+    params.delete("compareTools");
+  }
 
   if (state.view === "tool") {
     const current = TOOLS.find(t => t.id === state.currentToolId);
@@ -1445,6 +1605,14 @@ function applyFiltersFromUrl() {
   }
 
   if (params.get("compare") === "1" && !params.get("tool")) {
+    state.compareMode = true;
+    if (!view) state.view = "directory";
+  }
+
+  const compareToolsRaw = params.get("compareTools");
+  if (compareToolsRaw) {
+    state.compareIds = parseCompareToolIds(compareToolsRaw);
+    if (state.compareIds.length) state.compareMode = true;
     if (!view) state.view = "directory";
   }
 
@@ -1526,8 +1694,12 @@ function clearFilters() {
   rerender();
 }
 
-/** Navigate to directory (optionally Start here / New / compare mode). */
-function browseTools({ starter = false, recent = false, compare = false } = {}) {
+/** Navigate to directory (optionally Start here / New / compare mode / pre-selected tools). */
+function browseTools({ starter = false, recent = false, compare = false, compareIds = null } = {}) {
+  if (compareIds && compareIds.length) {
+    startCompareWithTools(compareIds);
+    return;
+  }
   if (starter) {
     state.starter = true;
     state.recent = false;
@@ -1540,11 +1712,40 @@ function browseTools({ starter = false, recent = false, compare = false } = {}) 
     state.statusBucket = null;
   }
   if (compare) {
+    captureCompareReturnView();
     state.compareMode = true;
   }
   showView("directory");
   syncCompareUI();
   scrollToDirectoryResults();
+}
+
+function parseCompareToolIds(raw) {
+  const list = Array.isArray(raw) ? raw : String(raw || "").split(",");
+  return list
+    .map(id => String(id).trim())
+    .filter(id => TOOLS.some(t => t.id === id))
+    .slice(0, COMPARE_MAX);
+}
+
+function captureCompareReturnView() {
+  const view = state.view;
+  if (view && view !== "directory" && view !== "tool") {
+    state.compareReturnView = view;
+  }
+}
+
+/** Open Directory compare mode with tools pre-selected (auto-opens panel when 2+). */
+function startCompareWithTools(rawIds, { openPanel = true } = {}) {
+  captureCompareReturnView();
+  const ids = parseCompareToolIds(rawIds);
+  state.compareIds = ids;
+  state.compareMode = true;
+  showView("directory");
+  scrollToDirectoryResults();
+  if (openPanel && ids.length >= 2) {
+    requestAnimationFrame(() => openCompare());
+  }
 }
 
 function scrollToDirectoryResults() {
@@ -1607,6 +1808,7 @@ function showView(view) {
 
   renderCurrentView();
   syncUrl();
+  syncHubOrientBanner();
   window.scrollTo(0, 0);
 }
 
@@ -1896,12 +2098,36 @@ function bindTeamRegisterForm() {
   });
 }
 
+function hubOrientDismissed() {
+  try {
+    return localStorage.getItem(HUB_ORIENT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function syncHubOrientBanner() {
+  const banner = document.getElementById("hubOrientBanner");
+  if (!banner) return;
+  banner.hidden = state.view !== "home" || hubOrientDismissed();
+}
+
+function dismissHubOrientBanner() {
+  try {
+    localStorage.setItem(HUB_ORIENT_KEY, "1");
+  } catch {
+    /* ignore storage errors */
+  }
+  syncHubOrientBanner();
+}
+
 function renderHome() {
   const grid = document.getElementById("chooserGrid");
   const result = document.getElementById("chooserResult");
   const starter = document.getElementById("starterRow");
   const totw = document.getElementById("toolOfWeek");
   if (!grid) return;
+  syncHubOrientBanner();
 
   grid.innerHTML = jobsData().map((job, i) => `
     <button type="button" class="chooser-card chooser-tone--${chooserTone(job, i)}${state.chooserJobId === job.id ? " is-active" : ""}" data-job="${escapeHtml(job.id)}">
@@ -1916,15 +2142,22 @@ function renderHome() {
       const tools = job.tools.map(findToolByName).filter(Boolean);
       result.hidden = false;
       result.innerHTML = `
-        <div class="chooser-result__badge" aria-hidden="true">Recommended for this job</div>
+        <div class="chooser-result__badge" aria-hidden="true">Picks for this job</div>
         <div class="chooser-result__head">
           <h3 class="chooser-result__title">${escapeHtml(job.label)}</h3>
           <p class="chooser-result__tip">${escapeHtml(job.tip)}</p>
         </div>
-        <p class="chooser-result__tools-label">Trusted tools</p>
+        <p class="chooser-result__tools-label">Trusted tools for this job</p>
         <div class="starter-row">
           ${tools.map(t => miniToolCard(t)).join("") || "<p class='empty'>No matching tools in the directory yet.</p>"}
         </div>
+        ${tools.length >= 2 ? `
+          <div class="chooser-result__actions">
+            <button type="button" class="btn-base btn-secondary chooser-result__compare" data-compare-tools="${tools.map(t => escapeHtml(t.id)).join(",")}">
+              Compare these side by side →
+            </button>
+          </div>
+        ` : ""}
       `;
       result.classList.remove("is-flash");
       void result.offsetWidth;
@@ -1997,12 +2230,20 @@ function guideCategoryLabel(category) {
 function renderGuideTips(guide) {
   return (guide.tips || []).map(tip => {
     const tool = findToolByName(tip.tool);
+    const headToHeads = comparisonsForTool(tip.tool);
     return `
       <div class="guide-tip">
         <div class="guide-tip__tool">
           ${tool ? logoHtml(tool) : ""}
           <button type="button" class="linkbtn" data-open-tool-name="${escapeHtml(tip.tool)}">${escapeHtml(tip.tool)}</button>
         </div>
+        ${headToHeads.length ? `
+          <div class="guide-tip__comparisons">
+            ${headToHeads.map(c => `
+              <button type="button" class="linkbtn" data-open-comparison="${escapeHtml(c.id || comparisonTitle(c))}">${escapeHtml(comparisonTitle(c))} →</button>
+            `).join("")}
+          </div>
+        ` : ""}
         <div class="guide-tip__cols">
           <div class="guide-tip__col guide-tip__col--go">
             <span class="guide-tip__label guide-tip__label--go">Use when</span>
@@ -2018,6 +2259,47 @@ function renderGuideTips(guide) {
   }).join("");
 }
 
+function comparisonTitle(c) {
+  return c.scenario || c.feature || "Comparison";
+}
+
+function comparisonWhyPreview(c) {
+  if (Array.isArray(c.why) && c.why.length) return c.why[0];
+  return c.notes || "";
+}
+
+function comparisonCategoryTone(category) {
+  const key = String(category || "").toLowerCase();
+  if (key.includes("assistant")) return "assistants";
+  if (key.includes("coding") || key.includes("code")) return "coding";
+  if (key.includes("research")) return "research";
+  return "default";
+}
+
+function comparisonsForTool(toolName) {
+  return comparisonsData().filter(c => (c.tools || []).includes(toolName));
+}
+
+function comparisonStoryAction(c) {
+  if (!c.storyId) return "";
+  const uc = useCasesData().find(u => u.id === c.storyId);
+  if (!uc) return "";
+  return `<p class="compare-category__story"><button type="button" class="linkbtn" data-playbook-search="${escapeHtml(uc.title)}">See team story →</button></p>`;
+}
+
+function renderComparisonBody(c) {
+  const why = Array.isArray(c.why) ? c.why : (c.notes ? [c.notes] : []);
+  return `
+    ${why.length ? `<ul class="compare-category__why">${why.map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : ""}
+    ${c.pickOtherWhen ? `<p class="compare-category__alt"><strong>Pick the other when:</strong> ${escapeHtml(c.pickOtherWhen)}</p>` : ""}
+    ${c.runnerUp ? `<p class="compare-category__runner">Runner-up: ${escapeHtml(c.runnerUp)}</p>` : ""}
+    ${c.reviewed ? `<p class="compare-category__reviewed">Last reviewed ${escapeHtml(c.reviewed)}</p>` : ""}
+    <div class="compare-note__actions">${renderComparisonActions(c)}</div>
+    ${renderComparisonCompareAction(c)}
+    ${comparisonStoryAction(c)}
+  `;
+}
+
 function renderMatchupLine(c) {
   const tools = c.tools || [];
   return tools.map((name, i) => {
@@ -2026,6 +2308,20 @@ function renderMatchupLine(c) {
     const vs = i < tools.length - 1 ? `<span class="compare-category__vs">vs</span>` : "";
     return `${tool}${vs}`;
   }).join("");
+}
+
+function comparisonToolIds(c) {
+  return (c.tools || [])
+    .map(findToolByName)
+    .filter(Boolean)
+    .map(t => t.id)
+    .slice(0, COMPARE_MAX);
+}
+
+function renderComparisonCompareAction(c) {
+  const ids = comparisonToolIds(c);
+  if (ids.length < 2) return "";
+  return `<button type="button" class="btn-base btn-secondary compare-category__compare" data-compare-tools="${escapeHtml(ids.join(","))}">Compare in Directory →</button>`;
 }
 
 function renderComparisonActions(c) {
@@ -2039,30 +2335,72 @@ function renderComparisonActions(c) {
   }).join("");
 }
 
+function comparisonGroupDesc(category) {
+  const tone = guideTone(category);
+  if (tone === "assistants") return "Same task, two assistants—who we pick and why.";
+  if (tone === "coding") return "Same coding job, two tools—who we pick and why.";
+  if (tone === "research") return "Same research job, two tools—who we pick and why.";
+  return "Same situation, two tools—who we pick and why.";
+}
+
+function renderComparisonRow(c) {
+  const preview = comparisonWhyPreview(c);
+  return `
+    <details class="compare-category compare-category--page compare-tone--${comparisonCategoryTone(c.category)}" data-comparison-id="${escapeHtml(c.id || comparisonTitle(c))}">
+      <summary class="compare-category__summary">
+        <span class="compare-category__chev" aria-hidden="true"></span>
+        <span class="compare-category__head">
+          <span class="compare-category__title">${escapeHtml(comparisonTitle(c))}</span>
+          <span class="compare-category__matchup">${renderMatchupLine(c)}</span>
+          ${preview ? `<span class="compare-category__verdict">DCS pick: ${escapeHtml(c.winner || "—")} — ${escapeHtml(preview)}</span>` : `<span class="compare-category__verdict">DCS pick: ${escapeHtml(c.winner || "—")}</span>`}
+        </span>
+      </summary>
+      <div class="compare-category__body">
+        ${renderComparisonBody(c)}
+      </div>
+    </details>
+  `;
+}
+
 function renderComparisonsList() {
   const comparisons = comparisonsData();
   if (!comparisons.length) {
     return `<p class="empty">No comparisons yet.</p>`;
   }
 
+  const order = ["Assistants", "Coding", "Research", "Other"];
+  const groups = new Map(order.map(cat => [cat, []]));
+  comparisons.forEach(c => {
+    const cat = c.category || "Other";
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat).push(c);
+  });
+
   return `
-    <div class="compare-categories">
-      ${comparisons.map(c => `
-        <details class="compare-category compare-category--page">
-          <summary class="compare-category__summary">
-            <span class="compare-category__chev" aria-hidden="true"></span>
-            <span class="compare-category__head">
-              <span class="compare-category__title">${escapeHtml(c.feature)}</span>
-              <span class="compare-category__matchup">${renderMatchupLine(c)}</span>
-            </span>
-            <span class="compare-category__winner">Winner: ${escapeHtml(c.winner || "—")}</span>
-          </summary>
-          <div class="compare-category__body">
-            ${c.notes ? `<p class="compare-note__body">${escapeHtml(c.notes)}</p>` : ""}
-            <div class="compare-note__actions">${renderComparisonActions(c)}</div>
-          </div>
-        </details>
-      `).join("")}
+    <div class="guides-categories guides-categories--comparisons">
+      ${order.filter(cat => groups.get(cat)?.length).map(cat => {
+        const items = groups.get(cat);
+        const tone = guideTone(cat);
+        const count = items.length;
+        return `
+          <details class="guide-category guide-tone--${tone}" data-compare-group="${escapeHtml(cat)}">
+            <summary class="guide-category__summary">
+              <span class="guide-category__chev" aria-hidden="true"></span>
+              <span class="guide-category__badge">${escapeHtml(guideCategoryLabel(cat))}</span>
+              <span class="guide-category__head">
+                <span class="guide-category__title">${escapeHtml(cat)} scenarios</span>
+                <span class="guide-category__desc">${escapeHtml(comparisonGroupDesc(cat))}</span>
+              </span>
+              <span class="guide-category__count">${count} ${count === 1 ? "matchup" : "matchups"}</span>
+            </summary>
+            <div class="guide-category__body">
+              <div class="compare-categories compare-categories--nested">
+                ${items.map(renderComparisonRow).join("")}
+              </div>
+            </div>
+          </details>
+        `;
+      }).join("")}
     </div>
   `;
 }
@@ -2391,6 +2729,62 @@ async function refreshPlaybookWinsFromSheet() {
   if (state.view === "playbooks") paintPlaybooks(merged);
 }
 
+function findStoryById(id) {
+  const cases = state.playbookUseCases || useCasesData();
+  return cases.find(item => item.id === id) || null;
+}
+
+function storyCardExpandable(uc) {
+  const impact = String(uc.impact || "");
+  return impact.length > 180 || Boolean(String(uc.how || "").trim());
+}
+
+function openStoryDetail(id) {
+  const uc = findStoryById(id);
+  if (!uc) return;
+  const overlay = document.getElementById("storyDetailOverlay");
+  const modal = document.getElementById("storyDetailModal");
+  const meta = document.getElementById("storyDetailMeta");
+  const title = document.getElementById("storyDetailTitle");
+  const impactEl = document.getElementById("storyDetailImpact");
+  const howWrap = document.getElementById("storyDetailHowWrap");
+  const howEl = document.getElementById("storyDetailHow");
+  const tool = findToolByName(uc.tool);
+  const roleLabel = uc.role || uc.department || "";
+  const metaParts = [
+    tool
+      ? `<button type="button" class="linkbtn" data-open-tool="${escapeHtml(tool.id)}">${escapeHtml(uc.tool)}</button>`
+      : escapeHtml(uc.tool || "—"),
+    escapeHtml(uc.owner || "Unassigned"),
+    roleLabel ? escapeHtml(roleLabel) : "",
+  ].filter(Boolean);
+  if (meta) meta.innerHTML = metaParts.join(" · ");
+  if (title) title.textContent = uc.title || "Team story";
+  if (impactEl) impactEl.textContent = uc.impact || "";
+  const how = String(uc.how || "").trim();
+  if (howWrap && howEl) {
+    if (how) {
+      howWrap.hidden = false;
+      howEl.textContent = how;
+    } else {
+      howWrap.hidden = true;
+      howEl.textContent = "";
+    }
+  }
+  if (overlay) {
+    overlay.hidden = false;
+    overlay.scrollTop = 0;
+  }
+  if (modal) modal.scrollTop = 0;
+  document.body.style.overflow = "hidden";
+}
+
+function closeStoryDetail() {
+  const overlay = document.getElementById("storyDetailOverlay");
+  if (overlay) overlay.hidden = true;
+  document.body.style.overflow = "";
+}
+
 function renderPlaybooks(refreshSheet = false) {
   applyContributeMode();
   populateWinToolDropdown();
@@ -2432,24 +2826,26 @@ function paintPlaybooks(cases) {
   useGrid.innerHTML = shownCases.map(uc => {
     const tool = findToolByName(uc.tool);
     const tone = playbookTone(uc.role || uc.department);
+    const roleLabel = uc.role || uc.department || "";
+    const expandable = storyCardExpandable(uc);
     return `
       <article class="usecase-card playbook-card playbook-card--usecase playbook-tone--${tone}">
-        <div class="playbook-card__kind">DCS experience</div>
-        <h3 class="usecase-card__title">${escapeHtml(uc.title)}</h3>
-        <p class="usecase-card__impact">${escapeHtml(uc.impact)}</p>
-        ${uc.how ? `<p class="usecase-card__impact">${escapeHtml(uc.how)}</p>` : ""}
-        <div class="usecase-card__meta">
+        <div class="usecase-card__meta usecase-card__meta--head">
           ${tool
             ? `<button type="button" class="linkbtn" data-open-tool="${escapeHtml(tool.id)}">${escapeHtml(uc.tool)}</button>`
-            : `<span>${escapeHtml(uc.tool)}</span>`}
-          <span>·</span>
+            : `<span>${escapeHtml(uc.tool || "—")}</span>`}
+          <span aria-hidden="true">·</span>
           <span>${escapeHtml(uc.owner || "Unassigned")}</span>
-          <span>·</span>
-          <span>${escapeHtml(uc.role || uc.department || "")}</span>
+          ${roleLabel ? `<span aria-hidden="true">·</span><span>${escapeHtml(roleLabel)}</span>` : ""}
         </div>
+        <h3 class="usecase-card__title">${escapeHtml(uc.title)}</h3>
+        <button type="button" class="usecase-card__excerpt${expandable ? " usecase-card__excerpt--expandable" : ""}" data-open-story="${escapeHtml(uc.id)}" aria-label="Read full story: ${escapeHtml(uc.title)}">
+          <span class="usecase-card__excerpt-text">${escapeHtml(uc.impact || "—")}</span>
+          ${expandable ? `<span class="usecase-card__read-more">Read full story →</span>` : ""}
+        </button>
       </article>
     `;
-  }).join("") || `<p class="empty">No DCS experiences match.</p>`;
+  }).join("") || `<p class="empty">No team stories match.</p>`;
 
   learnGrid.innerHTML = shownLearning.map(res => {
     const tone = playbookTone(res.role);
@@ -2544,12 +2940,10 @@ function syncSubmissionsAdminHint() {
   if (!el) return;
   const cfg = contributeConfig();
   if (isAdminSession() && cfg.submitUrl && cfg.assignSecret) {
-    el.hidden = false;
-    el.textContent = "Open Review to assign, reject, or add a tool to the Directory.";
+    el.textContent = "Admin: open Review on a card to assign, reject, or publish to Directory.";
     return;
   }
-  el.hidden = true;
-  el.textContent = "";
+  el.textContent = "Search and filter by status—see what’s waiting, in review, testing, or rejected.";
 }
 
 function renderContribute() {
@@ -2715,7 +3109,11 @@ function updateWinCounts() {
   const how = document.getElementById("w_how");
   const ic = document.getElementById("w_impact_count");
   const hc = document.getElementById("w_how_count");
-  if (impact && ic) ic.textContent = `${impact.value.length} / 400`;
+  if (impact && ic) {
+    const len = impact.value.length;
+    ic.textContent = `${len} / ${WIN_IMPACT_MAX_CHARS}`;
+    ic.classList.toggle("field-count--over", len > WIN_IMPACT_MAX_CHARS);
+  }
   if (how && hc) hc.textContent = `${how.value.length} / 600`;
 }
 
@@ -2741,7 +3139,10 @@ function validateWinForm() {
     ok = false;
   }
   if (!impact || impact.length < 12) {
-    setWinFieldError("w_impact", "Describe the impact in a sentence or two (at least 12 characters).");
+    setWinFieldError("w_impact", "Describe the impact briefly (at least 12 characters).");
+    ok = false;
+  } else if (impact.length > WIN_IMPACT_MAX_CHARS) {
+    setWinFieldError("w_impact", `Keep impact to ${WIN_IMPACT_MAX_CHARS} characters or fewer.`);
     ok = false;
   }
   if (name && (name.length > 60 || !PERSON_PATTERN.test(name))) {
@@ -2755,7 +3156,7 @@ function validateWinForm() {
     formErr.hidden = false;
     formErr.textContent = "Check the highlighted fields and try again.";
   }
-  return ok ? { title, tool, submittedBy: name, role, impact, how } : null;
+  return ok ? { title, tool, submittedBy: name, role, impact: impact.slice(0, WIN_IMPACT_MAX_CHARS), how } : null;
 }
 
 function showWinSuccess() {
@@ -2827,6 +3228,8 @@ async function copyText(text, statusEl) {
 }
 
 function openToolByIdOrName(idOrName) {
+  const storyOverlay = document.getElementById("storyDetailOverlay");
+  if (storyOverlay && !storyOverlay.hidden) closeStoryDetail();
   const tool = directoryTools().find(t => t.id === idOrName) || findToolByName(idOrName);
   if (tool && !isRejectedStatus(tool.status)) openModal(tool);
 }
@@ -2853,10 +3256,70 @@ function bindAppNavigation() {
   document.getElementById("dcs-site-header")?.addEventListener("click", e => {
     const btn = e.target.closest("[data-view]");
     if (!btn) return;
-    showView(btn.dataset.view);
+    const view = btn.dataset.view;
+    if (view !== "directory") {
+      state.compareReturnView = null;
+      if (state.compareMode) {
+        closeCompare();
+        state.compareMode = false;
+        state.compareIds = [];
+      }
+    }
+    showView(view);
   });
 
   document.body.addEventListener("click", e => {
+    const comparePick = e.target.closest("[data-compare-tools]");
+    if (comparePick) {
+      startCompareWithTools(comparePick.dataset.compareTools);
+      return;
+    }
+
+    const openComparison = e.target.closest("[data-open-comparison]");
+    if (openComparison) {
+      const id = openComparison.dataset.openComparison;
+      const onGuides = state.view === "guides";
+      if (!onGuides) showView("guides");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const row = document.querySelector(`[data-comparison-id="${CSS.escape(id)}"]`)
+            || document.querySelector(`[data-comparison-id="${id}"]`);
+          if (row) {
+            const group = row.closest("[data-compare-group]");
+            if (group) group.open = true;
+            row.open = true;
+            const top = row.getBoundingClientRect().top + window.scrollY - fixedHeaderOffset();
+            window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+          } else {
+            scrollToAnchor("comparisonsList");
+          }
+        });
+      });
+      return;
+    }
+
+    const playbookSearchGo = e.target.closest("[data-playbook-search]");
+    if (playbookSearchGo) {
+      state.playbookSearch = playbookSearchGo.dataset.playbookSearch || "";
+      showView("playbooks");
+      renderPlaybooks();
+      requestAnimationFrame(() => scrollToAnchor("useCaseGrid"));
+      return;
+    }
+
+    const openPrompt = e.target.closest("[data-open-prompt]");
+    if (openPrompt) {
+      const id = openPrompt.getAttribute("data-open-prompt");
+      if (!id) return;
+      state.promptId = id;
+      showView("prompts");
+      renderPrompts();
+      requestAnimationFrame(() => {
+        document.getElementById(`prompt-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return;
+    }
+
     const go = e.target.closest("[data-go-view]");
     if (go) {
       const view = go.dataset.goView;
@@ -2906,6 +3369,12 @@ function bindAppNavigation() {
           });
         });
       }
+      return;
+    }
+
+    const openStory = e.target.closest("[data-open-story]");
+    if (openStory) {
+      openStoryDetail(openStory.dataset.openStory);
       return;
     }
 
@@ -3100,27 +3569,62 @@ function populateDepartmentDropdown() {
 }
 
 function setCompareMode(on) {
-  state.compareMode = on;
   if (!on) {
+    closeCompare();
+    const returnView = state.compareReturnView;
+    state.compareReturnView = null;
+    state.compareMode = false;
     state.compareIds = [];
+    if (returnView) {
+      showView(returnView);
+      return;
+    }
+    rerender();
+    return;
   }
+  state.compareMode = true;
   rerender();
 }
 
 function syncCompareUI() {
   const bar = document.getElementById("compareBar");
-  const banner = document.getElementById("compareBanner");
   const openBtn = document.getElementById("compareOpen");
   const text = document.getElementById("compareBarText");
   const toggle = document.getElementById("compareToggle");
+  const desc = document.getElementById("compareToolsDesc");
+  const status = document.getElementById("compareToolsStatus");
+  const compareSection = document.getElementById("compareTools");
   const count = state.compareIds.length;
   const onDirectory = state.view === "directory";
   const selecting = state.compareMode && onDirectory;
+
+  if (compareSection) {
+    compareSection.classList.toggle("compare-tools--active", selecting);
+  }
 
   if (toggle) {
     toggle.classList.toggle("is-active", state.compareMode);
     toggle.setAttribute("aria-pressed", String(state.compareMode));
     toggle.textContent = state.compareMode ? "Done" : "Compare";
+  }
+
+  if (desc) {
+    desc.textContent = selecting
+      ? "Check the tools you want, then tap Compare in the bar below."
+      : "Pick up to 3 tools from the list below for a side-by-side view.";
+  }
+
+  if (status) {
+    if (selecting && count > 0) {
+      const names = selectedTools().map(t => t.name).join(", ");
+      status.hidden = false;
+      status.textContent = count === 1
+        ? `1 selected (${names}) — pick at least one more.`
+        : `${count} selected: ${names}`;
+    } else {
+      status.hidden = true;
+      status.textContent = "";
+    }
   }
 
   if (selecting) {
@@ -3131,14 +3635,13 @@ function syncCompareUI() {
     bar.hidden = true;
     bar.classList.remove("is-visible");
   }
-  if (banner) banner.hidden = !selecting;
   document.body.classList.toggle("has-compare-bar", selecting);
 
   if (!state.compareMode) return;
 
-  if (count === 0) text.textContent = "Select 2–3 tools to compare";
-  else if (count === 1) text.textContent = "1 tool selected — pick at least one more";
-  else text.textContent = `${count} of ${COMPARE_MAX} tools selected`;
+  if (count === 0) text.textContent = "Select 2–3 tools below";
+  else if (count === 1) text.textContent = "1 selected — pick one more";
+  else text.textContent = `${count} of ${COMPARE_MAX} selected`;
 
   openBtn.disabled = count < 2;
 }
@@ -3237,9 +3740,10 @@ function renderComparePanel() {
     <div class="compare-notes">
       ${comps.map(c => `
         <article class="compare-note">
-          <strong>${escapeHtml(c.feature)}</strong>
-          <p>${escapeHtml(c.tools.join(" vs "))} — winner: <em>${escapeHtml(c.winner || "—")}</em></p>
-          ${c.notes ? `<p class="compare-note__body">${escapeHtml(c.notes)}</p>` : ""}
+          <strong>${escapeHtml(comparisonTitle(c))}</strong>
+          <p>${escapeHtml(c.tools.join(" vs "))} — DCS pick: <em>${escapeHtml(c.winner || "—")}</em></p>
+          ${comparisonWhyPreview(c) ? `<p class="compare-note__body">${escapeHtml(comparisonWhyPreview(c))}</p>` : ""}
+          ${c.pickOtherWhen ? `<p class="compare-note__body">${escapeHtml(c.pickOtherWhen)}</p>` : ""}
         </article>
       `).join("")}
     </div>
@@ -3312,6 +3816,7 @@ function init(opts = {}) {
     state.currentToolId = null;
     state.compareMode = false;
     state.compareIds = [];
+    state.compareReturnView = null;
     resetChipFilters();
     state.search = "";
   }
@@ -3321,14 +3826,18 @@ function init(opts = {}) {
   bindAppNavigation();
   bindBackToTop();
   bindTeamRegisterForm();
+  document.getElementById("hubOrientDismiss")?.addEventListener("click", dismissHubOrientBanner);
   showView(state.view);
+  syncHubOrientBanner();
   if (!opts.forceHome) openToolFromUrl();
 
   const params = new URLSearchParams(window.location.search);
   if (!opts.forceHome && params.get("compare") === "1") {
     setCompareMode(true);
   }
-
+  if (!opts.forceHome && state.compareMode && state.compareIds.length >= 2) {
+    requestAnimationFrame(() => openCompare());
+  }
   document.getElementById("stats").addEventListener("click", e => {
     const stat = e.target.closest(".stat");
     if (!stat) return;
@@ -3443,7 +3952,13 @@ function init(opts = {}) {
   document.getElementById("emptyClear").addEventListener("click", clearFilters);
 
   document.getElementById("compareToggle").addEventListener("click", () => {
-    setCompareMode(!state.compareMode);
+    const turningOn = !state.compareMode;
+    state.compareReturnView = null;
+    setCompareMode(turningOn);
+    if (turningOn) scrollToDirectoryResults();
+  });
+  document.getElementById("compareDismiss")?.addEventListener("click", () => {
+    setCompareMode(false);
   });
   document.getElementById("compareClear").addEventListener("click", () => {
     state.compareIds = [];
@@ -3453,6 +3968,11 @@ function init(opts = {}) {
   document.getElementById("compareClose").addEventListener("click", closeCompare);
   document.getElementById("compareOverlay").addEventListener("click", e => {
     if (e.target.id === "compareOverlay") closeCompare();
+  });
+
+  document.getElementById("storyDetailClose")?.addEventListener("click", closeStoryDetail);
+  document.getElementById("storyDetailOverlay")?.addEventListener("click", e => {
+    if (e.target.id === "storyDetailOverlay") closeStoryDetail();
   });
 
   document.getElementById("toolGrid").addEventListener("change", e => {
@@ -3484,8 +4004,11 @@ function init(opts = {}) {
     }
   });
 
-  document.getElementById("modalClose").addEventListener("click", closeModal);
-  document.getElementById("modalOverlay").addEventListener("click", e => {
+  document.getElementById("modalBody")?.addEventListener("click", e => {
+    if (e.target.closest("#modalClose")) {
+      closeModal();
+      return;
+    }
     const compareBtn = e.target.closest("#modalCompareBtn");
     if (compareBtn && !compareBtn.disabled) {
       toggleCompareFromModal(compareBtn.dataset.id);
@@ -3509,6 +4032,11 @@ function init(opts = {}) {
     }
     if (!document.getElementById("compareOverlay").hidden) {
       closeCompare();
+      return;
+    }
+    const storyOverlay = document.getElementById("storyDetailOverlay");
+    if (storyOverlay && !storyOverlay.hidden) {
+      closeStoryDetail();
       return;
     }
     if (state.view === "tool") closeModal();
@@ -4057,11 +4585,11 @@ function renderSubmissionsList(items) {
       : parts.why
         ? `<p class="submission-item__why"><strong>Why:</strong> ${escapeHtml(parts.why)}</p>`
         : "";
-    const owner = statusLabel === "Rejected"
-      ? ""
-      : assignee
+    const owner = statusLabel !== "Rejected"
+      ? (assignee
         ? `<p class="submission-item__owner">Assigned To: ${escapeHtml(teamShortName(assignee))}</p>`
-        : `<p class="submission-item__owner submission-item__owner--open">Not assigned yet</p>`;
+        : `<p class="submission-item__owner submission-item__owner--open">Not assigned yet</p>`)
+      : "";
     const reviewBtn = submissionReviewButtonHtml(item);
     const badgeHtml = statusLabel === "Rejected"
       ? `<span class="badge badge--${badge}">${escapeHtml(statusLabel)}</span>`
@@ -5416,7 +5944,7 @@ function syncLoginAccountHint() {
   const input = document.getElementById("loginUsername");
   if (!input || input.value) return;
   const teamUser = authConfig().employeeUsername || "team";
-  input.placeholder = teamUser;
+  input.placeholder = teamUser === "team" ? "team or admin" : teamUser;
 }
 
 function bindAuthUi() {

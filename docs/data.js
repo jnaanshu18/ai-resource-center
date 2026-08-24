@@ -609,74 +609,113 @@ const CATEGORIES = [
 ];
 const COMPARISONS = [
   {
-    "feature": "Code Completion",
-    "tools": [
-      "GitHub Copilot",
-      "Cursor",
-      "Claude"
-    ],
-    "winner": "Cursor",
-    "notes": "Best project context for multi-file work"
-  },
-  {
-    "feature": "Research",
-    "tools": [
-      "Perplexity",
-      "ChatGPT",
-      "Gemini"
-    ],
+    "id": "CMP-001",
+    "category": "Assistants",
+    "scenario": "I need cited facts from the web",
+    "feature": "I need cited facts from the web",
+    "tools": ["Perplexity", "ChatGPT"],
     "winner": "Perplexity",
-    "notes": "Best citations for open-web fact-finding"
+    "runnerUp": "ChatGPT",
+    "why": [
+      "Sources appear with every answer — easier to verify before you share",
+      "Faster than manual search-then-synthesize when facts matter"
+    ],
+    "pickOtherWhen": "You already have trusted sources and just need a draft — ChatGPT is fine.",
+    "reviewed": "2026-08-05",
+    "storyId": "UC-004"
   },
   {
-    "feature": "Everyday writing",
-    "tools": [
-      "ChatGPT",
-      "Claude",
-      "Gemini"
-    ],
-    "winner": "ChatGPT",
-    "notes": "Fast default for drafts and brainstorming"
-  },
-  {
-    "feature": "Long documents",
-    "tools": [
-      "Claude",
-      "ChatGPT",
-      "Gemini"
-    ],
+    "id": "CMP-002",
+    "category": "Assistants",
+    "scenario": "I'm analyzing a long PDF or spec",
+    "feature": "I'm analyzing a long PDF or spec",
+    "tools": ["Claude", "ChatGPT"],
     "winner": "Claude",
-    "notes": "Strongest long-context careful analysis"
+    "runnerUp": "ChatGPT",
+    "why": [
+      "Stronger on long-context careful reading and structured summaries",
+      "Better for specs, contracts, and multi-section reports"
+    ],
+    "pickOtherWhen": "The doc is short or you need a quick rewrite — ChatGPT is faster.",
+    "reviewed": "2026-07-07"
   },
   {
-    "feature": "Workspace multimodal",
-    "tools": [
-      "Gemini",
-      "ChatGPT",
-      "Claude"
+    "id": "CMP-003",
+    "category": "Assistants",
+    "scenario": "I need a fast first draft",
+    "feature": "I need a fast first draft",
+    "tools": ["ChatGPT", "Claude"],
+    "winner": "ChatGPT",
+    "runnerUp": "Claude",
+    "why": [
+      "Fast default for emails, brainstorms, and everyday writing",
+      "Most of the team already uses it daily"
     ],
+    "pickOtherWhen": "Tone, nuance, or length matter more than speed — use Claude.",
+    "reviewed": "2026-07-07"
+  },
+  {
+    "id": "CMP-004",
+    "category": "Assistants",
+    "scenario": "My work lives in Google Workspace",
+    "feature": "My work lives in Google Workspace",
+    "tools": ["Gemini", "ChatGPT"],
     "winner": "Gemini",
-    "notes": "Best fit when work lives in Google Workspace"
+    "runnerUp": "ChatGPT",
+    "why": [
+      "Native fit for Docs, Sheets, and Gmail workflows",
+      "Multimodal when files and screenshots are in Drive"
+    ],
+    "pickOtherWhen": "Client data handling isn't confirmed for Workspace — stick with ChatGPT/Claude.",
+    "reviewed": "2026-08-05"
   },
   {
-    "feature": "Agentic coding",
-    "tools": [
-      "Antigravity",
-      "Cursor",
-      "OpenHands"
+    "id": "CMP-005",
+    "category": "Research",
+    "scenario": "I'm researching docs we already have",
+    "feature": "I'm researching docs we already have",
+    "tools": ["NotebookLM", "Perplexity"],
+    "winner": "NotebookLM",
+    "runnerUp": "Perplexity",
+    "why": [
+      "Q&A grounded in uploaded packs — not the open web",
+      "Good for briefing docs, notes, and internal source sets"
     ],
+    "pickOtherWhen": "You need live web citations or competitor scans — start with Perplexity.",
+    "reviewed": "2026-08-05",
+    "storyId": "UC-005"
+  },
+  {
+    "id": "CMP-006",
+    "category": "Coding",
+    "scenario": "I'm coding in the repo today",
+    "feature": "I'm coding in the repo today",
+    "tools": ["Cursor", "GitHub Copilot"],
+    "winner": "Cursor",
+    "runnerUp": "GitHub Copilot",
+    "why": [
+      "Project-aware edits across multiple files",
+      "Core Production IDE for everyday delivery work"
+    ],
+    "pickOtherWhen": "You only need inline completions in a familiar IDE — Copilot is lighter.",
+    "reviewed": "2026-08-06",
+    "storyId": "UC-002"
+  },
+  {
+    "id": "CMP-007",
+    "category": "Coding",
+    "scenario": "I want an agent to build a spike",
+    "feature": "I want an agent to build a spike",
+    "tools": ["Antigravity", "Cursor"],
     "winner": "Antigravity",
-    "notes": "Already used in delivery for agent-first spikes"
-  },
-  {
-    "feature": "Scraping to RAG",
-    "tools": [
-      "Firecrawl",
-      "Crawl4AI",
-      "Browser Use"
+    "runnerUp": "Cursor",
+    "why": [
+      "Agent-first sessions for prototypes the team then hardens",
+      "Already used in delivery for accelerated spikes"
     ],
-    "winner": "Firecrawl",
-    "notes": "Clean hosted path to markdown/JSON for LLMs"
+    "pickOtherWhen": "You need tight IDE control on an existing codebase — stay on Cursor.",
+    "reviewed": "2026-08-05",
+    "storyId": "UC-006"
   }
 ];
 const EVALUATIONS = {
@@ -1361,81 +1400,89 @@ const PROMPTS = [
 const USE_CASES = [
   {
     "id": "UC-001",
-    "title": "Weekly report automation",
+    "title": "Friday ops wrap-up without a blank page",
     "department": "Operations",
     "tool": "ChatGPT",
-    "owner": "Admin",
-    "impact": "Saves ~2 hours per week drafting ops summaries",
+    "owner": "Sourabh Jain",
+    "impact": "Friday ops summary: ~90 min down to 25 min each week.",
+    "how": "I keep rough bullet notes in Slack all week. Friday I paste them in and ask for decisions, blockers, and next-week priorities. I fix names and dates before it goes to the team.",
     "date": "2026-07-07",
     "role": "Operations"
   },
   {
     "id": "UC-002",
-    "title": "Code review assistant",
+    "title": "Switched from VS Code without slowing down delivery",
     "department": "Engineering",
     "tool": "Cursor",
-    "owner": "Admin",
-    "impact": "Faster first-pass review consistency on PRs",
-    "date": "2026-07-07",
+    "owner": "Anshu Jain",
+    "impact": "VS Code familiarity + faster planning; less stress on integrations.",
+    "how": "I'd been on VS Code for years, so Cursor felt familiar — same shortcuts and layout, not a new IDE to learn. On bigger projects I use it for debugging and testing across files: what calls this, what breaks if I change it, what edge case I'm not covering. Those are easy to miss when you're deep in one file. Before I code, I describe the task and ask which files are in scope — saves me from halfway-through surprises. Third-party setup used to mean docs in one tab and config in another, always wondering if I skipped a step. I paste the vendor docs and ask for steps in our project's order. I still verify everything, but I'm not carrying the whole checklist in my head — less stress, fewer false starts.",
+    "date": "2026-08-20",
     "role": "Engineering"
   },
   {
     "id": "UC-003",
-    "title": "Customer email drafting",
+    "title": "Client follow-ups when the tone has to be right",
     "department": "Operations",
     "tool": "Claude",
-    "owner": "Admin",
-    "impact": "Faster response drafts with clearer tone",
+    "owner": "Chinmay Jain",
+    "impact": "Client replies same day; fewer rewrites from my lead.",
+    "how": "I paste the thread, say who the client is, and what we need — status update, scope pushback, or apology. I rewrite anything that sounds generic before sending.",
     "date": "2026-07-07",
     "role": "Operations"
   },
   {
     "id": "UC-004",
-    "title": "Cited competitor research",
+    "title": "Competitor scan before a proposal call",
     "department": "Everyone",
     "tool": "Perplexity",
-    "owner": "Admin",
-    "impact": "Cuts discovery time before proposal writing",
+    "owner": "Parmeshver",
+    "impact": "~45 min saved on proposal prep with cited competitor bullets.",
+    "how": "One focused query: who competes with them, recent pricing moves, one clear weakness. I copy three or four citations into our outline and double-check anything client-facing.",
     "date": "2026-08-05",
     "role": "Everyone"
   },
   {
     "id": "UC-005",
-    "title": "Doc-pack briefings",
+    "title": "Questions on a 40-page onboarding pack",
     "department": "Everyone",
     "tool": "NotebookLM",
-    "owner": "Admin",
-    "impact": "Quick Q&A over internal briefing packs",
+    "owner": "Aagam Jain",
+    "impact": "New joiners ask the onboarding pack first, not me.",
+    "how": "We uploaded the PDF once. People ask about PTO, deploy steps, client comms. Answers come from our doc, not random web advice.",
     "date": "2026-08-05",
     "role": "Everyone"
   },
   {
     "id": "UC-006",
-    "title": "Agentic coding spikes",
+    "title": "Saturday spike for a demo API",
     "department": "Engineering",
     "tool": "Antigravity",
-    "owner": "Admin",
-    "impact": "Accelerates prototypes that humans then harden",
+    "owner": "Aagam Jain",
+    "impact": "Demo stub in ~4 hours; we hardened auth on Monday.",
+    "how": "Antigravity generated routes, sample payloads, and a bare UI shell. Nothing merged as-is — we used it to validate the flow on a client call.",
     "date": "2026-08-05",
     "role": "Engineering"
   },
   {
     "id": "UC-007",
-    "title": "Website-to-RAG extraction",
+    "title": "Vendor site into our RAG test index",
     "department": "Engineering",
     "tool": "Firecrawl",
-    "owner": "Admin",
-    "impact": "Cleaner markdown/JSON for LLM pipelines",
+    "owner": "Sourabh Jain",
+    "impact": "Clean markdown from a messy vendor site — no hand copy-paste.",
+    "how": "Crawled the vendor docs URL, dropped the MD into our test pipeline. Still validating quality before we treat it as production-ready.",
     "date": "2026-08-05",
     "role": "Engineering"
   },
   {
     "id": "UC-008",
-    "title": "Ad hoc CSV analysis",
+    "title": "One-off charts on a CSV export",
     "department": "Data Engineering",
     "tool": "Julius AI",
-    "owner": "Admin",
-    "impact": "Faster exploratory charts on sample datasets",
+    "owner": "Karan Longani",
+    "impact": "Charts in ~15 min without a notebook for a one-off question.",
+    "how": "Uploaded a redacted export, asked for trend by region and top outliers. Verified the numbers in Sheets before sharing in stand-up.",
     "date": "2026-08-05",
     "role": "Data"
   },

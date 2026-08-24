@@ -231,8 +231,10 @@ def main() -> int:
         "chooserGrid", "starterRow", "toolOfWeek", "recentTools",
         "stats", "searchInput", "sortSelect", "compareToggle", "filterChips",
         "toolGrid", "emptyState", "clearFilters", "resultCount",
-        "compareBar", "compareOpen", "compareClear", "compareOverlay", "compareBody", "compareBanner",
-        "modalOverlay", "modalBody", "modalClose",
+        "compareBar", "compareOpen", "compareClear", "compareDismiss", "compareOverlay", "compareBody",
+        "compareTools", "compareToolsTitle", "compareToolsDesc", "compareToolsStatus",
+        "storyDetailOverlay", "storyDetailModal", "storyDetailTitle", "storyDetailImpact", "storyDetailHow",
+        "modalBody",
         "promptSearchInput", "promptGrid", "promptEmpty",
         "playbookSearchInput", "useCaseGrid", "learnGrid",
         "suggestForm", "s_name", "s_category", "s_url", "s_submitter", "s_desc", "s_reason",
@@ -423,10 +425,14 @@ def main() -> int:
     else:
         record("FAIL", "Directory", "Directory playbook-style card styling missing")
 
-    if "card__name-btn" in script and "Open site" in script and "card__name-link" not in script:
-        record("PASS", "Directory", "Tool name opens details; vendor site is a labeled Open site action")
+    if "card__name-arrow" in script and "card__name-btn" in script:
+        render_cards = script.split("function renderCards()", 1)[-1].split("\nfunction ", 1)[0]
+        if "View details" not in render_cards and "Open site" not in render_cards:
+            record("PASS", "Directory", "Tool name link with arrow opens details; card actions hidden")
+        else:
+            record("FAIL", "Directory", "Directory card still shows View details or Open site")
     else:
-        record("FAIL", "Directory", "Directory name still acts as an unlabeled vendor link")
+        record("FAIL", "Directory", "Directory tool name link styling missing")
 
     moved_names = {
         "Windsurf", "Make", "Lovable", "Exa", "Raycast AI", "Fireflies.ai", "Bolt.new",
@@ -441,11 +447,34 @@ def main() -> int:
     else:
         record("FAIL", "Directory", f"Move incomplete dir={still_in_dir} missing_sub={missing_sub}")
 
-    # Compare UX
-    if "click a card" in html.lower():
-        record("WARN", "Compare", "Banner still says click a card (selection is via checkbox)")
+    if "function startCompareWithTools" in script and "data-compare-tools" in script:
+        record("PASS", "Compare", "Pre-filled compare entry points wired")
     else:
-        record("PASS", "Compare", "Compare banner copy aligned or updated")
+        record("FAIL", "Compare", "startCompareWithTools or data-compare-tools missing")
+
+    if "Compare these side by side" in script and "Compare in Directory" in script:
+        record("PASS", "Compare", "AI hub and head-to-head compare CTAs present")
+    else:
+        record("FAIL", "Compare", "Compare discovery CTAs missing")
+
+    if 'params.set("compareTools"' in script and "parseCompareToolIds" in script:
+        record("PASS", "Compare", "Shareable compareTools URL param wired")
+    else:
+        record("FAIL", "Compare", "compareTools URL sync missing")
+
+    # Compare UX
+    if "compareToolsDesc" in html and "compareToolsStatus" in script:
+        record("PASS", "Compare", "Directory compare strip with live status wired")
+    else:
+        record("FAIL", "Compare", "Directory compare strip missing")
+
+    controls_pos = html.find('id="find-tools"')
+    compare_pos = html.find('id="compareTools"')
+    results_pos = html.find('id="toolResults"')
+    if controls_pos != -1 and compare_pos != -1 and results_pos != -1 and controls_pos < compare_pos < results_pos:
+        record("PASS", "Compare", "Directory layout: filters → compare → results")
+    else:
+        record("FAIL", "Compare", "Directory section order incorrect")
 
     # Auth config shape
     if "passwordHash" in example_cfg and "employeePasswordHash" in example_cfg and "inviteTokenHash" in example_cfg:
@@ -691,6 +720,14 @@ def main() -> int:
         record("PASS", "Team stories", f"Use cases: {len(use_cases)}")
     if learning:
         record("PASS", "Team stories", f"Learning items: {len(learning)}")
+    if "function openStoryDetail" in script and "usecase-card__excerpt" in script:
+        record("PASS", "Team stories", "Impact truncation + story detail modal wired")
+    else:
+        record("FAIL", "Team stories", "Story impact card UX missing")
+    if "WIN_IMPACT_MAX_CHARS = 400" in script and 'maxlength="400"' in html:
+        record("PASS", "Team stories", "Impact field allows 400 characters")
+    else:
+        record("FAIL", "Team stories", "Impact character limit mismatch")
 
     # ===== CHOOSE A TOOL =====
     if guides:
@@ -701,6 +738,14 @@ def main() -> int:
                 record("WARN", "Choose a tool", f"Sparse guide entry keys: {list(g.keys())[:6]}")
     if comparisons:
         record("PASS", "Choose a tool", f"Comparisons: {len(comparisons)}")
+        if all(c.get("scenario") for c in comparisons):
+            record("PASS", "Choose a tool", "Comparisons use scenario-based titles")
+        else:
+            record("FAIL", "Choose a tool", "Comparisons missing scenario field")
+        if "data-compare-group" in script and "comparisonTitle" in script:
+            record("PASS", "Choose a tool", "Grouped head-to-head UI wired")
+        else:
+            record("FAIL", "Choose a tool", "Grouped head-to-head UI missing")
 
     if "guides-categories" in script and "guide-category" in script and "renderGuideTips" in script:
         record("PASS", "Choose a tool", "Expandable decision guide sections wired")
@@ -712,10 +757,10 @@ def main() -> int:
     else:
         record("FAIL", "Choose a tool", "Expandable head-to-head sections missing")
 
-    if 'class="content guides-split"' in html and "guides-split__col" in html:
-        record("PASS", "Choose a tool", "Official picks and head-to-heads in equal split columns")
+    if "Category guides" in html and "Tool vs tool" in html and 'class="content guides-split"' in html:
+        record("PASS", "Choose a tool", "Category guides and tool-vs-tool split columns")
     else:
-        record("FAIL", "Choose a tool", "Choose a tool split layout missing")
+        record("FAIL", "Choose a tool", "Choose a tool split layout or labels missing")
 
     if re.search(r"toolAssignments:\s*\{[^}]*enabled:\s*false", example_cfg, re.S):
         record("PASS", "Features", "toolAssignments disabled in site-config.example.js (v1)")
@@ -829,11 +874,32 @@ def main() -> int:
         modal_fn
         and glance_fn
         and 'detailField("Owner"' not in modal_fn.group(0)
+        and 'detailField("Catalog owner"' not in glance_fn.group(0)
         and "tool.owner" not in glance_fn.group(0)
     ):
         record("PASS", "Tool page", "Owner is not shown on the tool detail page")
     else:
         record("FAIL", "Tool page", "Owner still appears in tool detail first-look or modal")
+
+    if (
+        "toolDetailTrustHtml" in script
+        and "TOOL_TRUST_ROW_ENABLED" in script
+        and "Internal contact:" in script
+        and "Client work:" in script
+    ):
+        record("PASS", "Tool page", "Client-work + internal contact row wired (gated by flag)")
+    else:
+        record("FAIL", "Tool page", "Missing client-work / internal contact helpers on tool detail")
+
+    if "toolDetailPromptsHtml" in script and "promptsForTool" in script and "data-open-prompt" in script:
+        record("PASS", "Tool page", "Related prompts linked from tool detail")
+    else:
+        record("FAIL", "Tool page", "Related prompts missing on tool detail")
+
+    if "hubOrientBanner" in html and "HUB_ORIENT_KEY" in script and "syncHubOrientBanner" in script:
+        record("PASS", "Home", "AI hub orientation banner with dismiss")
+    else:
+        record("FAIL", "Home", "AI hub orientation banner missing")
 
     if (
         "tool-glance" in script
