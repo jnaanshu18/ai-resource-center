@@ -19,7 +19,7 @@
   <div class="login-gate__shell">
     <div class="login-gate__layout">
       <div class="login-gate__brand">
-        <a class="login-gate__logo" href="https://dailycodesolutions.com/" target="_blank" rel="noopener noreferrer" aria-label="Daily Code Solutions — website">
+        <a class="login-gate__logo" href="?" aria-label="AI Resource Center home">
           <img src="shared/assets/logo.svg" width="160" height="34" alt="Daily Code Solutions">
         </a>
         <p class="login-gate__welcome">Internal access</p>
@@ -387,25 +387,28 @@
           </div>
         </div>
         <div class="role-chips" id="playbookRoleChips" aria-label="Filter team stories by role"></div>
-        <div class="resultbar">
+        <div class="resultbar resultbar--playbooks">
           <span id="playbookResultCount"></span>
-          <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
+          <div class="resultbar__actions">
+            <button type="button" id="playbookJumpLearning" class="linkbtn" data-scroll-to="learnTitle" hidden>Learning section ↓</button>
+            <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
+          </div>
         </div>
 
-        <section class="panel" aria-labelledby="useCasesTitle">
+        <section class="panel" id="playbookStoriesPanel" aria-labelledby="useCasesTitle">
           <div class="panel__head">
             <div>
-              <h2 class="panel__title" id="useCasesTitle">How DCS people use these tools</h2>
+              <h2 class="panel__title" id="useCasesTitle">How DCS people use these tools <span class="panel__count" id="useCasesCount" hidden></span></h2>
               <p class="panel__desc">Real examples from DCS teammates—the tool they used, what they did, and what changed. Need help choosing a tool? <button type="button" class="linkbtn" data-go-view="guides">Category guides →</button></p>
             </div>
           </div>
           <div class="usecase-grid" id="useCaseGrid"></div>
         </section>
 
-        <section class="panel" aria-labelledby="learnTitle">
+        <section class="panel" id="playbookLearningPanel" aria-labelledby="learnTitle">
           <div class="panel__head">
             <div>
-              <h2 class="panel__title" id="learnTitle">Learning by role</h2>
+              <h2 class="panel__title" id="learnTitle">Learning by role <span class="panel__count" id="learnCount" hidden></span></h2>
               <p class="panel__desc">Curated courses and docs—use search and role filters above to narrow down.</p>
             </div>
           </div>

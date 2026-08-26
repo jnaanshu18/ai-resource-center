@@ -2792,11 +2792,26 @@ function renderPlaybooks(refreshSheet = false) {
   if (refreshSheet || !state.playbookUseCases) refreshPlaybookWinsFromSheet();
 }
 
+function playbookResultSummary(shownCases, shownLearning, totalCases, totalLearning) {
+  const shown = shownCases + shownLearning;
+  const total = totalCases + totalLearning;
+  const parts = [];
+  if (shownCases) parts.push(`${shownCases} stor${shownCases === 1 ? "y" : "ies"}`);
+  if (shownLearning) parts.push(`${shownLearning} learning`);
+  if (!parts.length) return `0 of ${total} items`;
+  return `${parts.join(" · ")} (${shown} of ${total})`;
+}
+
 function paintPlaybooks(cases) {
   const useGrid = document.getElementById("useCaseGrid");
   const learnGrid = document.getElementById("learnGrid");
   const countEl = document.getElementById("playbookResultCount");
   const clearBtn = document.getElementById("playbookClearFilters");
+  const jumpLearningBtn = document.getElementById("playbookJumpLearning");
+  const storiesPanel = document.getElementById("playbookStoriesPanel");
+  const learningPanel = document.getElementById("playbookLearningPanel");
+  const useCasesCount = document.getElementById("useCasesCount");
+  const learnCount = document.getElementById("learnCount");
   const searchInput = document.getElementById("playbookSearchInput");
   if (!useGrid || !learnGrid) return;
 
@@ -2818,9 +2833,39 @@ function paintPlaybooks(cases) {
   const filtersOn = state.playbookRole !== "All" || Boolean(state.playbookSearch.trim());
   if (clearBtn) clearBtn.hidden = !filtersOn;
   if (countEl) {
-    const total = cases.length + learning.length;
-    const shown = shownCases.length + shownLearning.length;
-    countEl.textContent = `${shown} of ${total} items`;
+    countEl.textContent = playbookResultSummary(
+      shownCases.length,
+      shownLearning.length,
+      cases.length,
+      learning.length
+    );
+  }
+  if (jumpLearningBtn) {
+    jumpLearningBtn.hidden = !(filtersOn && shownCases.length > 0 && shownLearning.length > 0);
+  }
+  if (useCasesCount) {
+    if (filtersOn && shownCases.length) {
+      useCasesCount.hidden = false;
+      useCasesCount.textContent = `(${shownCases.length})`;
+    } else {
+      useCasesCount.hidden = true;
+      useCasesCount.textContent = "";
+    }
+  }
+  if (learnCount) {
+    if (filtersOn && shownLearning.length) {
+      learnCount.hidden = false;
+      learnCount.textContent = `(${shownLearning.length})`;
+    } else {
+      learnCount.hidden = true;
+      learnCount.textContent = "";
+    }
+  }
+  if (storiesPanel) {
+    storiesPanel.hidden = filtersOn && shownCases.length === 0;
+  }
+  if (learningPanel) {
+    learningPanel.hidden = filtersOn && shownLearning.length === 0;
   }
 
   useGrid.innerHTML = shownCases.map(uc => {
@@ -3256,6 +3301,7 @@ function bindAppNavigation() {
   document.getElementById("dcs-site-header")?.addEventListener("click", e => {
     const btn = e.target.closest("[data-view]");
     if (!btn) return;
+    e.preventDefault();
     const view = btn.dataset.view;
     if (view !== "directory") {
       state.compareReturnView = null;

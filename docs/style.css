@@ -831,6 +831,21 @@ select {
   font-size: 13px;
   color: var(--text-muted);
 }
+.resultbar--playbooks {
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+}
+.resultbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+.panel__count {
+  font-size: 0.82em;
+  font-weight: 650;
+  color: var(--text-muted);
+}
 .linkbtn {
   background: none;
   border: none;
@@ -3820,30 +3835,17 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   font: inherit;
   color: inherit;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-}
-.usecase-card__excerpt:hover,
-.usecase-card__excerpt:focus-visible {
-  border-color: #a5b4fc;
-  background: #fff;
-  box-shadow: 0 2px 10px #4338ca14;
-  outline: none;
 }
 .usecase-card__excerpt-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   word-break: break-word;
   font-size: 0.9rem;
   line-height: 1.45;
   white-space: pre-wrap;
-}
-.usecase-card__excerpt:hover .usecase-card__excerpt-text,
-.usecase-card__excerpt:focus-visible .usecase-card__excerpt-text {
-  -webkit-line-clamp: 12;
-  line-clamp: 12;
 }
 .usecase-card__read-more {
   display: none;

@@ -1,10 +1,9 @@
 /**
  * DCS AI Resource Center header.
- * Logo stays; main-site links (Home / Services / Schedule) are replaced
+ * Logo links to the in-app AI hub; main-site links are replaced
  * by in-app navigation: AI hub, Directory, Choose a tool, Prompts, Team stories, Suggestions.
  */
 (function () {
-  const ROOT = "https://dailycodesolutions.com";
   const ASSET_BASE = new URL("./assets/", document.currentScript.src).href;
 
   const NAV = [
@@ -23,7 +22,7 @@
     mount.innerHTML = `
       <header class="dcs-header" id="dcsHeader">
         <div class="dcs-header__inner">
-          <a class="dcs-header__logo" href="${ROOT}/" aria-label="Daily Code Solutions home">
+          <a class="dcs-header__logo" href="?" data-view="home" aria-label="AI hub home">
             <img src="${ASSET_BASE}logo.svg" width="118" height="26" alt="Daily Code Solutions" fetchpriority="high">
           </a>
 
