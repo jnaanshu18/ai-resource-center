@@ -259,11 +259,11 @@ function renderChips() {
       <div class="filter-more__body">
         <div class="filter-group filter-group--title">
           <div class="filter-group__title">Filters</div>
-          <div class="chiprow">
+      <div class="chiprow">
             <button class="chip" data-filter="all" type="button">All (${catalog.length})</button>
-            <button class="chip chip--starter" data-starter="true" type="button">Start here (${starterCount})</button>
+        <button class="chip chip--starter" data-starter="true" type="button">Start here (${starterCount})</button>
+      </div>
           </div>
-        </div>
         <div class="filter-group">
           <div class="filter-group__label">Category</div>
           <div class="chiprow">${categoryChips}</div>
@@ -1165,14 +1165,14 @@ function toolDetailMetaHtml(tool) {
   ).join("");
   return `
     <div class="tool-detail__meta">
-      <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
+          <span class="badge badge--${group}">${escapeHtml(tool.status)}</span>
       ${tool.category ? `<span class="card__tag">${escapeHtml(tool.category)}</span>` : ""}
       ${tool.pricing ? `<span class="card__tag">${escapeHtml(tool.pricing)}</span>` : ""}
       ${classChip}
       ${platformTags}
       ${ratingHtml(evalData, tool)}
       ${modalMetaAssignmentHtml(tool)}
-    </div>
+        </div>
   `;
 }
 
@@ -1201,7 +1201,7 @@ function toolDetailStoriesHtml(tool) {
         ${stories.map(uc => `
           <button type="button" class="linkbtn" data-playbook-search="${escapeHtml(uc.title)}">${escapeHtml(uc.title)} →</button>
         `).join("")}
-      </div>
+    </div>
     </section>
   `;
 }
@@ -1216,7 +1216,7 @@ function toolDetailPromptsHtml(tool) {
         ${prompts.map(p => `
           <button type="button" class="linkbtn" data-open-prompt="${escapeHtml(p.id)}">${escapeHtml(p.title)} →</button>
         `).join("")}
-      </div>
+    </div>
     </section>
   `;
 }
@@ -1335,7 +1335,7 @@ function openModal(tool) {
         ${toolDetailNoteBlock("Limitations", tool.limitations, { variant: "caution" })}
         ${toolDetailCostSecurityHtml(tool)}
         ${toolDetailEvalHtml(tool, evalData)}
-      </div>
+    </div>
 
       ${toolDetailComparisonsHtml(tool) || toolDetailStoriesHtml(tool) || toolDetailPromptsHtml(tool) ? `
         <div class="tool-detail__related-row">
@@ -1363,7 +1363,7 @@ function closeModal() {
   closeAssignmentModal();
   const back = state.toolReturnView && state.toolReturnView !== "tool" ? state.toolReturnView : "directory";
   state.currentToolId = null;
-  document.body.style.overflow = "";
+    document.body.style.overflow = "";
   showView(back);
 }
 
@@ -2100,9 +2100,18 @@ function bindTeamRegisterForm() {
 
 function hubOrientDismissed() {
   try {
-    return localStorage.getItem(HUB_ORIENT_KEY) === "1";
+    return sessionStorage.getItem(HUB_ORIENT_KEY) === "1";
   } catch {
     return false;
+  }
+}
+
+function resetHubOrientForNewSession() {
+  try {
+    sessionStorage.removeItem(HUB_ORIENT_KEY);
+    localStorage.removeItem(HUB_ORIENT_KEY);
+  } catch {
+    /* ignore storage errors */
   }
 }
 
@@ -2114,7 +2123,7 @@ function syncHubOrientBanner() {
 
 function dismissHubOrientBanner() {
   try {
-    localStorage.setItem(HUB_ORIENT_KEY, "1");
+    sessionStorage.setItem(HUB_ORIENT_KEY, "1");
   } catch {
     /* ignore storage errors */
   }
@@ -2229,14 +2238,14 @@ function guideCategoryLabel(category) {
 
 function renderGuideTips(guide) {
   return (guide.tips || []).map(tip => {
-    const tool = findToolByName(tip.tool);
+          const tool = findToolByName(tip.tool);
     const headToHeads = comparisonsForTool(tip.tool);
-    return `
-      <div class="guide-tip">
-        <div class="guide-tip__tool">
-          ${tool ? logoHtml(tool) : ""}
-          <button type="button" class="linkbtn" data-open-tool-name="${escapeHtml(tip.tool)}">${escapeHtml(tip.tool)}</button>
-        </div>
+          return `
+            <div class="guide-tip">
+              <div class="guide-tip__tool">
+                ${tool ? logoHtml(tool) : ""}
+                <button type="button" class="linkbtn" data-open-tool-name="${escapeHtml(tip.tool)}">${escapeHtml(tip.tool)}</button>
+              </div>
         ${headToHeads.length ? `
           <div class="guide-tip__comparisons">
             ${headToHeads.map(c => `
@@ -2244,18 +2253,18 @@ function renderGuideTips(guide) {
             `).join("")}
           </div>
         ` : ""}
-        <div class="guide-tip__cols">
-          <div class="guide-tip__col guide-tip__col--go">
-            <span class="guide-tip__label guide-tip__label--go">Use when</span>
-            <p>${escapeHtml(tip.useWhen)}</p>
-          </div>
-          <div class="guide-tip__col guide-tip__col--skip">
-            <span class="guide-tip__label guide-tip__label--skip">Skip when</span>
-            <p>${escapeHtml(tip.skipWhen)}</p>
-          </div>
-        </div>
-      </div>
-    `;
+              <div class="guide-tip__cols">
+                <div class="guide-tip__col guide-tip__col--go">
+                  <span class="guide-tip__label guide-tip__label--go">Use when</span>
+                  <p>${escapeHtml(tip.useWhen)}</p>
+                </div>
+                <div class="guide-tip__col guide-tip__col--skip">
+                  <span class="guide-tip__label guide-tip__label--skip">Skip when</span>
+                  <p>${escapeHtml(tip.skipWhen)}</p>
+                </div>
+              </div>
+            </div>
+          `;
   }).join("");
 }
 
@@ -2326,12 +2335,12 @@ function renderComparisonCompareAction(c) {
 
 function renderComparisonActions(c) {
   return (c.tools || []).map(name => {
-    const t = findToolByName(name);
-    const isWinner = c.winner && name === c.winner;
-    const chipClass = `chip${isWinner ? " chip--winner" : ""}`;
-    return t
-      ? `<button type="button" class="${chipClass}" data-open-tool="${escapeHtml(t.id)}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</button>`
-      : `<span class="${chipClass}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</span>`;
+          const t = findToolByName(name);
+          const isWinner = c.winner && name === c.winner;
+          const chipClass = `chip${isWinner ? " chip--winner" : ""}`;
+          return t
+            ? `<button type="button" class="${chipClass}" data-open-tool="${escapeHtml(t.id)}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</button>`
+            : `<span class="${chipClass}">${escapeHtml(name)}${isWinner ? " ✓" : ""}</span>`;
   }).join("");
 }
 
@@ -2400,8 +2409,8 @@ function renderComparisonsList() {
             </div>
           </details>
         `;
-      }).join("")}
-    </div>
+        }).join("")}
+      </div>
   `;
 }
 
@@ -2654,7 +2663,7 @@ function normalizeWinStatus(raw) {
 function winToUseCase(row) {
   const title = submissionField(row, "Title");
   if (!title) return null;
-  if (normalizeWinStatus(submissionField(row, "Status")) !== "Approved") return null;
+  if (normalizeWinStatus(submissionField(row, "Status")) === "Rejected") return null;
   const tool = submissionField(row, "Tool used", "Tool");
   const role = submissionField(row, "Role") || "Everyone";
   const owner = submissionField(row, "Submitted by", "Submitter", "Name") || "Team";
@@ -2996,8 +3005,8 @@ function renderContribute() {
   syncContributeTabs();
   populateWinToolDropdown();
   if (syncAdminReviewVisibility()) {
-    renderReviewHowto();
-    loadPendingReviews();
+  renderReviewHowto();
+  loadPendingReviews();
   }
 }
 
@@ -3193,7 +3202,7 @@ function validateWinForm() {
   if (name && (name.length > 60 || !PERSON_PATTERN.test(name))) {
     ok = false;
     if (formErr) {
-      formErr.hidden = false;
+    formErr.hidden = false;
       formErr.textContent = "Use letters, spaces, apostrophes, or hyphens only in your name.";
     }
   }
@@ -3543,6 +3552,7 @@ function bindAppNavigation() {
     try {
       await submitWinLink(payload);
       showWinSuccess();
+      await refreshPlaybookWinsFromSheet();
     } catch (err) {
       if (formErr) {
         formErr.hidden = false;
@@ -3624,7 +3634,7 @@ function setCompareMode(on) {
     if (returnView) {
       showView(returnView);
       return;
-    }
+  }
     rerender();
     return;
   }
@@ -3851,7 +3861,7 @@ function openCompare() {
 function closeCompare() {
   const overlay = document.getElementById("compareOverlay");
   if (overlay) overlay.hidden = true;
-  document.body.style.overflow = "";
+    document.body.style.overflow = "";
 }
 
 function init(opts = {}) {
@@ -4222,7 +4232,7 @@ function setSimilarToolsWarning(tools) {
     ` <span class="similar-tool-status">(${escapeHtml(t.status)})</span>`
   ).join(", ");
   el.hidden = false;
-  el.innerHTML = `Similar tools already listed: ${links}. You can still submit if this is different.`;
+  el.innerHTML = `Similar tools already listed: ${links}. Check the Directory before submitting.`;
 }
 
 function clearSuggestErrors() {
@@ -4232,6 +4242,9 @@ function clearSuggestErrors() {
     el.textContent = "";
   });
   setSimilarToolsWarning([]);
+  setSuggestConflictBanner("s_name_similar", null);
+  setSuggestConflictBanner("s_url_similar", null);
+  syncSuggestSubmitButtons(false);
   const formErr = document.getElementById("suggestFormErr");
   if (formErr) {
     formErr.hidden = true;
@@ -4718,9 +4731,9 @@ function validateSimpleSubmit() {
     setSimpleFieldError("link", "Use a valid URL starting with http:// or https://");
     ok = false;
   }
-  const listed = existingDirectoryTool(toolName, link);
+  const listed = findSuggestConflict(toolName, link);
   if (listed) {
-    setSimpleFieldError("tool", `“${listed.name}” is already in the Directory.`);
+    setSimpleFieldError("tool", suggestConflictMessage(listed));
     ok = false;
   }
   if (note.length > 200) {
@@ -4748,6 +4761,9 @@ function showSimpleSubmitSuccess() {
 function resetSimpleSubmit() {
   document.getElementById("simpleSubmitForm")?.reset();
   ["tool", "link", "note", "assign"].forEach(k => setSimpleFieldError(k, ""));
+  setSuggestConflictBanner("simple_tool_similar", null);
+  setSuggestConflictBanner("simple_link_similar", null);
+  syncSuggestSubmitButtons(false);
   const formErr = document.getElementById("simpleSubmitErr");
   if (formErr) { formErr.hidden = true; formErr.textContent = ""; }
   const wrap = document.getElementById("simpleSubmitWrap");
@@ -5139,10 +5155,29 @@ function bindSimpleSubmit() {
         formErr.textContent = err.message || "Something went wrong. Try again in a moment.";
       }
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = "Suggest tool"; }
+      if (btn) {
+        btn.textContent = "Suggest tool";
+        btn.disabled = updateSimpleSuggestFeedback();
+      }
     }
   });
   document.getElementById("simpleSubmitAnother")?.addEventListener("click", resetSimpleSubmit);
+  const simpleTool = document.getElementById("simple_tool");
+  const simpleLink = document.getElementById("simple_link");
+  if (simpleTool) {
+    simpleTool.addEventListener("input", () => {
+      setSimpleFieldError("tool", "");
+      updateSimpleSuggestFeedback();
+    });
+    simpleTool.addEventListener("blur", updateSimpleSuggestFeedback);
+  }
+  if (simpleLink) {
+    simpleLink.addEventListener("input", () => {
+      setSimpleFieldError("link", "");
+      updateSimpleSuggestFeedback();
+    });
+    simpleLink.addEventListener("blur", updateSimpleSuggestFeedback);
+  }
 }
 
 function setSubmissionReviewFieldError(key, message) {
@@ -5214,10 +5249,14 @@ function openSubmissionReviewModal(item) {
   }
   const dup = document.getElementById("submissionReviewDup");
   const listed = existingDirectoryTool(item.toolName, item.link);
+  const queued = existingQueueMatch(item.toolName, item.link);
   if (dup) {
     if (listed) {
       dup.hidden = false;
       dup.textContent = `Already in the Directory as ${listed.name}.`;
+    } else if (queued && submissionKey(queued) !== submissionKey(item)) {
+      dup.hidden = false;
+      dup.textContent = `Already in the suggestion queue as ${submissionDisplayName(queued)} (${effectiveSubmissionStatus(queued)}).`;
     } else {
       dup.hidden = true;
       dup.textContent = "";
@@ -5429,6 +5468,152 @@ function existingDirectoryTool(name, url) {
   return all.find(t => catalogUrlKey(t.url) === key) || null;
 }
 
+function submissionsForDuplicateCheck() {
+  return mergeSubmissionItems(bakedSubmissionRows(), state.submissionsCache || []);
+}
+
+function existingQueueMatch(name, url) {
+  const qNorm = normalizeToolName(name);
+  const urlKey = catalogUrlKey(url);
+  if (!qNorm && !urlKey) return null;
+  return submissionsForDuplicateCheck().find(item => {
+    if (effectiveSubmissionStatus(item) === "Rejected") return false;
+    const itemNorm = normalizeToolName(submissionDisplayName(item));
+    const nameMatch = Boolean(qNorm && itemNorm && itemNorm === qNorm);
+    const urlMatch = Boolean(urlKey && catalogUrlKey(item.link) === urlKey);
+    return nameMatch || urlMatch;
+  }) || null;
+}
+
+function namesLikelySameTool(a, b) {
+  const aNorm = normalizeToolName(a);
+  const bNorm = normalizeToolName(b);
+  if (!aNorm || !bNorm) return false;
+  if (aNorm === bNorm) return true;
+  const aLower = String(a || "").trim().toLowerCase();
+  const bLower = String(b || "").trim().toLowerCase();
+  if (aNorm.length >= 3 && (aLower.startsWith(bLower) || bLower.startsWith(aLower))) return true;
+  if (aNorm.length >= 3 && (aNorm.startsWith(bNorm) || bNorm.startsWith(aNorm))) return true;
+  const dist = levenshtein(aNorm, bNorm);
+  const maxLen = Math.max(aNorm.length, bNorm.length);
+  return maxLen >= 3 && dist <= 1;
+}
+
+function findSuggestConflict(name, url = "") {
+  const trimmed = String(name || "").trim();
+  const urlVal = normalizeSuggestUrl(String(url || "").trim());
+  if (trimmed.length >= 2 || urlVal) {
+    const inDir = existingDirectoryTool(trimmed, urlVal);
+    if (inDir) {
+      return { where: "Directory", name: inDir.name, detail: inDir.status || "listed" };
+    }
+    const inQueue = existingQueueMatch(trimmed, urlVal);
+    if (inQueue) {
+      return {
+        where: "Suggestions queue",
+        name: submissionDisplayName(inQueue),
+        detail: effectiveSubmissionStatus(inQueue),
+      };
+    }
+  }
+  if (trimmed.length >= 3) {
+    for (const tool of (typeof TOOLS !== "undefined" ? TOOLS : [])) {
+      if (namesLikelySameTool(trimmed, tool.name)) {
+        return { where: "Directory", name: tool.name, detail: tool.status || "listed", partial: true };
+      }
+    }
+    for (const item of submissionsForDuplicateCheck()) {
+      if (effectiveSubmissionStatus(item) === "Rejected") continue;
+      const disp = submissionDisplayName(item);
+      if (namesLikelySameTool(trimmed, disp)) {
+        return {
+          where: "Suggestions queue",
+          name: disp,
+          detail: effectiveSubmissionStatus(item),
+          partial: true,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function suggestConflictMessage(conflict) {
+  if (!conflict) return "";
+  const where = conflict.where === "Directory" ? "the Directory" : "the suggestion queue";
+  const detail = conflict.detail ? ` (${conflict.detail})` : "";
+  if (conflict.partial) {
+    return `Related tool “${conflict.name}” is already in ${where}${detail}. You can’t submit a duplicate.`;
+  }
+  return `“${conflict.name}” is already in ${where}${detail}. You can’t submit a duplicate.`;
+}
+
+function setSuggestConflictBanner(warnId, conflict) {
+  const el = document.getElementById(warnId);
+  if (!el) return;
+  const msg = suggestConflictMessage(conflict);
+  el.hidden = !msg;
+  el.textContent = msg;
+  el.classList.toggle("field-warn--block", Boolean(msg));
+}
+
+function syncSuggestSubmitButtons(blocked) {
+  ["simpleSubmitBtn", "suggestSubmit"].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = Boolean(blocked);
+  });
+}
+
+function findUrlConflict(url) {
+  const urlVal = normalizeSuggestUrl(String(url || "").trim());
+  if (!catalogUrlKey(urlVal)) return null;
+  const inDir = existingDirectoryTool("", urlVal);
+  if (inDir) {
+    return { where: "Directory", name: inDir.name, detail: inDir.status || "listed" };
+  }
+  const inQueue = existingQueueMatch("", urlVal);
+  if (inQueue) {
+    return {
+      where: "Suggestions queue",
+      name: submissionDisplayName(inQueue),
+      detail: effectiveSubmissionStatus(inQueue),
+    };
+  }
+  return null;
+}
+
+function updateSimpleSuggestFeedback() {
+  const toolName = (document.getElementById("simple_tool")?.value || "").trim();
+  const link = normalizeSuggestUrl(document.getElementById("simple_link")?.value || "");
+  const nameConflict = findSuggestConflict(toolName, "");
+  const urlConflict = findUrlConflict(link);
+  const blocked = Boolean(findSuggestConflict(toolName, link) || nameConflict || urlConflict);
+  setSuggestConflictBanner("simple_tool_similar", nameConflict);
+  setSuggestConflictBanner("simple_link_similar", urlConflict);
+  syncSuggestSubmitButtons(blocked);
+  return blocked;
+}
+
+function updateFullSuggestFeedback() {
+  const name = suggestValue("s_name");
+  const url = suggestValue("s_url");
+  const nameConflict = findSuggestConflict(name, "");
+  const urlConflict = findUrlConflict(url);
+  const blocked = Boolean(findSuggestConflict(name, url) || nameConflict || urlConflict);
+  if (blocked) {
+    setSimilarToolsWarning([]);
+    setSuggestConflictBanner("s_name_similar", nameConflict);
+    setSuggestConflictBanner("s_url_similar", urlConflict);
+    syncSuggestSubmitButtons(true);
+    return true;
+  }
+  setSuggestConflictBanner("s_name_similar", null);
+  setSuggestConflictBanner("s_url_similar", null);
+  updateSimilarToolsWarning();
+  syncSuggestSubmitButtons(false);
+  return false;
+}
+
 function findSimilarTools(name) {
   const q = name.trim().toLowerCase();
   const qNorm = normalizeToolName(name);
@@ -5464,6 +5649,11 @@ function findSimilarTools(name) {
 
 function updateSimilarToolsWarning() {
   const name = suggestValue("s_name");
+  const url = suggestValue("s_url");
+  if (findSuggestConflict(name, url)) {
+    setSimilarToolsWarning([]);
+    return;
+  }
   if (!name || name.length < SUGGEST_LIMITS.name.min) {
     setSimilarToolsWarning([]);
     return;
@@ -5478,7 +5668,7 @@ function updateSimilarToolsWarning() {
 
 function validateSuggestForm() {
   clearSuggestErrors();
-  updateSimilarToolsWarning();
+  updateFullSuggestFeedback();
   const errors = {};
 
   const name = suggestValue("s_name");
@@ -5498,8 +5688,8 @@ function validateSuggestForm() {
   } else if (!NAME_PATTERN.test(name)) {
     errors.name = "Use letters, numbers, spaces, and . _ - & + ' / ( ) only.";
   } else {
-    const dup = existingDirectoryTool(name, urlRaw);
-    if (dup) errors.name = `“${dup.name}” is already in the Directory.`;
+    const conflict = findSuggestConflict(name, urlRaw);
+    if (conflict) errors.name = suggestConflictMessage(conflict);
   }
 
   if (!category) {
@@ -5598,9 +5788,17 @@ function bindSuggestValidation() {
   if (nameInput) {
     nameInput.addEventListener("input", () => {
       setSuggestFieldError("name", "");
-      updateSimilarToolsWarning();
+      updateFullSuggestFeedback();
     });
-    nameInput.addEventListener("blur", updateSimilarToolsWarning);
+    nameInput.addEventListener("blur", updateFullSuggestFeedback);
+  }
+  const urlInput = document.getElementById("s_url");
+  if (urlInput) {
+    urlInput.addEventListener("input", () => {
+      setSuggestFieldError("url", "");
+      updateFullSuggestFeedback();
+    });
+    urlInput.addEventListener("blur", updateFullSuggestFeedback);
   }
 
   const similarBox = document.getElementById("s_name_similar");
@@ -5972,6 +6170,7 @@ async function tryInviteUnlock() {
   if (!(await secretMatches(invite, cfg.inviteTokenHash))) return false;
 
   await writeAuthSession({ username: "invite", isAdmin: false });
+  resetHubOrientForNewSession();
   params.delete("invite");
   const next = params.toString();
   const clean = `${window.location.pathname}${next ? `?${next}` : ""}${window.location.hash || ""}`;
@@ -6044,6 +6243,7 @@ function bindAuthUi() {
         username: login.username,
         isAdmin: login.isAdmin,
       });
+      resetHubOrientForNewSession();
       unlockApp();
       startAppOnce({ forceHome: true });
     } finally {
@@ -6061,6 +6261,7 @@ function bindAuthUi() {
   });
 
   document.getElementById("signOutBtn")?.addEventListener("click", () => {
+    resetHubOrientForNewSession();
     clearAuthSession();
     lockApp();
   });

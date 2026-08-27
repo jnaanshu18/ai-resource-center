@@ -92,17 +92,25 @@ Apps Script templates: `scripts/tool_submissions_apps_script.js`, `scripts/team_
 
 ## Repository layout
 
+Only these top-level paths are meant for git (see `.gitignore` allowlist):
+
 ```
 data/                  CSV source of truth
 scripts/
   generate_site_data.py   CSV → docs/data.js
   qa_full_site.py         Automated checks
   hash_auth_secret.py     Password / invite hashes
-docs/                  Published site (HTML, CSS, JS)
+docs/                  Published site (HTML, CSS, JS) — GitHub Pages deploys this folder only
   data.js              Generated — do not edit by hand
   site-config.js       Local secrets (gitignored)
 .github/workflows/     Deploy on push to main
+workers/               Optional Cloudflare Worker (assignment email — not used in v1)
+release/               Employee/admin launch guides (Word, screenshots)
 ```
+
+**Not in git:** `personal/`, `samples/`, scratch files like `biok.py`, and any accidental folders at repo root.
+
+**Workers folder:** Keep it in the repo. It is **not** published to the website (Pages only uploads `docs/`). It is source for a separate Cloudflare deploy when assignment email is turned on later. Secrets (`RESEND_API_KEY`, etc.) live in Cloudflare, not in git.
 
 **Main CSVs**
 

@@ -17,7 +17,7 @@
  * Status values (Submissions): New | In review | Approved | Rejected
  * Status values (Team wins): New | Approved | Rejected
  * Approve a tool suggestion: also appends a row to "Directory queue".
- * Approve a team win: set Status to Approved on Team wins — the site lists it in Team stories.
+ * Team wins show on the site right after submit. Set Status to Rejected in the sheet to hide one.
  */
 
 const SUBMISSION_HEADERS = [

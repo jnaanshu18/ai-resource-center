@@ -1,11 +1,62 @@
-.DS_Store
-*.tmp
-__pycache__/
-*.pyc
+# =============================================================================
+# ALLOWLIST — only paths listed below are intended for git.
+# Anything else at repo root (biok.py, extra folders, zips, etc.) stays local.
+# To track a new top-level folder: add !/folder/ and !/folder/** below.
+# =============================================================================
 
-# Local host / auth settings (copy from site-config.example.js)
+# Ignore everything at repository root
+/*
+!/.gitignore
+!/README.md
+
+# GitHub Actions (deploy)
+!/.github/
+!/.github/**
+
+# CSV source of truth → docs/data.js
+!/data/
+!/data/**
+
+# Static site (GitHub Pages publishes docs/ only)
+!/docs/
+!/docs/**
+
+# Maintainer scripts, QA, Apps Script templates
+!/scripts/
+!/scripts/**
+
+# Cloudflare Worker for assignment email (optional — NOT deployed via Pages).
+# Safe to keep in git: no API keys here (wrangler secrets). Used when
+# toolAssignments.notify is enabled. See docs/site-config.example.js.
+!/workers/
+!/workers/**
+
+# Launch guides (markdown, Word, screenshots for employees/admins)
+!/release/
+!/release/**
+
+# =============================================================================
+# Secrets & local config (never commit — even inside allowed folders)
+# =============================================================================
 docs/site-config.js
 docs/site-config.production.js
 
-# Personal notes, launch checklists, ops runbooks (local only)
-personal/
+# =============================================================================
+# Explicit local-only (always ignore — even if moved or recreated)
+# =============================================================================
+extra/
+*.zip
+
+
+
+# =============================================================================
+# OS / Python noise
+# =============================================================================
+.DS_Store
+Thumbs.db
+*.tmp
+__pycache__/
+*.pyc
+.python-version
+.venv/
+venv/

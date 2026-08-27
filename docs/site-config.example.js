@@ -3,7 +3,7 @@
 //   copy docs/site-config.example.js docs/site-config.js
 // site-config.js is gitignored — do not commit plaintext passwords.
 //
-// Feature on/off for v1 vs later launches: see personal/FEATURE_TOGGLES.md (local, gitignored).
+// Feature on/off for v1 vs later launches: see extra/FEATURE_TOGGLES.md (local, gitignored).
 //
 // Soft gate only — use Cloudflare Access for real production protection.
 // Generate hashes:
@@ -48,7 +48,7 @@ const SITE_CONFIG = {
      * Assignee emails come from TEAM_MEMBERS (team directory) first, then assigneeEmails below.
      */
     notify: {
-      enabled: false,  // V1 off — see personal/FEATURE_TOGGLES.md
+      enabled: false,  // V1 off — see extra/FEATURE_TOGGLES.md
       webhookUrl: "",
       webhookSecret: "",
       /** Optional extra name -> email overrides */
@@ -61,7 +61,7 @@ const SITE_CONFIG = {
   /**
    * Team directory — roster from data/team_members.csv (assignment dropdown).
    * V1: allowSelfRegister false — no Home registration form; add members via CSV.
-   * See personal/FEATURE_TOGGLES.md to enable self-registration later.
+   * See extra/FEATURE_TOGGLES.md to enable self-registration later.
    */
   teamDirectory: {
     enabled: true,
@@ -74,9 +74,11 @@ const SITE_CONFIG = {
    * Contribute / submissions.
    * fullForm: legacy GitHub-issue “Add a tool” (kept, off by default).
    * simpleSubmit: tool name + link POST to Apps Script.
-   * winSubmit: share-a-win POST (same Apps Script URL is fine if Team wins tab exists).
-   * Approved Team wins (Sheet Status = Approved) merge into Team stories live.
-   * See scripts/tool_submissions_apps_script.js and scripts/team_wins_apps_script.js.
+   * winSubmit: share-a-win POST (same Apps Script URL + Team wins tab in the Sheet).
+   * Team wins appear on Team stories right after submit (Status New or Approved).
+   * Set Status to Rejected in the Team wins tab to hide a story. No admin approve step.
+   * winSubmit.csvUrl: leave empty — site loads wins via ?action=listWins (instant).
+   * See scripts/tool_submissions_apps_script.js.
    */
   contribute: {
     fullForm: { enabled: false },
@@ -91,9 +93,9 @@ const SITE_CONFIG = {
     },
     winSubmit: {
       enabled: true,
-      /** Apps Script web app URL (same as simpleSubmit.submitUrl is fine). Approved wins load into Team stories. */
+      /** Same Apps Script URL as simpleSubmit.submitUrl. Posts to Team wins tab. */
       submitUrl: "",
-      /** Optional published CSV of the Team wins tab. Leave empty to use ?action=listWins. */
+      /** Leave empty (recommended). Site reads wins live via ?action=listWins. Published CSV can lag. */
       csvUrl: "",
     },
   },

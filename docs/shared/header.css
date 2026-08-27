@@ -251,3 +251,17 @@
     padding: 0.7rem 0.85rem;
   }
 }
+
+@media (max-width: 480px) {
+  .dcs-header__inner {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+  .dcs-header__logo img {
+    height: 22px;
+  }
+  .dcs-header__role {
+    font-size: 0.66rem;
+    padding: 0.22rem 0.45rem;
+  }
+}

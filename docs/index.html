@@ -380,18 +380,18 @@
     </section>
     <div class="content playbooks-split">
       <div class="playbooks-split__main">
-        <div class="prompt-search-row">
-          <div class="search prompt-search">
-            <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <div class="prompt-search-row">
+        <div class="search prompt-search">
+          <svg class="search__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M14 14L18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             <input type="search" id="playbookSearchInput" placeholder="Search teammate stories &amp; learning — e.g. Gmail, Cursor, reporting…" autocomplete="off" aria-label="Search team stories">
           </div>
         </div>
         <div class="role-chips" id="playbookRoleChips" aria-label="Filter team stories by role"></div>
         <div class="resultbar resultbar--playbooks">
-          <span id="playbookResultCount"></span>
+        <span id="playbookResultCount"></span>
           <div class="resultbar__actions">
             <button type="button" id="playbookJumpLearning" class="linkbtn" data-scroll-to="learnTitle" hidden>Learning section ↓</button>
-            <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
+        <button type="button" id="playbookClearFilters" class="linkbtn" hidden>Clear</button>
           </div>
         </div>
 
@@ -418,8 +418,8 @@
 
       <aside class="playbooks-split__aside">
         <section class="panel playbooks-split__win" id="shareWinSection" aria-labelledby="shareWinTitle">
-          <div class="panel__head">
-            <div>
+        <div class="panel__head">
+          <div>
               <h2 class="panel__title" id="shareWinTitle">Share a win</h2>
               <p class="panel__desc">Tell us what worked—tool, outcome, and how you used it.</p>
             </div>
@@ -481,8 +481,8 @@
           </div>
         </section>
       </aside>
-    </div>
-  </section>
+        </div>
+      </section>
 
   <!-- SUBMISSIONS + ADD TOOL (everyone) -->
   <section class="view" id="view-submissions" data-view-panel="submissions" hidden>
@@ -529,12 +529,14 @@
             <form id="simpleSubmitForm" novalidate>
               <div class="field" data-simple-field="tool">
                 <label for="simple_tool">Tool name <span class="req">*</span></label>
-                <input type="text" id="simple_tool" name="toolName" maxlength="80" required placeholder="e.g. Cursor" autocomplete="off" aria-describedby="simple_tool_err">
+                <input type="text" id="simple_tool" name="toolName" maxlength="80" required placeholder="e.g. Cursor" autocomplete="off" aria-describedby="simple_tool_similar simple_tool_err">
+                <p class="field-warn" id="simple_tool_similar" hidden></p>
                 <p class="field-error" id="simple_tool_err" hidden></p>
               </div>
               <div class="field" data-simple-field="link">
                 <label for="simple_link">Link <span class="req">*</span></label>
-                <input type="url" id="simple_link" name="link" maxlength="300" required placeholder="https://… website, repo, or demo" aria-describedby="simple_link_err">
+                <input type="url" id="simple_link" name="link" maxlength="300" required placeholder="https://… website, repo, or demo" aria-describedby="simple_link_similar simple_link_err">
+                <p class="field-warn" id="simple_link_similar" hidden></p>
                 <p class="field-error" id="simple_link_err" hidden></p>
               </div>
               <div class="field" data-simple-field="note">
@@ -624,11 +626,12 @@
               </div>
             </div>
 
-            <div class="field" data-field="url">
-              <label for="s_url">Website <span class="req">*</span></label>
-              <input type="url" id="s_url" name="url" maxlength="300" required placeholder="https://… official site, repo, or demo" aria-describedby="s_url_err">
-              <p class="field-error" id="s_url_err" hidden></p>
-            </div>
+              <div class="field" data-field="url">
+                <label for="s_url">Website <span class="req">*</span></label>
+                <input type="url" id="s_url" name="url" maxlength="300" required placeholder="https://… official site, repo, or demo" aria-describedby="s_url_similar s_url_err">
+                <p class="field-warn" id="s_url_similar" hidden></p>
+                <p class="field-error" id="s_url_err" hidden></p>
+              </div>
 
             <div class="field-row">
               <div class="field" data-field="submitter">

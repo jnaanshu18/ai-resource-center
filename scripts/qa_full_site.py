@@ -302,10 +302,12 @@ def main() -> int:
     else:
         record("FAIL", "Contribute", "Submit validation or site-config example missing")
 
-    if "existingDirectoryTool" in script and "already in the Directory" in script and "isCatalogedSubmission" in script:
+    if (existingDirectoryTool" in script and "existingQueueMatch" in script and "already in the Directory" in script and "isCatalogedSubmission" in script:
+        record("PASS", "Contribute", "Directory and queue duplicates blocked on suggest")
+    elif "existingDirectoryTool" in script and "already in the Directory" in script and "isCatalogedSubmission" in script:
         record("PASS", "Contribute", "Directory tools cannot be re-submitted; hidden from Suggestions")
     else:
-        record("FAIL", "Contribute", "Missing directory duplicate block on Suggestions")
+        record("FAIL", "Contribute", "Missing duplicate block on Suggestions suggest form")
 
     if "submitWinLink" in script and "Share win" in html and "winIssueLink" not in html:
         record("PASS", "Contribute", "Share a win posts to Sheet (no GitHub draft UI)")
@@ -400,7 +402,7 @@ def main() -> int:
         record("FAIL", "Contribute", "Share a win form missing from Team stories")
 
     if "fetchApprovedWinUseCases" in script and "listWins" in apps and "mergeUseCases" in script:
-        record("PASS", "Contribute", "Approved Team wins merge into Team stories")
+        record("PASS", "Contribute", "Live Team wins (non-rejected) merge into Team stories")
     else:
         record("FAIL", "Contribute", "Live Team wins → Team stories wiring missing")
 

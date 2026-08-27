@@ -2461,6 +2461,11 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   border-radius: 6px;
   padding: 6px 8px;
 }
+.field-warn--block {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
 .similar-tool-link {
   display: inline;
   margin: 0;
@@ -2551,7 +2556,7 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   color: var(--coral);
 }
 
-.view[hidden] { display: none !important; }
+[hidden] { display: none !important; }
 
 .hero--tool .hero__container {
   display: grid;
@@ -3351,7 +3356,7 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
 .guide-tip__tool {
   display: flex;
   align-items: center;
-  gap: 0.5rem;watch on
+  gap: 0.5rem;
   margin-bottom: 0.65rem;
 }
 .guide-tip__tool .card__logo {
@@ -4011,6 +4016,168 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   #suggestModal { padding: 18px 16px 16px; }
   .panel__head { flex-direction: column; }
   .app-nav__link { font-size: 0.875rem; padding: 0.55rem 0.85rem; }
+
+  /* AI hub orientation */
+  .hub-orient { padding: 0 0.75rem; }
+  .hub-orient__inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    padding: 0.75rem 0.85rem;
+  }
+  .hub-orient__dismiss { align-self: flex-end; }
+
+  /* Directory stats + chooser */
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat { padding: 12px 14px; }
+  .stat__value { font-size: 1.35rem; }
+  .stat__label { font-size: 12px; }
+  .chooser-grid { grid-template-columns: 1fr; }
+
+  /* Modals + overlays */
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-start;
+  }
+  .modal {
+    padding: 20px 16px 24px;
+    border-radius: 12px;
+    max-height: calc(100dvh - 24px);
+  }
+  .modal--wide,
+  .modal--directory-approve {
+    padding: 20px 16px 28px;
+    max-width: calc(100vw - 24px);
+  }
+  .modal--submission-review {
+    max-width: calc(100vw - 24px);
+    padding: 1.1rem 1rem 1rem;
+  }
+  .modal__close {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .modal__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .modal__actions .modal__cta,
+  .modal__actions .modal__cta--secondary {
+    width: 100%;
+    justify-content: center;
+  }
+  .submission-review__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .submission-review__reject {
+    margin-right: 0;
+    width: 100%;
+  }
+  .submission-review__actions .btn-base {
+    width: 100%;
+    justify-content: center;
+  }
+  .modal--directory-approve .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .modal--directory-approve .form-actions .btn-base {
+    width: 100%;
+  }
+
+  /* Compare bar + safe areas */
+  .compare-bar__inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+  .compare-bar__text { font-size: 13px; line-height: 1.35; }
+  .compare-bar__actions {
+    width: 100%;
+    justify-content: stretch;
+    gap: 8px;
+  }
+  .compare-bar__actions .linkbtn,
+  .compare-bar__btn {
+    flex: 1 1 0;
+    min-height: 2.5rem;
+    justify-content: center;
+  }
+
+  /* Suggestions + playbooks lists */
+  .submissions-list { grid-template-columns: 1fr; }
+  .submission-item__top { flex-wrap: wrap; }
+  .submission-item__top-end {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .submission-item__review-btn {
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  /* Tool detail page */
+  .tool-detail__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tool-detail__toolbar-actions {
+    width: 100%;
+  }
+  .tool-detail__toolbar-actions .btn-base {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+  .tool-glance {
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+
+  /* Contribute / suggest forms */
+  #view-contribute .form-actions .btn-base,
+  #view-submissions .form-actions .btn-base,
+  #view-playbooks .form-actions .btn-base {
+    width: 100%;
+    min-width: 0;
+  }
+  #view-contribute .suggest-draft-actions,
+  #view-submissions .suggest-draft-actions,
+  #view-playbooks .suggest-draft-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #view-contribute .suggest-draft-actions .modal__cta--wide,
+  #view-submissions .suggest-draft-actions .modal__cta--wide,
+  #view-playbooks .suggest-draft-actions .modal__cta--wide {
+    width: 100%;
+    min-width: 0;
+  }
+
+  footer {
+    padding: 24px 16px max(48px, calc(32px + env(safe-area-inset-bottom, 0px)));
+  }
+  body.has-compare-bar footer {
+    padding-bottom: max(112px, calc(96px + env(safe-area-inset-bottom, 0px)));
+  }
+  body.has-compare-bar #view-directory .grid {
+    padding-bottom: max(104px, calc(88px + env(safe-area-inset-bottom, 0px)));
+  }
+  .back-to-top {
+    right: 0.85rem;
+    bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+  }
+  body.has-compare-bar .back-to-top {
+    bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4378,7 +4545,7 @@ body:has(#compareOverlay:not([hidden])) .compare-bar {
   background: #fff1f2;
 }
 #view-submissions .submissions-split__form .form-actions {
-  justify-content: flex-start;
+  justify-content: center;
   margin-top: 0.15rem;
 }
 #view-submissions .submissions-split__form .panel__head {
@@ -5094,6 +5261,44 @@ body.auth-locked .modal-overlay {
   }
   .login-gate__panel {
     padding: 1.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-heading { font-size: 1.45rem; }
+  .hero-text { font-size: 0.875rem; }
+  .tool-detail__identity {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tool-detail__name-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+  .tool-detail__website { white-space: normal; }
+  .submissions-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .submissions-filters::-webkit-scrollbar { display: none; }
+  .role-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .role-chips::-webkit-scrollbar { display: none; }
+}
+
+/* Touch devices: hover tooltips on queue cards are unreliable */
+@media (max-width: 640px) and (hover: none) {
+  .submission-item__tip {
+    display: none !important;
   }
 }
 
